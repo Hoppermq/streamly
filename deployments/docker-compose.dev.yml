@@ -1,0 +1,145 @@
+# Development Docker Compose Configuration
+# Optimized for local development with hot reload and debugging
+
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ../
+      dockerfile: docker/frontend.Dockerfile
+      target: development
+      args:
+        BUILD_TARGET: development
+        BUN_VERSION: 1.0
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../frontend:/app
+      - /app/node_modules
+      - bun_cache:/root/.bun
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:8080
+      - VITE_APP_ENV=development
+    depends_on:
+      - backend
+    networks:
+      - streamly-dev
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  backend:
+    build:
+      context: ../
+      dockerfile: docker/services.Dockerfile
+      args:
+        TARGET_OS: linux
+        TARGET_ARCH: amd64
+        SERVICE_PATH: ./cmd/server
+    ports:
+      - "8080:8080"
+    volumes:
+      - ../:/app
+      - go_mod_cache:/go/pkg/mod
+      - go_build_cache:/root/.cache/go-build
+    environment:
+      - GO_ENV=development
+      - PORT=8080
+      - CONFIG_PATH=/app/internal/http/config/config.dev.toml
+    networks:
+      - streamly-dev
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - streamly-dev
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  postgres:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    environment:
+      - POSTGRES_DB=streamly_dev
+      - POSTGRES_USER=streamly
+      - POSTGRES_PASSWORD=dev_password_123
+      - POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256
+    networks:
+      - streamly-dev
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U streamly -d streamly_dev"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  adminer:
+    image: adminer:4.8.1
+    ports:
+      - "8081:8080"
+    environment:
+      - ADMINER_DEFAULT_SERVER=postgres
+    depends_on:
+      - postgres
+    networks:
+      - streamly-dev
+    restart: unless-stopped
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    ports:
+      - "1025:1025" # SMTP
+      - "8025:8025" # Web UI
+    networks:
+      - streamly-dev
+    restart: unless-stopped
+
+# Networks
+networks:
+  streamly-dev:
+    driver: bridge
+    name: streamly-dev
+
+# Volumes for data persistence and caching
+volumes:
+  postgres_data:
+    driver: local
+    name: streamly-dev-postgres
+  redis_data:
+    driver: local
+    name: streamly-dev-redis
+  bun_cache:
+    driver: local
+    name: streamly-dev-bun-cache
+  go_mod_cache:
+    driver: local
+    name: streamly-dev-go-mod
+  go_build_cache:
+    driver: local
+    name: streamly-dev-go-build

@@ -1,34 +1,40 @@
 {
   "name": "frontend",
   "private": true,
-  "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
+    "dev": "bunx --bun vite --port 3000",
+    "start": "vite --port 3000",
+    "build": "vite build && tsc",
+    "serve": "bunx --bun vite preview",
+    "test": "bunx --bun vitest run",
+    "format": "biome format",
+    "lint": "biome lint",
+    "check": "biome check"
   },
   "dependencies": {
-    "@tanstack/react-query": "^5.87.1",
-    "@tanstack/react-router": "^1.131.35",
-    "@tanstack/react-router-devtools": "^1.131.35",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1",
+    "@tailwindcss/vite": "^4.0.6",
+    "@tanstack/react-devtools": "^0.2.2",
+    "@tanstack/react-query": "^5.66.5",
+    "@tanstack/react-query-devtools": "^5.84.2",
+    "@tanstack/react-router": "^1.130.2",
+    "@tanstack/react-router-devtools": "^1.131.5",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tailwindcss": "^4.0.6",
     "zustand": "^5.0.8"
   },
   "devDependencies": {
-    "@eslint/js": "^9.33.0",
-    "@tanstack/router-plugin": "^1.131.35",
-    "@types/react": "^19.1.10",
-    "@types/react-dom": "^19.1.7",
-    "@vitejs/plugin-react": "^5.0.0",
-    "eslint": "^9.33.0",
-    "eslint-plugin-react-hooks": "^5.2.0",
-    "eslint-plugin-react-refresh": "^0.4.20",
-    "globals": "^16.3.0",
-    "typescript": "~5.8.3",
-    "typescript-eslint": "^8.39.1",
-    "vite": "^7.1.2"
+    "@biomejs/biome": "1.9.4",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/react": "^16.2.0",
+    "@types/react": "^19.0.8",
+    "@types/react-dom": "^19.0.3",
+    "@vitejs/plugin-react": "^4.3.4",
+    "jsdom": "^26.0.0",
+    "typescript": "^5.7.2",
+    "vite": "^6.3.5",
+    "vitest": "^3.0.5",
+    "web-vitals": "^4.2.4"
   }
 }

@@ -1,0 +1,216 @@
+# Production Docker Compose Configuration
+# Optimized for production deployment with security and performance
+
+version: '3.8'
+
+services:
+  # Frontend service - production build with Bun server
+  frontend:
+    build:
+      context: ../
+      dockerfile: docker/frontend.Dockerfile
+      target: production
+      args:
+        BUILD_TARGET: production
+        BUN_VERSION: 1.0
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - backend
+    networks:
+      - streamly-prod
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.5'
+        reservations:
+          memory: 64M
+          cpus: '0.25'
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
+  # Backend service - production build
+  backend:
+    build:
+      context: ../
+      dockerfile: docker/services.Dockerfile
+      args:
+        TARGET_OS: linux
+        TARGET_ARCH: amd64
+        SERVICE_PATH: ./cmd/server
+    ports:
+      - "8080:8080"
+    environment:
+      - GO_ENV=production
+      - PORT=8080
+      - DATABASE_URL=postgres://streamly:${POSTGRES_PASSWORD}@postgres:5432/streamly_prod?sslmode=require
+      - REDIS_URL=redis://redis:6379
+      - CONFIG_PATH=/app/config/config.prod.toml
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - streamly-prod
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.5'
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
+  # Redis for caching and sessions
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf:ro
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      - streamly-prod
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+          cpus: '0.25'
+
+  # PostgreSQL database
+  postgres:
+    image: postgres:15-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgresql.conf:/etc/postgresql/postgresql.conf:ro
+    environment:
+      - POSTGRES_DB=streamly_prod
+      - POSTGRES_USER=streamly
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
+    networks:
+      - streamly-prod
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U streamly -d streamly_prod"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+
+
+  # Monitoring and observability
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=15d'
+      - '--web.enable-lifecycle'
+    networks:
+      - streamly-prod
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.5'
+
+  # Grafana for visualization
+  grafana:
+    image: grafana/grafana:10.0.0
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+    depends_on:
+      - prometheus
+    networks:
+      - streamly-prod
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+          cpus: '0.25'
+
+# Networks
+networks:
+  streamly-prod:
+    driver: bridge
+    name: streamly-prod
+
+# Volumes for data persistence
+volumes:
+  postgres_data:
+    driver: local
+    name: streamly-prod-postgres
+  redis_data:
+    driver: local
+    name: streamly-prod-redis
+  prometheus_data:
+    driver: local
+    name: streamly-prod-prometheus
+  grafana_data:
+    driver: local
+    name: streamly-prod-grafana

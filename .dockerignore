@@ -1,0 +1,83 @@
+# .dockerignore - Enhanced for better build performance
+
+# Version control
+.git
+.gitignore
+
+# Documentation
+README.md
+*.md
+docs/
+
+# Docker files (avoid recursion)
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Environment and secrets
+.env*
+*.env
+secrets/
+
+# Dependencies and build artifacts
+node_modules/
+*/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.next/
+frontend/out/
+# When copying frontend/, these patterns will work relative to frontend/
+dist/
+build/
+.next/
+out/
+
+# Go build artifacts
+vendor/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+go.work
+go.work.sum
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Logs and temporary files
+*.log
+logs/
+tmp/
+temp/
+
+# Test coverage
+coverage/
+*.cover
+*.coverprofile
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Bun specific
+.bun/
+bun.lockb.backup
+
+# Development databases
+*.db
+*.sqlite
+*.sqlite3

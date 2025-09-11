@@ -154,13 +154,11 @@ services:
       - streamly-dev
     restart: unless-stopped
 
-# Networks
 networks:
   streamly-dev:
     driver: bridge
     name: streamly-dev
 
-# Volumes for data persistence and caching
 volumes:
   postgres_data:
     driver: local

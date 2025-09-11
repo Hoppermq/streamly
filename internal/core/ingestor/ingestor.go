@@ -6,6 +6,8 @@ import (
 	"log/slog"
 	"sync"
 
+	"github.com/hoppermq/streamly/cmd/config"
+	"github.com/hoppermq/streamly/pkg/domain"
 	serviceloader "github.com/zixyos/goloader/service"
 )
 
@@ -21,7 +23,6 @@ type Ingestor struct {
 	wg     *sync.WaitGroup
 	mu     sync.Mutex
 	cancel context.CancelFunc
-
 }
 
 // Option is the function callback to compose the Ingestor.
@@ -71,7 +72,7 @@ func (i Ingestor) Run(ctx context.Context) error {
 
 		go func(h serviceloader.Service) {
 			defer i.wg.Done()
-			i.logger.Info("starting handler")
+			i.logger.Info("starting handler", "component", handler.Name())
 
 			if err := h.Run(ctx); err != nil {
 				i.logger.Error("handler failed", "name", h.Name(), "error", err)
@@ -116,6 +117,18 @@ func (i *Ingestor) SetServiceID(serviceID string) {
 // Name return the service name.
 func (i *Ingestor) Name() string {
 	return i.serviceName
+}
+
+func WithConfig(cfg *config.IngestionConfig) Option {
+	return func(ingestor *Ingestor) {
+		ingestor.serviceName = cfg.Ingestor.Service.Name
+	}
+}
+
+func WithTransport(transport domain.Transport) Option {
+	return func(ingestor *Ingestor) {
+
+	}
 }
 
 func NewIngestor(opts ...Option) (*Ingestor, error) {

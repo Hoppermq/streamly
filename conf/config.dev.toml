@@ -1,0 +1,30 @@
+[ingestor]
+  [ingestor.service]
+  name = "ingestor-service"
+  version = "0.0.1"
+
+  [ingestor.storage]
+    [ingestor.storage.clickhouse]
+    port = "9000"
+    read_timeout = 3600
+    write_timeout = 3600
+
+    [ingestor.storage.database]
+
+  [ingestor.redis]
+  addr = ""
+  password = ""
+
+  [ingestor.logging]
+  level = "info"
+  format = "json"
+
+  [ingestor.http]
+  port = 8090
+  read_timeout = 3600
+  write_timeout = 3600
+
+  [ingestor.component]
+  batch_size = 4096
+  flush_timeout = 3600
+  workers_count = 10

@@ -8,14 +8,13 @@ import (
 
 	"github.com/hoppermq/streamly/cmd/config"
 	"github.com/hoppermq/streamly/pkg/domain"
-	serviceloader "github.com/zixyos/goloader/service"
 )
 
 // Ingestor represent the ingestion service component.
 type Ingestor struct {
 	logger *slog.Logger
 
-	handlers []serviceloader.Service // this will be the domain type for handlers
+	handlers []domain.Service // this will be the domain type for handlers
 
 	serviceID   string
 	serviceName string
@@ -35,7 +34,7 @@ func WithLogger(logger *slog.Logger) Option {
 }
 
 // WithHandlers load the handlers to the service.
-func WithHandlers(handlers ...serviceloader.Service) Option {
+func WithHandlers(handlers ...domain.Service) Option {
 	return func(ingestor *Ingestor) {
 		ingestor.handlers = handlers
 	}
@@ -70,7 +69,7 @@ func (i Ingestor) Run(ctx context.Context) error {
 	for _, handler := range i.handlers {
 		i.wg.Add(1)
 
-		go func(h serviceloader.Service) {
+		go func(h domain.Service) {
 			defer i.wg.Done()
 			i.logger.Info("starting handler", "component", handler.Name())
 
@@ -95,7 +94,7 @@ func (i *Ingestor) Stop(ctx context.Context) error {
 	}
 
 	for _, handler := range i.handlers {
-		if err := handler.Stop(ctx); err != nil {
+		if err := handler.Shutdown(ctx); err != nil {
 			i.logger.Warn("failed to shutdown handler", "name", handler.Name(), "error", err)
 			return err
 		}

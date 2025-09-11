@@ -20,7 +20,7 @@
   format = "json"
 
   [ingestor.http]
-  port = 8090
+  port = 8091
   read_timeout = 3600
   write_timeout = 3600
 

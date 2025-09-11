@@ -23,7 +23,7 @@ services:
       - VITE_API_URL=http://localhost:8080
       - VITE_APP_ENV=development
     depends_on:
-      - backend
+      - ingestor-service
     networks:
       - streamly-dev
     restart: unless-stopped
@@ -34,14 +34,14 @@ services:
       retries: 3
       start_period: 40s
 
-  backend:
+  ingestor-service:
     build:
       context: ../
-      dockerfile: docker/services.Dockerfile
+      dockerfile: docker/services.dev.Dockerfile
+      target: development
       args:
         TARGET_OS: linux
         TARGET_ARCH: amd64
-        SERVICE_PATH: ./cmd/server
     ports:
       - "8080:8080"
     volumes:
@@ -52,6 +52,7 @@ services:
       - GO_ENV=development
       - PORT=8080
       - CONFIG_PATH=/app/internal/http/config/config.dev.toml
+      - SERVICE_PATH=./cmd/ingestion
     networks:
       - streamly-dev
     restart: unless-stopped

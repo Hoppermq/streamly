@@ -85,10 +85,6 @@ github.com/ugorji/go/codec v1.3.0 h1:Qd2W2sQawAfG8XSvzwhBeoGq71zXOC/Q1E9y/wUcsUA
 github.com/ugorji/go/codec v1.3.0/go.mod h1:pRBVtBSKl77K30Bv8R2P+cLSGaTtex6fsA2Wjqmfxj4=
 github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e h1:JVG44RsyaB9T2KIHavMF/ppJZNG9ZpyihvCd0w101no=
 github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e/go.mod h1:RbqR21r5mrJuqunuUZ/Dhy/avygyECGrLceyNeo4LiM=
-github.com/zixyos/glog v0.0.2 h1:Tsd8ERw53iCVn8FJ6yi9KmoY9wwhRt4hum9ijFeBGIw=
-github.com/zixyos/glog v0.0.2/go.mod h1:kuv28tCAyEUUW34Q1E4xB3HZhVO0LQmJF23doGuvvTA=
-github.com/zixyos/glog v0.0.11 h1:0tW4kkYjkeXoZyf2ph6nOs7Wx7rpPZIRlB41WyknjwM=
-github.com/zixyos/glog v0.0.11/go.mod h1:kuv28tCAyEUUW34Q1E4xB3HZhVO0LQmJF23doGuvvTA=
 github.com/zixyos/glog v0.1.0 h1:fpiYrtfXFdZsLtDuMQkcXR6Gq49GB1dd2HvnaikwDFQ=
 github.com/zixyos/glog v0.1.0/go.mod h1:kuv28tCAyEUUW34Q1E4xB3HZhVO0LQmJF23doGuvvTA=
 github.com/zixyos/goloader v0.1.4 h1:9E5jJj8z0cuSOiJWbszs4IxQ9hxyY3sViFU9kdmmtto=

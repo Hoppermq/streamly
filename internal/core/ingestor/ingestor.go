@@ -55,7 +55,7 @@ func WithServiceID(id string) Option {
 }
 
 // Run will start the component.
-func (i Ingestor) Run(ctx context.Context) error {
+func (i *Ingestor) Run(ctx context.Context) error {
 	ctx, i.cancel = context.WithCancel(ctx)
 
 	i.logger.Info(

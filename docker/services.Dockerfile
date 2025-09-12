@@ -1,4 +1,4 @@
-FROM --platform=${BUILDPLATFORM} golang:1.23-alpine AS deps
+FROM --platform=${BUILDPLATFORM} golang:1.24-alpine AS deps
 WORKDIR /app
 COPY go.mod go.sum ./
 RUN --mount=type=cache,target=/go/pkg/mod \
@@ -18,6 +18,6 @@ FROM alpine:latest AS runtime
 RUN apk --no-cache add ca-certificates tzdata && \
     adduser -D -s /bin/sh appuser
 WORKDIR /app
-COPY --from=builder /app/service ./
+COPY --from=builder /app/service ./service
 USER appuser
 ENTRYPOINT ["./service"]

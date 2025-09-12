@@ -35,7 +35,7 @@ func WithHTTPServer(conf *config.IngestionConfig) Options {
 		h.server = &http.Server{
 			Addr:         ":" + strconv.Itoa(conf.Ingestor.HTTP.Port),
 			Handler:      h.engine,
-			ReadTimeout:  conf.Ingestor.HTTP.ReadTimeout * time.Microsecond,
+			ReadTimeout:  conf.Ingestor.HTTP.ReadTimeout * time.Millisecond,
 			WriteTimeout: conf.Ingestor.HTTP.WriteTimeout * time.Millisecond,
 		}
 	}

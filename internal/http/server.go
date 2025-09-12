@@ -78,7 +78,6 @@ func NewHTTPServer(opts ...Options) *HTTPServer {
 func (s *HTTPServer) Run(ctx context.Context) error {
 	routes.RegisterBaseRoutes(s.engine)
 
-	// Register ingestion routes if use case is available
 	if s.ingestionUseCase != nil {
 		routes.RegisterIngestionRoutes(s.engine, s.logger, s.ingestionUseCase)
 		s.logger.Info("registered ingestion routes", "endpoint", "POST /events/ingest")

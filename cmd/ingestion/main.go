@@ -30,12 +30,17 @@ func main() {
 		logger.Warn("failed to load ingestion config", "error", err)
 	}
 
+	// Initialize dependencies following Clean Architecture
+	eventRepo := ingestor.NewMockEventRepository()
+	eventUseCase := ingestor.NewEventIngestionUseCase(eventRepo)
+
 	engine := gin.New()
 
 	httpServer := http.NewHTTPServer(
 		http.WithEngine(engine),
 		http.WithHTTPServer(ingestionConfig),
 		http.WithLogger(logger),
+		http.WithIngestionUseCase(eventUseCase),
 	)
 
 	ingestionService, err := ingestor.NewIngestor(

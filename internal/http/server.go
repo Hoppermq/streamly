@@ -22,6 +22,8 @@ type HTTPServer struct {
 
 	engine *gin.Engine
 	server *http.Server
+	
+	ingestionUseCase domain.EventIngestionUseCase
 }
 
 type Options func(*HTTPServer)
@@ -55,6 +57,13 @@ func WithLogger(logger *slog.Logger) Options {
 	}
 }
 
+// WithIngestionUseCase set the ingestion use case.
+func WithIngestionUseCase(useCase domain.EventIngestionUseCase) Options {
+	return func(h *HTTPServer) {
+		h.ingestionUseCase = useCase
+	}
+}
+
 // NewHTTPServer create the http server.
 func NewHTTPServer(opts ...Options) *HTTPServer {
 	h := &HTTPServer{}
@@ -68,6 +77,12 @@ func NewHTTPServer(opts ...Options) *HTTPServer {
 // Run will run the http server component.
 func (s *HTTPServer) Run(ctx context.Context) error {
 	routes.RegisterBaseRoutes(s.engine)
+	
+	// Register ingestion routes if use case is available
+	if s.ingestionUseCase != nil {
+		routes.RegisterIngestionRoutes(s.engine, s.ingestionUseCase)
+		s.logger.Info("registered ingestion routes", "endpoint", "POST /events/ingest")
+	}
 
 	go func() {
 		if err := s.server.ListenAndServe(); err != nil {
@@ -80,6 +95,11 @@ func (s *HTTPServer) Run(ctx context.Context) error {
 
 // Shutdown stop gracefully the HTTPServer.
 func (s *HTTPServer) Shutdown(ctx context.Context) error {
+	if err := s.server.Shutdown(ctx); err != nil {
+		s.logger.Warn("http server shutdown failed", "error", err)
+		return err
+	}
+
 	return nil
 }
 

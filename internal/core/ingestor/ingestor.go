@@ -107,9 +107,8 @@ func (i *Ingestor) Stop(ctx context.Context) error {
 
 // SetServiceID load the service id.
 func (i *Ingestor) SetServiceID(serviceID string) {
-	defer i.mu.Unlock()
-
 	i.mu.Lock()
+	defer i.mu.Unlock()
 	i.serviceID = serviceID
 }
 

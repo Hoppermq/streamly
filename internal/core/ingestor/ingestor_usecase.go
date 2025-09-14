@@ -19,9 +19,13 @@ type EventIngestionUseCaseImpl struct {
 
 type UseCaseOption func(*EventIngestionUseCaseImpl)
 
+
 func WithEventRepository(eventRepo domain.EventRepository) UseCaseOption {
-	return func(e *EventIngestionUseCaseImpl) {}
+	return func(e *EventIngestionUseCaseImpl) {
+		e.eventRepo = eventRepo
+	}
 }
+
 
 func UseCaseWithLogger(logger *slog.Logger) UseCaseOption {
 	return func(e *EventIngestionUseCaseImpl) {

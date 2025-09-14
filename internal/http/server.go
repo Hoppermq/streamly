@@ -22,7 +22,7 @@ type HTTPServer struct {
 
 	engine *gin.Engine
 	server *http.Server
-	
+
 	ingestionUseCase domain.EventIngestionUseCase
 }
 
@@ -77,10 +77,10 @@ func NewHTTPServer(opts ...Options) *HTTPServer {
 // Run will run the http server component.
 func (s *HTTPServer) Run(ctx context.Context) error {
 	routes.RegisterBaseRoutes(s.engine)
-	
+
 	// Register ingestion routes if use case is available
 	if s.ingestionUseCase != nil {
-		routes.RegisterIngestionRoutes(s.engine, s.ingestionUseCase)
+		routes.RegisterIngestionRoutes(s.engine, s.logger, s.ingestionUseCase)
 		s.logger.Info("registered ingestion routes", "endpoint", "POST /events/ingest")
 	}
 

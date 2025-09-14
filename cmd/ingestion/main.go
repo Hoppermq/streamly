@@ -32,7 +32,10 @@ func main() {
 
 	// Initialize dependencies following Clean Architecture
 	eventRepo := ingestor.NewMockEventRepository()
-	eventUseCase := ingestor.NewEventIngestionUseCase(eventRepo)
+	eventUseCase := ingestor.NewEventIngestionUseCase(
+		ingestor.UseCaseWithLogger(logger),
+		ingestor.WithEventRepository(eventRepo),
+	)
 
 	engine := gin.New()
 

@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
+	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
@@ -13,17 +13,34 @@ import (
 
 type EventIngestionUseCaseImpl struct {
 	eventRepo domain.EventRepository
+
+	logger *slog.Logger
 }
 
-func NewEventIngestionUseCase(eventRepo domain.EventRepository) domain.EventIngestionUseCase {
-	return &EventIngestionUseCaseImpl{
-		eventRepo: eventRepo,
+type UseCaseOption func(*EventIngestionUseCaseImpl)
+
+func WithEventRepository(eventRepo domain.EventRepository) UseCaseOption {
+	return func(e *EventIngestionUseCaseImpl) {}
+}
+
+func UseCaseWithLogger(logger *slog.Logger) UseCaseOption {
+	return func(e *EventIngestionUseCaseImpl) {
+		e.logger = logger
 	}
 }
 
+func NewEventIngestionUseCase(opts ...UseCaseOption) domain.EventIngestionUseCase {
+	useCase := &EventIngestionUseCaseImpl{}
+
+	for _, opt := range opts {
+		opt(useCase)
+	}
+
+	return useCase
+}
+
 func (uc *EventIngestionUseCaseImpl) IngestBatch(ctx context.Context, request *domain.BatchIngestionRequest) (*domain.BatchIngestionResponse, error) {
-	log.Printf("EventIngestionUseCase: Starting batch ingestion for tenant %s, %d events", 
-		request.TenantID, len(request.Events))
+	uc.logger.Info("ingesting batch ingestion request", "request", request)
 
 	if err := uc.validateRequest(request); err != nil {
 		return nil, fmt.Errorf("validation failed: %w", err)
@@ -35,7 +52,7 @@ func (uc *EventIngestionUseCaseImpl) IngestBatch(ctx context.Context, request *d
 	}
 
 	if err := uc.eventRepo.BatchInsert(ctx, events); err != nil {
-		log.Printf("EventIngestionUseCase: Repository insert failed: %v", err)
+		uc.logger.Info("failed to ingest events", "error", err)
 		return nil, fmt.Errorf("repository insert failed: %w", err)
 	}
 
@@ -47,9 +64,7 @@ func (uc *EventIngestionUseCaseImpl) IngestBatch(ctx context.Context, request *d
 		FailedCount:   0,
 	}
 
-	log.Printf("EventIngestionUseCase: Successfully ingested batch %s with %d events", 
-		response.BatchID, response.IngestedCount)
-
+	uc.logger.Info("ingested batch ingestion response", "response", response)
 	return response, nil
 }
 
@@ -67,6 +82,7 @@ func (uc *EventIngestionUseCaseImpl) validateRequest(request *domain.BatchIngest
 		return fmt.Errorf("events cannot be empty")
 	}
 	if len(request.Events) > 5000 {
+		uc.logger.Info("events too big", "events", len(request.Events))
 		return fmt.Errorf("batch size cannot exceed 5000 events, got %d", len(request.Events))
 	}
 
@@ -100,7 +116,7 @@ func (uc *EventIngestionUseCaseImpl) validateEventData(event *domain.EventIngest
 
 func (uc *EventIngestionUseCaseImpl) transformToEvents(request *domain.BatchIngestionRequest) ([]*domain.Event, error) {
 	events := make([]*domain.Event, 0, len(request.Events))
-	
+
 	for _, eventData := range request.Events {
 		event := &domain.Event{
 			Timestamp:   time.Now(),

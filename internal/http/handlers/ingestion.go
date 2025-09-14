@@ -1,47 +1,65 @@
 package handlers
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/hoppermq/streamly/internal/common"
 	"github.com/hoppermq/streamly/pkg/domain"
 )
 
 type IngestionHandler struct {
 	ingestionUseCase domain.EventIngestionUseCase
+
+	logger *slog.Logger
 }
 
-func NewIngestionHandler(ingestionUseCase domain.EventIngestionUseCase) *IngestionHandler {
-	return &IngestionHandler{
-		ingestionUseCase: ingestionUseCase,
+type Option func(*IngestionHandler)
+
+func WithLogger(logger *slog.Logger) Option {
+	return func(h *IngestionHandler) {
+		h.logger = logger
 	}
+}
+
+func WithUSeCase(ingestionUseCase domain.EventIngestionUseCase) Option {
+	return func(h *IngestionHandler) {
+		h.ingestionUseCase = ingestionUseCase
+	}
+}
+
+func NewIngestionHandler(opts ...Option) *IngestionHandler {
+	h := &IngestionHandler{}
+
+	for _, opt := range opts {
+		opt(h)
+	}
+
+	return h
 }
 
 func (h *IngestionHandler) IngestEvents(c *gin.Context) {
 	var request domain.BatchIngestionRequest
 
 	if err := c.ShouldBindJSON(&request); err != nil {
-		log.Printf("IngestionHandler: JSON binding failed: %v", err)
-		c.JSON(http.StatusBadRequest, gin.H{
-			"status": "validation_failed",
-			"error":  "Invalid JSON payload: " + err.Error(),
-		})
+		h.logger.Warn("json ingestion failed", "error", err)
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+
 		return
 	}
 
-	log.Printf("IngestionHandler: Received ingestion request for tenant %s with %d events", 
-		request.TenantID, len(request.Events))
+	h.logger.Info("ingestion request", "request", request)
 
 	response, err := h.ingestionUseCase.IngestBatch(c.Request.Context(), &request)
 	if err != nil {
-		log.Printf("IngestionHandler: Use case failed: %v", err)
+		h.logger.Warn("ingestion failed", "error", err)
 		h.handleError(c, err)
 		return
 	}
 
 	c.JSON(http.StatusAccepted, response)
-	log.Printf("IngestionHandler: Successfully processed batch %s", response.BatchID)
+	h.logger.Info("ingestion succeeded", "response", response)
 }
 
 func (h *IngestionHandler) handleError(c *gin.Context, err error) {
@@ -79,7 +97,7 @@ func isValidationError(errorMsg string) bool {
 	}
 
 	for _, keyword := range validationKeywords {
-		if containsKeyword(errorMsg, keyword) {
+		if common.ContainsKeyword(errorMsg, keyword) {
 			return true
 		}
 	}
@@ -95,22 +113,7 @@ func isRepositoryError(errorMsg string) bool {
 	}
 
 	for _, keyword := range repositoryKeywords {
-		if containsKeyword(errorMsg, keyword) {
-			return true
-		}
-	}
-	return false
-}
-
-func containsKeyword(text, keyword string) bool {
-	return len(text) >= len(keyword) && 
-		   text[:len(keyword)] == keyword || 
-		   findSubstring(text, keyword)
-}
-
-func findSubstring(text, substring string) bool {
-	for i := 0; i <= len(text)-len(substring); i++ {
-		if text[i:i+len(substring)] == substring {
+		if common.ContainsKeyword(errorMsg, keyword) {
 			return true
 		}
 	}

@@ -2,6 +2,7 @@ package routes
 
 import (
 	"context"
+	"log/slog"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -21,9 +22,17 @@ func RegisterBaseRoutes(router *gin.Engine) {
 }
 
 // RegisterIngestionRoutes will register the event ingestion routes.
-func RegisterIngestionRoutes(router *gin.Engine, ingestionUseCase domain.EventIngestionUseCase) {
-	ingestionHandler := handlers.NewIngestionHandler(ingestionUseCase)
-	
+func RegisterIngestionRoutes(
+	router *gin.Engine,
+	logger *slog.Logger,
+
+	ingestionUseCase domain.EventIngestionUseCase,
+) {
+	ingestionHandler := handlers.NewIngestionHandler(
+		handlers.WithLogger(logger),
+		handlers.WithUSeCase(ingestionUseCase),
+	)
+
 	eventsGroup := router.Group("/events")
 	{
 		eventsGroup.POST("/ingest", ingestionHandler.IngestEvents)

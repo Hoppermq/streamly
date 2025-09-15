@@ -5,7 +5,11 @@
 
   [ingestor.storage]
     [ingestor.storage.clickhouse]
-    port = "9000"
+    address = "localhost"
+    port = "5342"
+    username = "streamly"
+    database = "streamly_analytics"
+    password = "dev_clickhouse_123"
     read_timeout = 3600
     write_timeout = 3600
 

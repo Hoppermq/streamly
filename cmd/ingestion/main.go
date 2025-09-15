@@ -32,10 +32,7 @@ func main() {
 	}
 
 	clickhouseDriver := clickhouse.OpenConn(
-		clickhouse.WithAddr("http://127.0.0.1:9000"),
-		clickhouse.WithUser("admin"),
-		clickhouse.WithPassword("admin"),
-		clickhouse.WithDatabase("database"),
+		clickhouse.WithConfig(ingestionConfig),
 	)
 
 	eventRepository := ingestor.NewEventRepository(
@@ -58,10 +55,15 @@ func main() {
 		http.WithIngestionUseCase(eventUseCase),
 	)
 
+	clickhouseClient := clickhouse.NewClient(
+		clickhouse.WithDriver(clickhouseDriver),
+		clickhouse.WithLogger(logger),
+	)
+
 	ingestionService, err := ingestor.NewIngestor(
 		ingestor.WithLogger(logger),
 		ingestor.WithConfig(ingestionConfig),
-		ingestor.WithHandlers(httpServer),
+		ingestor.WithHandlers(clickhouseClient, httpServer),
 	)
 
 	if err != nil {

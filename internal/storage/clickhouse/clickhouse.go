@@ -3,24 +3,42 @@ package clickhouse
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/hoppermq/streamly/pkg/domain"
 )
 
 type Client struct {
-	conn domain.Connection
+	driver domain.Driver
+
+	logger *slog.Logger
 }
 
 type Option func(*Client) error
 
-func WithConn(conn domain.Connection) Option {
+func WithDriver(driver domain.Driver) Option {
 	return func(c *Client) error {
-		c.conn = conn
+		c.driver = driver
+		return nil
+	}
+}
+
+func WithLogger(logger *slog.Logger) Option {
+	return func(c *Client) error {
+		c.logger = logger
 		return nil
 	}
 }
 
 func (c *Client) Run(ctx context.Context) error {
+	c.logger.Info("running clickhouse connection")
+	go func() {
+		_, err := c.driver.Begin()
+		if err != nil {
+			panic(err)
+		}
+	}()
+
 	return nil
 }
 

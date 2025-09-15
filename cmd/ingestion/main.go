@@ -2,12 +2,14 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"log/slog"
 	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/hoppermq/streamly/cmd/config"
 	"github.com/hoppermq/streamly/internal/core/ingestor"
+	"github.com/hoppermq/streamly/internal/core/migration"
 	"github.com/hoppermq/streamly/internal/http"
 	"github.com/hoppermq/streamly/internal/storage/clickhouse"
 	"github.com/zixyos/glog"
@@ -35,14 +37,33 @@ func main() {
 		clickhouse.WithConfig(ingestionConfig),
 	)
 
+	migrationDriver := clickhouse.OpenConn(
+		clickhouse.WithConfig(ingestionConfig),
+	)
+
+	// Extract *sql.DB from ClickHouseDriver for migrations
+	var sqlDB *sql.DB
+	if chDriver, ok := migrationDriver.(*clickhouse.ClickHouseDriver); ok {
+		sqlDB = chDriver.DB()
+	}
+
+	migrationService := migration.NewService(
+		migration.WithDB(sqlDB),
+		migration.WithLogger(logger),
+		migration.WithMigrationPath("./clickhouse/sql"),
+	)
+
+	if err := migrationService.RunMigrations(ctx); err != nil {
+		logger.Error("failed to run migrations", "error", err)
+		panic(err)
+	}
+
 	eventRepository := ingestor.NewEventRepository(
 		ingestor.WithDriver(clickhouseDriver),
 	)
 
-	mockEventRepo := ingestor.NewMockEventRepository()
 	eventUseCase := ingestor.NewEventIngestionUseCase(
 		ingestor.UseCaseWithLogger(logger),
-		ingestor.WithEventRepository(mockEventRepo),
 		ingestor.WithEventRepository(eventRepository),
 	)
 

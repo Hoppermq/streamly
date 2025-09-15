@@ -1,6 +1,7 @@
 package clickhouse
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 
@@ -12,6 +13,19 @@ import (
 // ClickHouseDriver adapts *sql.DB to domain.Driver interface
 type ClickHouseDriver struct {
 	db *sql.DB
+}
+
+type stmtAdapter struct {
+	stmt *sql.Stmt
+}
+
+func (s *stmtAdapter) ExecContext(ctx context.Context, args ...interface{}) error {
+	_, err := s.stmt.ExecContext(ctx, args...)
+	return err
+}
+
+func (s *stmtAdapter) Close() error {
+	return s.stmt.Close()
 }
 
 type txAdapter struct {
@@ -26,6 +40,14 @@ func (t *txAdapter) Rollback() error {
 	return t.tx.Rollback()
 }
 
+func (t *txAdapter) PrepareContext(ctx context.Context, query string) (domain.Stmt, error) {
+	stmt, err := t.tx.PrepareContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	return &stmtAdapter{stmt: stmt}, nil
+}
+
 func (d *ClickHouseDriver) Begin() (domain.Tx, error) {
 	tx, err := d.db.Begin()
 	if err != nil {
@@ -34,8 +56,21 @@ func (d *ClickHouseDriver) Begin() (domain.Tx, error) {
 	return &txAdapter{tx: tx}, nil
 }
 
+func (d *ClickHouseDriver) BeginTx(ctx context.Context, opts *sql.TxOptions) (domain.Tx, error) {
+	tx, err := d.db.BeginTx(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	return &txAdapter{tx: tx}, nil
+}
+
 func (d *ClickHouseDriver) Close() error {
 	return d.db.Close()
+}
+
+func (d *ClickHouseDriver) DB() *sql.DB {
+	return d.db
 }
 
 type DriverOption func(options *clickhouse.Options)

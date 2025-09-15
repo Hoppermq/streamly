@@ -9,6 +9,7 @@ import (
 	"github.com/hoppermq/streamly/cmd/config"
 	"github.com/hoppermq/streamly/internal/core/ingestor"
 	"github.com/hoppermq/streamly/internal/http"
+	"github.com/hoppermq/streamly/internal/storage/clickhouse"
 	"github.com/zixyos/glog"
 	serviceloader "github.com/zixyos/goloader/service"
 )
@@ -30,10 +31,22 @@ func main() {
 		logger.Warn("failed to load ingestion config", "error", err)
 	}
 
-	eventRepo := ingestor.NewMockEventRepository()
+	clickhouseDriver := clickhouse.OpenConn(
+		clickhouse.WithAddr("http://127.0.0.1:9000"),
+		clickhouse.WithUser("admin"),
+		clickhouse.WithPassword("admin"),
+		clickhouse.WithDatabase("database"),
+	)
+
+	eventRepository := ingestor.NewEventRepository(
+		ingestor.WithDriver(clickhouseDriver),
+	)
+
+	mockEventRepo := ingestor.NewMockEventRepository()
 	eventUseCase := ingestor.NewEventIngestionUseCase(
 		ingestor.UseCaseWithLogger(logger),
-		ingestor.WithEventRepository(eventRepo),
+		ingestor.WithEventRepository(mockEventRepo),
+		ingestor.WithEventRepository(eventRepository),
 	)
 
 	engine := gin.New()

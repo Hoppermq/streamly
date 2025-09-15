@@ -9,21 +9,46 @@ import (
 	"github.com/hoppermq/streamly/pkg/domain"
 )
 
+type EventRepository struct {
+	driver domain.Driver
+}
+
+type RepositoryOption func(*EventRepository)
+
+func WithDriver(driver domain.Driver) RepositoryOption {
+	return func(r *EventRepository) {
+		r.driver = driver
+	}
+}
+
+func (e EventRepository) BatchInsert(ctx context.Context, events []*domain.Event) error {
+	return nil
+}
+
+func NewEventRepository(opts ...RepositoryOption) *EventRepository {
+	r := &EventRepository{}
+	for _, opt := range opts {
+		opt(r)
+	}
+
+	return r
+}
+
 type MockEventRepository struct {
-	events []domain.Event
+	events      []domain.Event
 	failureRate float64
 }
 
 func NewMockEventRepository() *MockEventRepository {
 	return &MockEventRepository{
-		events: make([]domain.Event, 0),
+		events:      make([]domain.Event, 0),
 		failureRate: 0.0,
 	}
 }
 
 func (r *MockEventRepository) BatchInsert(ctx context.Context, events []*domain.Event) error {
 	log.Printf("MockEventRepository: Simulating batch insert of %d events", len(events))
-	
+
 	for i, event := range events {
 		if err := r.validateEvent(event); err != nil {
 			return fmt.Errorf("validation failed for event %d: %w", i, err)
@@ -35,10 +60,10 @@ func (r *MockEventRepository) BatchInsert(ctx context.Context, events []*domain.
 	for _, event := range events {
 		r.events = append(r.events, *event)
 	}
-	
-	log.Printf("MockEventRepository: Successfully inserted %d events. Total stored: %d", 
+
+	log.Printf("MockEventRepository: Successfully inserted %d events. Total stored: %d",
 		len(events), len(r.events))
-	
+
 	return nil
 }
 

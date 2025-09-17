@@ -192,33 +192,3 @@ func (s *Service) isTableCompatible(ctx context.Context) (bool, error) {
 	return true, nil
 }
 
-func (s *Service) debugTableStructure(ctx context.Context) {
-	s.logger.InfoContext(ctx, "debugging table structure")
-
-	// Check table structure
-	rows, err := s.db.QueryContext(ctx, "DESCRIBE TABLE schema_migrations")
-	if err != nil {
-		s.logger.ErrorContext(ctx, "failed to describe table", "error", err)
-		return
-	}
-	defer rows.Close()
-
-	s.logger.InfoContext(ctx, "schema_migrations table structure:")
-	for rows.Next() {
-		var name, type_, defaultType, defaultExpression, comment, codecExpression, ttlExpression string
-		if err := rows.Scan(&name, &type_, &defaultType, &defaultExpression, &comment, &codecExpression, &ttlExpression); err != nil {
-			s.logger.ErrorContext(ctx, "failed to scan row", "error", err)
-			continue
-		}
-		s.logger.InfoContext(ctx, "column", "name", name, "type", type_)
-	}
-
-	// Try to query the table
-	testQuery := "SELECT COUNT(*) FROM schema_migrations"
-	var count int
-	if err := s.db.QueryRowContext(ctx, testQuery).Scan(&count); err != nil {
-		s.logger.ErrorContext(ctx, "failed to count rows", "error", err)
-	} else {
-		s.logger.InfoContext(ctx, "table row count", "count", count)
-	}
-}

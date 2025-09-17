@@ -8,6 +8,7 @@ import (
 
 	"github.com/hoppermq/streamly/internal/storage/clickhouse"
 	"github.com/hoppermq/streamly/pkg/domain"
+	"github.com/hoppermq/streamly/pkg/domain/errors"
 )
 
 type EventRepository struct {
@@ -29,7 +30,7 @@ func (e EventRepository) BatchInsert(ctx context.Context, events []*domain.Event
 
 	driver, ok := e.driver.(*clickhouse.ClickHouseDriver)
 	if !ok {
-		return fmt.Errorf("not a clickhouse driver")
+		return errors.ErrNotAClickhouseDriver
 	}
 
 	tx, err := driver.BeginTx(ctx, nil)
@@ -41,11 +42,12 @@ func (e EventRepository) BatchInsert(ctx context.Context, events []*domain.Event
 	defer func(tx domain.Tx) {
 		if !committed {
 			if err := tx.Rollback(); err != nil {
-				panic(err)
+				return
 			}
 		}
 	}(tx)
 
+	// We will extract query to another place.
 	query := `INSERT INTO events (
           timestamp, tenant_id, message_id, source_id, topic,
           content_raw, content_json, content_size_bytes, headers, frame_type, event_type
@@ -58,7 +60,7 @@ func (e EventRepository) BatchInsert(ctx context.Context, events []*domain.Event
 	defer func(stmt domain.Stmt) {
 		err := stmt.Close()
 		if err != nil {
-			panic(err)
+			return
 		}
 	}(stmt)
 
@@ -77,7 +79,7 @@ func (e EventRepository) BatchInsert(ctx context.Context, events []*domain.Event
 			event.EventType,
 		)
 		if err != nil {
-			return fmt.Errorf("could not insert event: %w", err)
+			return errors.ErrEventCouldNotInserted
 		}
 	}
 
@@ -112,9 +114,9 @@ func NewMockEventRepository() *MockEventRepository {
 func (r *MockEventRepository) BatchInsert(ctx context.Context, events []*domain.Event) error {
 	log.Printf("MockEventRepository: Simulating batch insert of %d events", len(events))
 
-	for i, event := range events {
+	for _, event := range events {
 		if err := r.validateEvent(event); err != nil {
-			return fmt.Errorf("validation failed for event %d: %w", i, err)
+			return errors.ErrEventCouldNotBeValidated
 		}
 	}
 

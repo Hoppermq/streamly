@@ -5,27 +5,28 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/hoppermq/streamly/pkg/domain"
+	"github.com/hoppermq/streamly/pkg/domain/errors"
 )
 
 type EventIngestionUseCaseImpl struct {
 	eventRepo domain.EventRepository
 
 	logger *slog.Logger
+	wg     sync.WaitGroup
 }
 
 type UseCaseOption func(*EventIngestionUseCaseImpl)
-
 
 func WithEventRepository(eventRepo domain.EventRepository) UseCaseOption {
 	return func(e *EventIngestionUseCaseImpl) {
 		e.eventRepo = eventRepo
 	}
 }
-
 
 func UseCaseWithLogger(logger *slog.Logger) UseCaseOption {
 	return func(e *EventIngestionUseCaseImpl) {
@@ -34,7 +35,9 @@ func UseCaseWithLogger(logger *slog.Logger) UseCaseOption {
 }
 
 func NewEventIngestionUseCase(opts ...UseCaseOption) domain.EventIngestionUseCase {
-	useCase := &EventIngestionUseCaseImpl{}
+	useCase := &EventIngestionUseCaseImpl{
+		wg: sync.WaitGroup{},
+	}
 
 	for _, opt := range opts {
 		opt(useCase)
@@ -45,22 +48,38 @@ func NewEventIngestionUseCase(opts ...UseCaseOption) domain.EventIngestionUseCas
 
 func (uc *EventIngestionUseCaseImpl) IngestBatch(ctx context.Context, request *domain.BatchIngestionRequest) (*domain.BatchIngestionResponse, error) {
 	uc.logger.Info("ingesting batch ingestion request", "request", request)
-
+	var resp *domain.BatchIngestionResponse
 	if err := uc.validateRequest(request); err != nil {
-		return nil, fmt.Errorf("validation failed: %w", err)
+		return nil, errors.ErrEventCouldNotBeValidated
 	}
 
 	events, err := uc.transformToEvents(request)
 	if err != nil {
-		return nil, fmt.Errorf("transformation failed: %w", err)
+		return nil, errors.ErrCouldNotTransformEvent
 	}
 
-	if err := uc.eventRepo.BatchInsert(ctx, events); err != nil {
-		uc.logger.Info("failed to ingest events", "error", err)
-		return nil, fmt.Errorf("repository insert failed: %w", err)
+	uc.wg.Add(1)
+	go func(events []*domain.Event) {
+		defer uc.wg.Done()
+		if err := uc.eventRepo.BatchInsert(ctx, events); err != nil {
+			uc.logger.Info("failed to ingest events", "error", err)
+			resp = &domain.BatchIngestionResponse{
+				Status:        "failed",
+				IngestedCount: 0, // should be able to know
+				Timestamp:     time.Now(),
+				BatchID:       uuid.New().String(),
+				FailedCount:   len(events), // should be able to know
+			}
+			return
+		}
+	}(events)
+	uc.wg.Wait()
+
+	if resp != nil {
+		return resp, errors.ErrEventCouldNotInserted
 	}
 
-	response := &domain.BatchIngestionResponse{
+	resp = &domain.BatchIngestionResponse{
 		Status:        "accepted",
 		IngestedCount: len(events),
 		Timestamp:     time.Now(),
@@ -68,8 +87,8 @@ func (uc *EventIngestionUseCaseImpl) IngestBatch(ctx context.Context, request *d
 		FailedCount:   0,
 	}
 
-	uc.logger.Info("ingested batch ingestion response", "response", response)
-	return response, nil
+	uc.logger.Info("ingested batch ingestion response", "response", resp)
+	return resp, nil
 }
 
 func (uc *EventIngestionUseCaseImpl) validateRequest(request *domain.BatchIngestionRequest) error {
@@ -87,7 +106,7 @@ func (uc *EventIngestionUseCaseImpl) validateRequest(request *domain.BatchIngest
 	}
 	if len(request.Events) > 5000 {
 		uc.logger.Info("events too big", "events", len(request.Events))
-		return fmt.Errorf("batch size cannot exceed 5000 events, got %d", len(request.Events))
+		return errors.ErrBatchSizeMaxSizeExceeded
 	}
 
 	for i, event := range request.Events {
@@ -112,7 +131,7 @@ func (uc *EventIngestionUseCaseImpl) validateEventData(event *domain.EventIngest
 
 	var jsonContent interface{}
 	if err := json.Unmarshal(event.Content, &jsonContent); err != nil {
-		return fmt.Errorf("events[%d]: content must be valid JSON: %w", index, err)
+		return errors.ErrEventCouldNotBeValidated
 	}
 
 	return nil

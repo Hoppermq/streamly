@@ -35,7 +35,8 @@ func (c *Client) Run(ctx context.Context) error {
 	go func() {
 		_, err := c.driver.Begin()
 		if err != nil {
-			panic(err)
+			c.logger.Warn("failed to begin clickhouse transaction", "error", err)
+			return
 		}
 	}()
 

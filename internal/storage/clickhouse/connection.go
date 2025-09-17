@@ -3,7 +3,6 @@ package clickhouse
 import (
 	"context"
 	"database/sql"
-	"fmt"
 
 	"github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/hoppermq/streamly/cmd/config"
@@ -93,7 +92,6 @@ func OpenConn(opts ...DriverOption) domain.Driver {
 		opt(options)
 	}
 
-	fmt.Println("HELLO ?", options.Addr)
 	db := clickhouse.OpenDB(options)
 	return &ClickHouseDriver{db: db}
 }

@@ -2,7 +2,6 @@ package http
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -12,6 +11,7 @@ import (
 	"github.com/hoppermq/streamly/cmd/config"
 	"github.com/hoppermq/streamly/internal/http/routes"
 	"github.com/hoppermq/streamly/pkg/domain"
+	"github.com/hoppermq/streamly/pkg/domain/errors"
 )
 
 // HTTPServer represent the HTTP server structure.
@@ -32,7 +32,7 @@ type Options func(*HTTPServer)
 func WithHTTPServer(conf *config.IngestionConfig) Options {
 	return func(h *HTTPServer) {
 		if h.engine == nil {
-			panic(fmt.Errorf("engine should be set before server"))
+			panic(errors.ErrEngineErrorOrder)
 		}
 		h.server = &http.Server{
 			Addr:         ":" + strconv.Itoa(conf.Ingestor.HTTP.Port),

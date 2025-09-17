@@ -5,7 +5,29 @@ meta {
 }
 
 post {
-  url: http://localhost:8080/events/ingest
-  body: none
+  url: {{ingestor-service-url}}/events/ingest
+  body: json
   auth: none
+}
+
+body:json {
+  {
+    "tenant_id": "customer_1233",
+    "source_id": "kafka_cluster_2",
+    "topic": "user_events",
+    "events": [
+      {
+        "message_id": "msg_123453",
+        "content": {
+          "user_id": "user_4564",
+          "action": "logout"
+        },
+        "headers": {
+          "correlation_id": "trace_7890"
+        },
+        "frame_type": 1,
+        "event_type": "user_activity"
+      }
+    ]
+  }
 }

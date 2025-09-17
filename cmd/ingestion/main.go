@@ -2,13 +2,16 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"log/slog"
 	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/hoppermq/streamly/cmd/config"
 	"github.com/hoppermq/streamly/internal/core/ingestor"
+	"github.com/hoppermq/streamly/internal/core/migration"
 	"github.com/hoppermq/streamly/internal/http"
+	"github.com/hoppermq/streamly/internal/storage/clickhouse"
 	"github.com/zixyos/glog"
 	serviceloader "github.com/zixyos/goloader/service"
 )
@@ -30,11 +33,38 @@ func main() {
 		logger.Warn("failed to load ingestion config", "error", err)
 	}
 
-	// Initialize dependencies following Clean Architecture
-	eventRepo := ingestor.NewMockEventRepository()
+	clickhouseDriver := clickhouse.OpenConn(
+		clickhouse.WithConfig(ingestionConfig),
+	)
+
+	migrationDriver := clickhouse.OpenConn(
+		clickhouse.WithConfig(ingestionConfig),
+	)
+
+	// Extract *sql.DB from ClickHouseDriver for migrations
+	var sqlDB *sql.DB
+	if chDriver, ok := migrationDriver.(*clickhouse.ClickHouseDriver); ok {
+		sqlDB = chDriver.DB()
+	}
+
+	migrationService := migration.NewService(
+		migration.WithDB(sqlDB),
+		migration.WithLogger(logger),
+		migration.WithMigrationPath("./clickhouse/sql"),
+	)
+
+	if err := migrationService.RunMigrations(ctx); err != nil {
+		logger.Error("failed to run migrations", "error", err)
+		panic(err)
+	}
+
+	eventRepository := ingestor.NewEventRepository(
+		ingestor.WithDriver(clickhouseDriver),
+	)
+
 	eventUseCase := ingestor.NewEventIngestionUseCase(
 		ingestor.UseCaseWithLogger(logger),
-		ingestor.WithEventRepository(eventRepo),
+		ingestor.WithEventRepository(eventRepository),
 	)
 
 	engine := gin.New()
@@ -46,10 +76,15 @@ func main() {
 		http.WithIngestionUseCase(eventUseCase),
 	)
 
+	clickhouseClient := clickhouse.NewClient(
+		clickhouse.WithDriver(clickhouseDriver),
+		clickhouse.WithLogger(logger),
+	)
+
 	ingestionService, err := ingestor.NewIngestor(
 		ingestor.WithLogger(logger),
 		ingestor.WithConfig(ingestionConfig),
-		ingestor.WithHandlers(httpServer),
+		ingestor.WithHandlers(clickhouseClient, httpServer),
 	)
 
 	if err != nil {

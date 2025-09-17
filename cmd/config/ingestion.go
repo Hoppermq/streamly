@@ -29,7 +29,11 @@ type IngestionConfig struct {
 
 		Storage struct {
 			Clickhouse struct {
+				Address      string        `toml:"address"`
 				Port         string        `toml:"port"`
+				UserName     string        `toml:"username"`
+				Password     string        `toml:"password"`
+				Database     string        `toml:"database"`
 				ReadTimeout  time.Duration `toml:"read_timeout"`
 				WriteTimeout time.Duration `toml:"write_timeout"`
 			} `toml:"clickhouse"`

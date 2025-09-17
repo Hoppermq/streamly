@@ -62,7 +62,7 @@ func (i *Ingestor) Run(ctx context.Context) error {
 		"starting component",
 		"name",
 		i.serviceName,
-		"id",
+		"service_id",
 		i.serviceID,
 	)
 

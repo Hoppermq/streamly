@@ -5,8 +5,8 @@
 
   [ingestor.storage]
     [ingestor.storage.clickhouse]
-    address = "localhost"
-    port = "5342"
+    address = "clickhouse"
+    port = "9000"
     username = "streamly"
     database = "streamly_analytics"
     password = "dev_clickhouse_123"
@@ -16,7 +16,7 @@
     [ingestor.storage.database]
 
   [ingestor.redis]
-  addr = ""
+  addr = "redis:6379"
   password = ""
 
   [ingestor.logging]

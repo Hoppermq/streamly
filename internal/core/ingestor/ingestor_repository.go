@@ -28,6 +28,7 @@ func (e EventRepository) BatchInsert(ctx context.Context, events []*domain.Event
 		return nil
 	}
 
+	// TODO: add proper methods to the domain.
 	driver, ok := e.driver.(*clickhouse.ClickHouseDriver)
 	if !ok {
 		return errors.ErrNotAClickhouseDriver

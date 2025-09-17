@@ -181,6 +181,11 @@ func (s *Service) isTableCompatible(ctx context.Context) (bool, error) {
 		}
 	}
 
+	if err := rows.Err(); err != nil {
+		s.logger.WarnContext(ctx, "failed to read schema_migrations table", "error", err)
+		return false, err
+	}
+
 	// Check if all expected columns are present
 	for col, found := range expectedColumns {
 		if !found {

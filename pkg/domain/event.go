@@ -7,17 +7,17 @@ import (
 )
 
 type Event struct {
-	Timestamp     time.Time              `json:"timestamp"`
-	TenantID      string                 `json:"tenant_id"`
-	MessageID     string                 `json:"message_id"`
-	SourceID      string                 `json:"source_id"`
-	Topic         string                 `json:"topic"`
-	ContentRaw    string                 `json:"-"`
-	ContentJSON   json.RawMessage        `json:"content"`
-	ContentSize   uint32                 `json:"-"`
-	Headers       map[string]string      `json:"headers"`
-	FrameType     uint8                  `json:"frame_type"`
-	EventType     string                 `json:"event_type"`
+	Timestamp   time.Time         `json:"timestamp"`
+	TenantID    string            `json:"tenant_id"`
+	MessageID   string            `json:"message_id"`
+	SourceID    string            `json:"source_id"`
+	Topic       string            `json:"topic"`
+	ContentRaw  string            `json:"-"`
+	ContentJSON json.RawMessage   `json:"content"`
+	ContentSize uint32            `json:"-"`
+	Headers     map[string]string `json:"headers"`
+	FrameType   uint8             `json:"frame_type"`
+	EventType   string            `json:"event_type"`
 }
 
 type BatchIngestionRequest struct {
@@ -36,11 +36,11 @@ type EventIngestionData struct {
 }
 
 type BatchIngestionResponse struct {
-	Status        string    `json:"status"`
-	IngestedCount int       `json:"ingested_count"`
-	Timestamp     time.Time `json:"timestamp"`
-	BatchID       string    `json:"batch_id"`
-	FailedCount   int       `json:"failed_count,omitempty"`
+	Status        string         `json:"status"`
+	IngestedCount int            `json:"ingested_count"`
+	Timestamp     time.Time      `json:"timestamp"`
+	BatchID       string         `json:"batch_id"`
+	FailedCount   int            `json:"failed_count,omitempty"`
 	Failures      []EventFailure `json:"failures,omitempty"`
 }
 
@@ -50,10 +50,10 @@ type EventFailure struct {
 	Error      string `json:"error"`
 }
 
-type EventRepository interface {
+type IngestionRepository interface {
 	BatchInsert(ctx context.Context, events []*Event) error
 }
 
-type EventIngestionUseCase interface {
+type IngestionUseCase interface { // should mre be IngestionUseCase
 	IngestBatch(ctx context.Context, request *BatchIngestionRequest) (*BatchIngestionResponse, error)
 }

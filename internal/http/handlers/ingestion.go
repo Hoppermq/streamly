@@ -10,7 +10,7 @@ import (
 )
 
 type IngestionHandler struct {
-	ingestionUseCase domain.EventIngestionUseCase
+	ingestionUseCase domain.IngestionUseCase
 
 	logger *slog.Logger
 }
@@ -23,7 +23,7 @@ func WithLogger(logger *slog.Logger) Option {
 	}
 }
 
-func WithUSeCase(ingestionUseCase domain.EventIngestionUseCase) Option {
+func WithUSeCase(ingestionUseCase domain.IngestionUseCase) Option {
 	return func(h *IngestionHandler) {
 		h.ingestionUseCase = ingestionUseCase
 	}

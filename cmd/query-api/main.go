@@ -36,9 +36,11 @@ func main() {
 		http.WithEngine(engine),
 		http.WithQueryHTTPServer(queryConfig),
 		http.WithLogger(logger),
-		http.WithRoutes(routes.CreateRouteRegistrar(
-			routes.WithLogger(logger),
-		)),
+		http.WithRoutes(
+			routes.CreateRouteRegistrar(
+				routes.WithLogger(logger),
+			),
+		),
 	)
 
 	queryService := query.NewQueryService(

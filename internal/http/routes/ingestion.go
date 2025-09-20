@@ -12,7 +12,7 @@ import (
 func RegisterIngestionRoutes(
 	router *gin.Engine,
 	logger *slog.Logger,
-	ingestionUseCase domain.EventIngestionUseCase,
+	ingestionUseCase domain.IngestionUseCase,
 ) {
 	ingestionHandler := handlers.NewIngestionHandler(
 		handlers.WithLogger(logger),

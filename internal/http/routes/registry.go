@@ -10,7 +10,7 @@ import (
 // RouteRegistry manages route registration for different services.
 type RouteRegistry struct {
 	logger           *slog.Logger
-	ingestionUseCase domain.EventIngestionUseCase
+	ingestionUseCase domain.IngestionUseCase
 	// Future: queryUseCase domain.QueryUseCase
 }
 
@@ -25,7 +25,7 @@ func WithLogger(logger *slog.Logger) RouteOption {
 }
 
 // WithIngestionUseCase sets the ingestion use case for route registration.
-func WithIngestionUseCase(useCase domain.EventIngestionUseCase) RouteOption {
+func WithIngestionUseCase(useCase domain.IngestionUseCase) RouteOption {
 	return func(r *RouteRegistry) {
 		r.ingestionUseCase = useCase
 	}
@@ -42,10 +42,8 @@ func NewRouteRegistry(opts ...RouteOption) *RouteRegistry {
 
 // RegisterAllRoutes registers all configured routes.
 func (r *RouteRegistry) RegisterAllRoutes(engine *gin.Engine) {
-	// Always register base routes
 	RegisterBaseRoutes(engine)
 
-	// Register service-specific routes based on what's configured
 	if r.ingestionUseCase != nil && r.logger != nil {
 		RegisterIngestionRoutes(engine, r.logger, r.ingestionUseCase)
 	}

@@ -5,7 +5,7 @@
 
   [ingestor.storage]
     [ingestor.storage.clickhouse]
-    address = "clickhouse"
+    address = "localhost"
     port = "9000"
     username = "streamly"
     database = "streamly_analytics"
@@ -32,33 +32,3 @@
   batch_size = 4096
   flush_timeout = 3600
   workers_count = 10
-
-[query]
-  [query.service]
-  name = "query-service"
-  version = "0.0.1"
-
-  [query.storage]
-    [query.storage.clickhouse]
-    address = "clickhouse"
-    port = "9000"
-    username = "streamly"
-    database = "streamly_analytics"
-    password = "dev_clickhouse_123"
-    read_timeout = 3600
-    write_timeout = 3600
-
-    [query.storage.database]
-
-  [query.redis]
-  addr = "redis:6379"
-  password = ""
-
-  [query.logging]
-  level = "info"
-  format = "json"
-
-  [query.http]
-  port = 8092
-  read_timeout = 3600
-  write_timeout = 3600

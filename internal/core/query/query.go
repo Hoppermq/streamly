@@ -49,7 +49,13 @@ func WithHandlers(handlers ...domain.Service) Option {
 
 func (q *QueryService) Run(ctx context.Context) error {
 	ctx, q.cancel = context.WithCancel(ctx)
-	q.logger.Info("starting component", "name", q.serviceName, "service_id", q.serviceID)
+
+	q.mu.Lock()
+	serviceName := q.serviceName
+	serviceID := q.serviceID
+	q.mu.Unlock()
+
+	q.logger.Info("starting component", "name", serviceName, "service_id", serviceID)
 
 	for _, handler := range q.handlers {
 		q.wg.Add(1)
@@ -66,14 +72,25 @@ func (q *QueryService) Run(ctx context.Context) error {
 	}
 
 	<-ctx.Done()
-	q.logger.Info("stopping component", "name", q.serviceName, "service_id", q.serviceID)
+
+	q.mu.Lock()
+	serviceName = q.serviceName
+	serviceID = q.serviceID
+	q.mu.Unlock()
+
+	q.logger.Info("stopping component", "name", serviceName, "service_id", serviceID)
 
 	return nil
 
 }
 
 func (q *QueryService) Stop(ctx context.Context) error {
-	q.logger.Info("stopping component", "name", q.serviceName, "service_id", q.serviceID)
+	q.mu.Lock()
+	serviceName := q.serviceName
+	serviceID := q.serviceID
+	q.mu.Unlock()
+
+	q.logger.Info("stopping component", "name", serviceName, "service_id", serviceID)
 	if q.cancel != nil {
 		q.cancel()
 	}
@@ -91,9 +108,13 @@ func (q *QueryService) Stop(ctx context.Context) error {
 }
 
 func (q *QueryService) Name() string {
+	q.mu.Lock()
+	defer q.mu.Unlock()
 	return q.serviceName
 }
 
 func (q *QueryService) SetServiceID(serviceID string) {
+	q.mu.Lock()
+	defer q.mu.Unlock()
 	q.serviceID = serviceID
 }

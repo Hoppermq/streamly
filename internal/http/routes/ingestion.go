@@ -24,3 +24,13 @@ func RegisterIngestionRoutes(
 		eventsGroup.POST("/ingest", ingestionHandler.IngestEvents)
 	}
 }
+
+// CreateIngestionRegistrar returns a RouteRegistrar for ingestion routes.
+func CreateIngestionRegistrar(
+	logger *slog.Logger,
+	ingestionUseCase domain.IngestionUseCase,
+) RouteRegistrar {
+	return func(engine *gin.Engine) {
+		RegisterIngestionRoutes(engine, logger, ingestionUseCase)
+	}
+}

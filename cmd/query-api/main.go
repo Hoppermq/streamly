@@ -38,7 +38,7 @@ func main() {
 		http.WithLogger(logger),
 		http.WithRoutes(
 			routes.CreateRouteRegistrar(
-				routes.WithLogger(logger),
+				routes.CreateQueryRegistrar(logger),
 			),
 		),
 	)

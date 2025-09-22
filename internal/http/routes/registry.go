@@ -1,58 +1,45 @@
 package routes
 
 import (
-	"log/slog"
-
 	"github.com/gin-gonic/gin"
-	"github.com/hoppermq/streamly/pkg/domain"
 )
 
-// RouteRegistry manages route registration for different services.
+// RouteRegistrar defines a function that registers routes on an engine.
+type RouteRegistrar func(*gin.Engine)
+
+// RouteRegistry manages multiple route registrars.
 type RouteRegistry struct {
-	logger           *slog.Logger
-	ingestionUseCase domain.IngestionUseCase
-	// Future: queryUseCase domain.QueryUseCase
+	registrars []RouteRegistrar
 }
 
-// RouteOption configures the route registry.
-type RouteOption func(*RouteRegistry)
-
-// WithLogger sets the logger for route registration.
-func WithLogger(logger *slog.Logger) RouteOption {
-	return func(r *RouteRegistry) {
-		r.logger = logger
+// NewRouteRegistry creates a new route registry.
+func NewRouteRegistry() *RouteRegistry {
+	return &RouteRegistry{
+		registrars: make([]RouteRegistrar, 0),
 	}
 }
 
-// WithIngestionUseCase sets the ingestion use case for route registration.
-func WithIngestionUseCase(useCase domain.IngestionUseCase) RouteOption {
-	return func(r *RouteRegistry) {
-		r.ingestionUseCase = useCase
-	}
+// AddRegistrar adds a route registrar to the registry.
+func (r *RouteRegistry) AddRegistrar(registrar RouteRegistrar) {
+	r.registrars = append(r.registrars, registrar)
 }
 
-// NewRouteRegistry creates a new route registry with options.
-func NewRouteRegistry(opts ...RouteOption) *RouteRegistry {
-	r := &RouteRegistry{}
-	for _, opt := range opts {
-		opt(r)
-	}
-	return r
-}
-
-// RegisterAllRoutes registers all configured routes.
-func (r *RouteRegistry) RegisterAllRoutes(engine *gin.Engine) {
+// RegisterAll registers all routes with the provided engine.
+func (r *RouteRegistry) RegisterAll(engine *gin.Engine) {
 	RegisterBaseRoutes(engine)
 
-	if r.ingestionUseCase != nil && r.logger != nil {
-		RegisterIngestionRoutes(engine, r.logger, r.ingestionUseCase)
+	for _, registrar := range r.registrars {
+		registrar(engine)
 	}
 }
 
-// CreateRouteRegistrar creates a route registrar function with the given options.
-func CreateRouteRegistrar(opts ...RouteOption) func(*gin.Engine) {
+// CreateRouteRegistrar creates a route registrar function from multiple registrars.
+func CreateRouteRegistrar(registrars ...RouteRegistrar) func(*gin.Engine) {
 	return func(engine *gin.Engine) {
-		registry := NewRouteRegistry(opts...)
-		registry.RegisterAllRoutes(engine)
+		registry := NewRouteRegistry()
+		for _, registrar := range registrars {
+			registry.AddRegistrar(registrar)
+		}
+		registry.RegisterAll(engine)
 	}
 }

@@ -75,8 +75,7 @@ func main() {
 		http.WithHTTPServer(ingestionConfig),
 		http.WithLogger(logger),
 		http.WithRoutes(routes.CreateRouteRegistrar(
-			routes.WithLogger(logger),
-			routes.WithIngestionUseCase(eventUseCase),
+			routes.CreateIngestionRegistrar(logger, eventUseCase),
 		)),
 	)
 

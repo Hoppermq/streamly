@@ -1,0 +1,15 @@
+meta {
+  name: query_event
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{query-service-url}}/v1/
+  body: json
+  auth: none
+}
+
+body:json {
+  {}
+}

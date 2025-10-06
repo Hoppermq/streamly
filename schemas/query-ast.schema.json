@@ -1,0 +1,170 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "select",
+    "from",
+    "timeRange",
+    "where",
+    "tenantID"
+  ],
+  "properties": {
+    "select": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "string",
+            "description": "column name or '*' for all col"
+          },
+          {
+            "type": "object",
+            "required": [
+              "function",
+              "args"
+            ],
+            "properties": {
+              "function": {
+                "type": "string",
+                "enum": [
+                  "avg",
+                  "sum",
+                  "count",
+                  "min",
+                  "max"
+                ]
+              },
+              "args": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "from": {
+      "type": "string",
+      "enum": [
+        "logs",
+        "traces",
+        "metrics",
+        "events",
+        "events_minute_stats_mv",
+        "events_hourly_stats_mv",
+        "top_sources_mv"
+      ],
+      "description": "data source to query"
+    },
+    "timeRange": {
+      "type": "object",
+      "required": [
+        "start",
+        "end"
+      ],
+      "properties": {
+        "start": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp or relative time like 'now-1h'"
+        },
+        "end": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "where": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "field",
+          "op",
+          "value"
+        ],
+        "properties": {
+          "field": {
+            "type": "string"
+          },
+          "op": {
+            "type": "string",
+            "enum": [
+              "=",
+              "!=",
+              ">",
+              ">=",
+              "<",
+              "<=",
+              "IN",
+              "NOT IN",
+              "LIKE",
+              "NOT LIKE",
+              "ILIKE",
+              "~=",
+              "MATCH"
+            ]
+          },
+          "value": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": [
+                    "string",
+                    "number"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      },
+      "description": "filter conditions"
+    },
+    "orderBy": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "field"
+        ],
+        "properties": {
+          "field": {
+            "type": "string"
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "ASC",
+              "DESC"
+            ],
+            "default": "DESC"
+          }
+        }
+      }
+    },
+    "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10000,
+      "default": 1000
+    },
+    "offset": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 0
+    }
+  }
+}

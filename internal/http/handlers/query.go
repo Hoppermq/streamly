@@ -41,6 +41,8 @@ func (h *QueryHandler) PerformQuery(c *gin.Context) {
 	res, err := h.useCase.AsyncQuery(c, nil)
 	if err != nil {
 		h.logger.Error("error performing query", "error", err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
 	}
 
 	c.JSON(http.StatusOK, res)

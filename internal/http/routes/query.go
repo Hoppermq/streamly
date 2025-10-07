@@ -12,11 +12,16 @@ func RegisterQueryRoutes(
 	router *gin.Engine,
 	logger *slog.Logger,
 ) {
-	queryGroup := router.Group("/")
+	queryGroup := router.Group("/v1")
 	{
-		queryGroup.POST("/v1/", func(ctx *gin.Context) {
+		queryGroup.GET("/", func(ctx *gin.Context) {
 			ctx.JSON(http.StatusOK, gin.H{"status": "ok"})
 		})
+
+		queryGroup.POST("/", func(ctx *gin.Context) {
+			ctx.JSON(http.StatusOK, gin.H{"status": "ok"})
+		})
+
 	}
 }
 

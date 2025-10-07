@@ -14,7 +14,7 @@ import (
 )
 
 type EventIngestionUseCaseImpl struct {
-	eventRepo domain.EventRepository
+	eventRepo domain.IngestionRepository
 
 	logger *slog.Logger
 	wg     sync.WaitGroup
@@ -22,7 +22,7 @@ type EventIngestionUseCaseImpl struct {
 
 type UseCaseOption func(*EventIngestionUseCaseImpl)
 
-func WithEventRepository(eventRepo domain.EventRepository) UseCaseOption {
+func WithEventRepository(eventRepo domain.IngestionRepository) UseCaseOption {
 	return func(e *EventIngestionUseCaseImpl) {
 		e.eventRepo = eventRepo
 	}
@@ -34,7 +34,7 @@ func UseCaseWithLogger(logger *slog.Logger) UseCaseOption {
 	}
 }
 
-func NewEventIngestionUseCase(opts ...UseCaseOption) domain.EventIngestionUseCase {
+func NewEventIngestionUseCase(opts ...UseCaseOption) domain.IngestionUseCase {
 	useCase := &EventIngestionUseCaseImpl{
 		wg: sync.WaitGroup{},
 	}

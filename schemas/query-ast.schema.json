@@ -1,0 +1,311 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "select",
+    "from",
+    "timeRange"
+  ],
+  "properties": {
+    "select": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "oneOf": [
+          {
+            "type": "string",
+            "description": "column name or '*' for all columns",
+            "pattern": "^(\\*|[a-zA-Z_][a-zA-Z0-9_]*(\\.[a-zA-Z_][a-zA-Z0-9_]*)?)$"
+          },
+          {
+            "type": "object",
+            "required": [
+              "function",
+              "args"
+            ],
+            "properties": {
+              "function": {
+                "type": "string",
+                "enum": [
+                  "avg",
+                  "sum",
+                  "count",
+                  "countDistinct",
+                  "min",
+                  "max",
+                  "uniq",
+                  "p50",
+                  "p90",
+                  "p95",
+                  "p99",
+                  "rate",
+                  "topK"
+                ]
+              },
+              "args": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string"
+                }
+              },
+              "alias": {
+                "type": "string",
+                "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
+                "description": "Optional alias for the aggregation result"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "from": {
+      "type": "string",
+      "enum": [
+        "events",
+        "logs", 
+        "metrics",
+        "errors",
+        "events_minute_stats_mv",
+        "events_hourly_stats_mv",
+        "top_sources_mv"
+      ],
+      "description": "data source to query"
+    },
+    "timeRange": {
+      "type": "object",
+      "required": [
+        "start",
+        "end"
+      ],
+      "properties": {
+        "start": {
+          "type": "string",
+          "anyOf": [
+            {"format": "date-time"},
+            {"pattern": "^now(-\\d+[smhd])?$"}
+          ],
+          "description": "ISO 8601 timestamp or relative time like 'now-1h'"
+        },
+        "end": {
+          "type": "string",
+          "anyOf": [
+            {"format": "date-time"},
+            {"pattern": "^now(-\\d+[smhd])?$"}
+          ],
+          "description": "ISO 8601 timestamp or relative time like 'now'"
+        }
+      }
+    },
+    "where": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "field",
+          "op",
+          "value"
+        ],
+        "properties": {
+          "field": {
+            "type": "string",
+            "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*(\\.[a-zA-Z_][a-zA-Z0-9_]*)*$"
+          },
+          "op": {
+            "type": "string",
+            "enum": [
+              "=",
+              "!=",
+              ">",
+              ">=",
+              "<",
+              "<=",
+              "IN",
+              "NOT IN",
+              "LIKE",
+              "NOT LIKE",
+              "ILIKE",
+              "CONTAINS",
+              "NOT CONTAINS",
+              "STARTS_WITH",
+              "ENDS_WITH",
+              "REGEX",
+              "NOT REGEX"
+            ]
+          },
+          "value": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": [
+                    "string",
+                    "number"
+                  ]
+                },
+                "minItems": 1
+              }
+            ]
+          }
+        }
+      },
+      "description": "filter conditions (implicit AND between conditions)"
+    },
+    "groupBy": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "string",
+            "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*(\\.[a-zA-Z_][a-zA-Z0-9_]*)*$"
+          },
+          {
+            "type": "object",
+            "required": [
+              "timeWindow"
+            ],
+            "properties": {
+              "timeWindow": {
+                "type": "string",
+                "enum": [
+                  "1s",
+                  "30s",
+                  "1m",
+                  "5m",
+                  "15m",
+                  "30m",
+                  "1h",
+                  "6h",
+                  "12h",
+                  "1d",
+                  "7d"
+                ]
+              },
+              "field": {
+                "type": "string",
+                "default": "timestamp",
+                "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*(\\.[a-zA-Z_][a-zA-Z0-9_]*)*$"
+              }
+            }
+          }
+        ]
+      },
+      "description": "group by fields or time windows"
+    },
+    "orderBy": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "field"
+        ],
+        "properties": {
+          "field": {
+            "type": "string",
+            "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*(\\.[a-zA-Z_][a-zA-Z0-9_]*)*$"
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "ASC",
+              "DESC"
+            ],
+            "default": "DESC"
+          }
+        }
+      }
+    },
+    "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100000,
+      "default": 1000
+    },
+    "offset": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 0
+    },
+    "tenantID": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_-]+$",
+      "description": "Injected server-side from auth context. Client MUST NOT set this."
+    }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "select": {
+            "contains": {
+              "type": "object",
+              "properties": {
+                "function": true
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "select": {
+            "not": {
+              "contains": {
+                "type": "string",
+                "const": "*"
+              }
+            }
+          }
+        },
+        "errorMessage": "Cannot use '*' selector with aggregation functions"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "select": {
+            "contains": {
+              "type": "object",
+              "properties": {
+                "function": true
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "anyOf": [
+          {"required": ["groupBy"]},
+          {
+            "properties": {
+              "select": {
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "function": {
+                      "enum": ["count"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "errorMessage": "Aggregation functions require groupBy clause (except standalone count)"
+      }
+    }
+  ]
+}

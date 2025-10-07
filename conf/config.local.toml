@@ -5,7 +5,7 @@
 
   [ingestor.storage]
     [ingestor.storage.clickhouse]
-    address = "clickhouse"
+    address = "localhost"
     port = "9000"
     username = "streamly"
     database = "streamly_analytics"
@@ -40,7 +40,7 @@
 
   [query.storage]
     [query.storage.clickhouse]
-    address = "clickhouse"
+    address = "localhost"
     port = "9000"
     username = "streamly"
     database = "streamly_analytics"
@@ -48,7 +48,7 @@
     read_timeout = 3600
     write_timeout = 3600
 
-    [query.storage.database]
+  [query.storage.database]
 
   [query.redis]
   addr = "redis:6379"

@@ -51,13 +51,42 @@ services:
     environment:
       - GO_ENV=development
       - PORT=8080
-      - CONFIG_PATH=/app/internal/http/config/config.dev.toml
+      - CONFIG_PATH=/app/conf/config.dev.toml
       - SERVICE_PATH=./cmd/ingestion
     networks:
       - streamly-dev
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  query-service:
+    build:
+      context: ../
+      dockerfile: docker/services.dev.Dockerfile
+      target: development
+      args:
+        TARGET_OS: linux
+        TARGET_ARCH: amd64
+    ports:
+      - "8181"
+    volumes:
+      - ../:/app
+      - go_mod_cache:/go/pkg/mod
+      - go_build_cache:/root/.cache/go-build
+    environment:
+      - GO_ENV=development
+      - PORT=8181
+      - CONFIG_PATH=/app/conf/config.dev.toml
+      - SERVICE_PATH=./cmd/query-api
+    networks:
+      - streamly-dev
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health" ]
       interval: 30s
       timeout: 10s
       retries: 3

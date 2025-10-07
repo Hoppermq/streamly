@@ -11,6 +11,7 @@ import (
 	"github.com/hoppermq/streamly/internal/core/ingestor"
 	"github.com/hoppermq/streamly/internal/core/migration"
 	"github.com/hoppermq/streamly/internal/http"
+	"github.com/hoppermq/streamly/internal/http/routes"
 	"github.com/hoppermq/streamly/internal/storage/clickhouse"
 	"github.com/zixyos/glog"
 	serviceloader "github.com/zixyos/goloader/service"
@@ -73,7 +74,9 @@ func main() {
 		http.WithEngine(engine),
 		http.WithHTTPServer(ingestionConfig),
 		http.WithLogger(logger),
-		http.WithIngestionUseCase(eventUseCase),
+		http.WithRoutes(routes.CreateRouteRegistrar(
+			routes.CreateIngestionRegistrar(logger, eventUseCase),
+		)),
 	)
 
 	clickhouseClient := clickhouse.NewClient(

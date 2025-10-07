@@ -72,14 +72,14 @@ services:
         TARGET_OS: linux
         TARGET_ARCH: amd64
     ports:
-      - "8181"
+      - "8092:8092"
     volumes:
       - ../:/app
       - go_mod_cache:/go/pkg/mod
       - go_build_cache:/root/.cache/go-build
     environment:
       - GO_ENV=development
-      - PORT=8181
+      - PORT=8092
       - CONFIG_PATH=/app/conf/config.dev.toml
       - SERVICE_PATH=./cmd/query-api
     networks:

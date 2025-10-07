@@ -64,5 +64,6 @@ type QueryAstRequest struct {
 type QueryRepository interface{}
 
 type QueryUseCase interface {
-	QueryEvents(ctx context.Context)
+	SyncQuery(ctx context.Context, req *QueryAstRequest) (any, error)
+	AsyncQuery(ctx context.Context, req *QueryAstRequest) (any, error)
 }

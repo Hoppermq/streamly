@@ -32,13 +32,17 @@ func main() {
 
 	engine := gin.New()
 
+	queryUseCase := query.NewQueryUseCase(
+		query.UseCaseWithLogger(logger),
+	)
+
 	httpServer := http.NewHTTPServer(
 		http.WithEngine(engine),
 		http.WithQueryHTTPServer(queryConfig),
 		http.WithLogger(logger),
 		http.WithRoutes(
 			routes.CreateRouteRegistrar(
-				routes.CreateQueryRegistrar(logger),
+				routes.CreateQueryRegistrar(logger, queryUseCase),
 			),
 		),
 	)

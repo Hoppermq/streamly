@@ -33,7 +33,7 @@ func RegisterQueryRoutes(
 // CreateQueryRegistrar returns a RouteRegistrar for query routes.
 func CreateQueryRegistrar(
 	logger *slog.Logger,
-	queyUseCase domain.QueryUseCase,
+	queryUseCase domain.QueryUseCase,
 ) RouteRegistrar {
 	return func(engine *gin.Engine) {
 		RegisterQueryRoutes(engine, logger, queyUseCase)

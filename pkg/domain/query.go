@@ -17,11 +17,11 @@ const (
 type AggFct struct {
 	Function string   `json:"function"`
 	Args     []string `json:"args"`
-	Alias    string   `json:"alias"`
+	Alias    string   `json:"alias,omitempty"`
 }
 
 type TimeWindow struct {
-	Window string `json:"time_window"`
+	Window string `json:"timeWindow"`
 	Field  string `json:"field,omitempty"`
 }
 
@@ -31,10 +31,13 @@ type SelectClause struct {
 	Function *AggFct
 }
 
+func (s *SelectClause) IsField() bool    { return s.Type == "field" }
+func (s *SelectClause) IsFunction() bool { return s.Type == "function" }
+
 type WhereClause struct {
-	Field string `json:"field" binding:"required"`
-	Op    string `json:"op" binding:"required"`
-	Value any    `json:"value" binding:"required"`
+	Field string `json:"field"`
+	Op    string `json:"op"`
+	Value any    `json:"value"`
 }
 
 type GroupByClause struct {
@@ -43,27 +46,43 @@ type GroupByClause struct {
 	TimeWindow *TimeWindow
 }
 
-type OrderByClause struct{}
+func (g *GroupByClause) IsField() bool      { return g.Type == "field" }
+func (g *GroupByClause) IsTimeWindow() bool { return g.Type == "timeWindow" }
+
+type OrderByClause struct {
+	Field     string `json:"field"`
+	Direction string `json:"direction,omitempty"`
+}
 
 type TimeRange struct {
-	Start string `json:"start" binding:"required"`
-	End   string `json:"end" binding:"required"`
+	Start string `json:"start"`
+	End   string `json:"end"`
 }
 
 type QueryAstRequest struct {
-	Select    []string      `json:"select" binding:"required"`
-	From      Datasource    `json:"from" binding:"required"`
-	Where     WhereClause   `json:"where,omitempty"`
-	GroupBy   GroupByClause `json:"group_by,omitempty"`
-	OrderBy   OrderByClause `json:"order_by,omitempty"`
-	Limit     uint          `json:"limit" binding:"required"`
-	Offset    uint          `json:"offset" binding:"required"`
-	TimeRange TimeRange     `json:"time_range" binding:"required"`
+	Select    []SelectClause  `json:"select"`
+	From      Datasource      `json:"from"`
+	TimeRange TimeRange       `json:"timeRange"`
+	Where     []WhereClause   `json:"where,omitempty"`
+	GroupBy   []GroupByClause `json:"groupBy,omitempty"`
+	OrderBy   []OrderByClause `json:"orderBy,omitempty"`
+	Limit     *int            `json:"limit,omitempty"`
+	Offset    *int            `json:"offset,omitempty"`
+
+	TenantID  string `json:"-"`
+	RequestID string `json:"-"`
 }
 
-type QueryRepository interface{}
+type QueryResponse struct {
+	RequestID string           `json:"request_id"`
+	Data      []map[string]any `json:"data"`
+	RowCount  int              `json:"row_count"`
+}
+
+type QueryRepository interface {
+	ExecuteQuery(ctx context.Context, req *QueryAstRequest) (*QueryResponse, error)
+}
 
 type QueryUseCase interface {
-	SyncQuery(ctx context.Context, req *QueryAstRequest) (any, error)
-	AsyncQuery(ctx context.Context, req *QueryAstRequest) (any, error)
+	SyncQuery(ctx context.Context, req *QueryAstRequest) (*QueryResponse, error)
 }

@@ -1,0 +1,60 @@
+meta {
+  name: query_aggregation
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{query-service-url}}/v1/queries
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "select": [
+      "event_name",
+      {
+        "function": "count",
+        "args": ["*"],
+        "alias": "total_events"
+      },
+      {
+        "function": "avg",
+        "args": ["properties.duration"],
+        "alias": "avg_duration"
+      }
+    ],
+    "from": "events",
+    "timeRange": {
+      "start": "2024-01-01T00:00:00Z",
+      "end": "2024-01-02T00:00:00Z"
+    },
+    "where": [
+      {
+        "field": "event_name",
+        "op": "IN",
+        "value": ["api_call", "db_query"]
+      },
+      {
+        "field": "properties.status_code",
+        "op": ">=",
+        "value": 200
+      }
+    ],
+    "groupBy": [
+      {
+        "timeWindow": "5m",
+        "field": "timestamp"
+      },
+      "event_name"
+    ],
+    "orderBy": [
+      {
+        "field": "total_events",
+        "direction": "DESC"
+      }
+    ],
+    "limit": 1000
+  }
+}

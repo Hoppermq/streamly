@@ -1,0 +1,44 @@
+meta {
+  name: query_timeseries
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{query-service-url}}/v1/queries
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "select": [
+      {
+        "function": "count",
+        "args": ["*"],
+        "alias": "count"
+      },
+      {
+        "function": "p95",
+        "args": ["duration"],
+        "alias": "p95_duration"
+      }
+    ],
+    "from": "events",
+    "timeRange": {
+      "start": "now-24h",
+      "end": "now"
+    },
+    "groupBy": [
+      {
+        "timeWindow": "1h"
+      }
+    ],
+    "orderBy": [
+      {
+        "field": "timestamp",
+        "direction": "ASC"
+      }
+    ]
+  }
+}

@@ -16,17 +16,17 @@ func RegisterQueryRoutes(
 	queryUseCase domain.QueryUseCase,
 ) {
 	qh := handlers.NewQueryHandler(
-		handlers.QueryHandlerWithLogger(logger),
-		handlers.QueryHandlerWithUseCase(queryUseCase),
+		handlers.WithQueryLogger(logger),
+		handlers.WithQueryUseCase(queryUseCase),
 	)
 
 	queryGroup := router.Group("/v1")
 	{
-		queryGroup.GET("/", func(ctx *gin.Context) {
+		queryGroup.GET("/health", func(ctx *gin.Context) {
 			ctx.JSON(http.StatusOK, gin.H{"status": "ok"})
 		})
 
-		queryGroup.POST("/", qh.PerformQuery)
+		queryGroup.POST("/queries", qh.Execute)
 	}
 }
 
@@ -36,6 +36,6 @@ func CreateQueryRegistrar(
 	queryUseCase domain.QueryUseCase,
 ) RouteRegistrar {
 	return func(engine *gin.Engine) {
-		RegisterQueryRoutes(engine, logger, queyUseCase)
+		RegisterQueryRoutes(engine, logger, queryUseCase)
 	}
 }

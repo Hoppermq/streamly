@@ -1,0 +1,41 @@
+meta {
+  name: query_filter
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{query-service-url}}/v1/queries
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "select": ["event_name", "user_id", "timestamp", "properties"],
+    "from": "events",
+    "timeRange": {
+      "start": "now-6h",
+      "end": "now"
+    },
+    "where": [
+      {
+        "field": "event_type",
+        "op": "=",
+        "value": "user_activity"
+      },
+      {
+        "field": "user_id",
+        "op": "LIKE",
+        "value": "user_%"
+      }
+    ],
+    "orderBy": [
+      {
+        "field": "timestamp",
+        "direction": "DESC"
+      }
+    ],
+    "limit": 100
+  }
+}

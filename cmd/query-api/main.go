@@ -33,7 +33,7 @@ func main() {
 	engine := gin.New()
 
 	queryUseCase := query.NewQueryUseCase(
-		query.UseCaseWithLogger(logger),
+		query.WithUseCaseLogger(logger),
 	)
 
 	httpServer := http.NewHTTPServer(

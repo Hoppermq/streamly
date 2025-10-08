@@ -15,13 +15,13 @@ type QueryHandler struct {
 
 type QueryHandlerOption func(*QueryHandler)
 
-func QueryHandlerWithLogger(logger *slog.Logger) QueryHandlerOption {
+func WithQueryLogger(logger *slog.Logger) QueryHandlerOption {
 	return func(qh *QueryHandler) {
 		qh.logger = logger
 	}
 }
 
-func QueryHandlerWithUseCase(queryUseCase domain.QueryUseCase) QueryHandlerOption {
+func WithQueryUseCase(queryUseCase domain.QueryUseCase) QueryHandlerOption {
 	return func(qh *QueryHandler) {
 		qh.useCase = queryUseCase
 	}
@@ -29,16 +29,24 @@ func QueryHandlerWithUseCase(queryUseCase domain.QueryUseCase) QueryHandlerOptio
 
 func NewQueryHandler(options ...QueryHandlerOption) *QueryHandler {
 	qh := &QueryHandler{}
-
 	for _, opt := range options {
 		opt(qh)
 	}
-
 	return qh
 }
 
-func (h *QueryHandler) PerformQuery(c *gin.Context) {
-	res, err := h.useCase.AsyncQuery(c, nil)
+func (h *QueryHandler) Execute(c *gin.Context) {
+	var req domain.QueryAstRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		h.logger.Info("error while binding query request", "error", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	req.TenantID = extractTenantID(c)
+
+	res, err := h.useCase.SyncQuery(c.Request.Context(), &req)
 	if err != nil {
 		h.logger.Error("error performing query", "error", err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
@@ -46,4 +54,12 @@ func (h *QueryHandler) PerformQuery(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, res)
+}
+
+func extractTenantID(ctx *gin.Context) string {
+	tenantID, exists := ctx.Get("tenant_id")
+	if !exists {
+		return "default"
+	}
+	return tenantID.(string)
 }

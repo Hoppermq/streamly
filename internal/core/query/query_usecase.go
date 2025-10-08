@@ -3,40 +3,65 @@ package query
 import (
 	"context"
 	"log/slog"
-	"sync"
 
 	"github.com/hoppermq/streamly/pkg/domain"
 )
 
-// QueryUseCaseImpl represent the query use case structure.
 type QueryUseCaseImpl struct {
-	logger *slog.Logger
-	wg     sync.WaitGroup
+	logger     *slog.Logger
+	repository domain.QueryRepository
 }
 
-type UseCaseOption func(impl *QueryUseCaseImpl)
+type UseCaseOption func(*QueryUseCaseImpl)
 
-func UseCaseWithLogger(logger *slog.Logger) UseCaseOption {
-	return func(q *QueryUseCaseImpl) {
-		q.logger = logger
+func NewQueryUseCase(opts ...UseCaseOption) *QueryUseCaseImpl {
+	uc := &QueryUseCaseImpl{}
+	for _, opt := range opts {
+		opt(uc)
+	}
+	return uc
+}
+
+func WithUseCaseLogger(logger *slog.Logger) UseCaseOption {
+	return func(uc *QueryUseCaseImpl) {
+		uc.logger = logger
 	}
 }
 
-func NewQueryUseCase(options ...UseCaseOption) *QueryUseCaseImpl {
-	useCase := &QueryUseCaseImpl{
-		wg: sync.WaitGroup{},
+func WithRepository(repo domain.QueryRepository) UseCaseOption {
+	return func(uc *QueryUseCaseImpl) {
+		uc.repository = repo
 	}
-	for _, option := range options {
-		option(useCase)
-	}
-
-	return useCase
 }
 
-func (u *QueryUseCaseImpl) SyncQuery(ctx context.Context, req *domain.QueryAstRequest) (any, error) {
-	return "sync query performed", nil
+func (uc *QueryUseCaseImpl) SyncQuery(ctx context.Context, req *domain.QueryAstRequest) (*domain.QueryResponse, error) {
+	uc.applyDefaults(req)
+
+	if uc.repository != nil {
+		return uc.repository.ExecuteQuery(ctx, req)
+	}
+
+	return &domain.QueryResponse{
+		RequestID: req.RequestID,
+		Data:      []map[string]any{},
+		RowCount:  0,
+	}, nil
 }
 
-func (u *QueryUseCaseImpl) AsyncQuery(ctx context.Context, req *domain.QueryAstRequest) (any, error) {
-	return "async query performed", nil
+func (uc *QueryUseCaseImpl) applyDefaults(req *domain.QueryAstRequest) {
+	if req.Limit == nil {
+		defaultLimit := 1000
+		req.Limit = &defaultLimit
+	}
+
+	if req.Offset == nil {
+		defaultOffset := 0
+		req.Offset = &defaultOffset
+	}
+
+	for i := range req.OrderBy {
+		if req.OrderBy[i].Direction == "" {
+			req.OrderBy[i].Direction = "DESC"
+		}
+	}
 }

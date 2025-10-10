@@ -19,7 +19,8 @@ func RegisterIngestionRoutes(
 		handlers.WithUSeCase(ingestionUseCase),
 	)
 
-	eventsGroup := router.Group("/events")
+	v1 := router.Group("/v1")
+	eventsGroup := v1.Group("/events")
 	{
 		eventsGroup.POST("/ingest", ingestionHandler.IngestEvents)
 	}

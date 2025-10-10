@@ -1,7 +1,7 @@
 meta {
-  name: query_event
+  name: query_simple
   type: http
-  seq: 8
+  seq: 4
 }
 
 post {
@@ -12,12 +12,11 @@ post {
 
 body:json {
   {
-    "select": ["*"],
+    "select": ["event_name", "user_id", "timestamp"],
     "from": "events",
     "timeRange": {
       "start": "now-1h",
       "end": "now"
-    },
-    "limit": 50
+    }
   }
 }

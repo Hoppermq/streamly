@@ -1,0 +1,11 @@
+meta {
+  name: ingestion_health
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{ingestor-service-url}}/v1/health
+  body: none
+  auth: none
+}

@@ -66,7 +66,6 @@ func (q *QueryService) Run(ctx context.Context) error {
 			q.logger.Info("starting handler", "componnent", h.Name())
 			if err := h.Run(ctx); err != nil {
 				q.logger.WarnContext(ctx, "failed to run handler", "error", err)
-				// should we stop if a service is not up ?
 			}
 		}(handler)
 	}

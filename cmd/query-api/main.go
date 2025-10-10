@@ -8,8 +8,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/hoppermq/streamly/cmd/config"
 	"github.com/hoppermq/streamly/internal/core/query"
+	"github.com/hoppermq/streamly/internal/core/query/ast"
 	"github.com/hoppermq/streamly/internal/http"
 	"github.com/hoppermq/streamly/internal/http/routes"
+	"github.com/hoppermq/streamly/schemas"
+	"github.com/santhosh-tekuri/jsonschema/v6"
 	"github.com/zixyos/glog"
 	serviceloader "github.com/zixyos/goloader/service"
 )
@@ -30,11 +33,28 @@ func main() {
 		logger.Warn("failed to load query config", "error", err)
 	}
 
-	engine := gin.New()
+	queryRepository := query.NewQueryRepository()
+
+	astValidator := ast.NewValidator(
+		ast.ValidatorWithLogger(logger),
+	)
+
+	jsonSchemaCompiler := jsonschema.NewCompiler()
+
+	astBuilder := ast.NewBuilder(
+		ast.BuilderWithLogger(logger),
+		ast.BuilderWithSchemaFS(schemas.FileFS),
+		ast.BuilderWithValidator(astValidator),
+		ast.BuilderWithJsonSchemaCompiler(jsonSchemaCompiler),
+	)
 
 	queryUseCase := query.NewQueryUseCase(
-		query.UseCaseWithLogger(logger),
+		query.WithUseCaseLogger(logger),
+		query.WithRepository(queryRepository),
+		query.WithAstBuilder(astBuilder),
 	)
+
+	engine := gin.New()
 
 	httpServer := http.NewHTTPServer(
 		http.WithEngine(engine),
@@ -49,7 +69,7 @@ func main() {
 
 	queryService := query.NewQueryService(
 		query.WithLogger(logger),
-		query.WithHandlers(httpServer),
+		query.WithHandlers(httpServer, astBuilder),
 	)
 
 	app := serviceloader.New(

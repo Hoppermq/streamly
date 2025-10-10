@@ -3,40 +3,72 @@ package query
 import (
 	"context"
 	"log/slog"
-	"sync"
 
+	"github.com/hoppermq/streamly/internal/core/query/ast"
 	"github.com/hoppermq/streamly/pkg/domain"
 )
 
-// QueryUseCaseImpl represent the query use case structure.
-type QueryUseCaseImpl struct {
-	logger *slog.Logger
-	wg     sync.WaitGroup
+type UseCaseImpl struct {
+	logger     *slog.Logger
+	repository domain.QueryRepository
+
+	astBuilder *ast.Builder
 }
 
-type UseCaseOption func(impl *QueryUseCaseImpl)
+type UseCaseOption func(*UseCaseImpl)
 
-func UseCaseWithLogger(logger *slog.Logger) UseCaseOption {
-	return func(q *QueryUseCaseImpl) {
-		q.logger = logger
+func NewQueryUseCase(opts ...UseCaseOption) *UseCaseImpl {
+	uc := &UseCaseImpl{}
+	for _, opt := range opts {
+		opt(uc)
+	}
+	return uc
+}
+
+func WithUseCaseLogger(logger *slog.Logger) UseCaseOption {
+	return func(uc *UseCaseImpl) {
+		uc.logger = logger
 	}
 }
 
-func NewQueryUseCase(options ...UseCaseOption) *QueryUseCaseImpl {
-	useCase := &QueryUseCaseImpl{
-		wg: sync.WaitGroup{},
+func WithRepository(repo domain.QueryRepository) UseCaseOption {
+	return func(uc *UseCaseImpl) {
+		uc.repository = repo
 	}
-	for _, option := range options {
-		option(useCase)
-	}
-
-	return useCase
 }
 
-func (u *QueryUseCaseImpl) SyncQuery(ctx context.Context, req *domain.QueryAstRequest) (any, error) {
-	return "sync query performed", nil
+func WithAstBuilder(astBuilder *ast.Builder) UseCaseOption {
+	return func(uc *UseCaseImpl) {
+		uc.astBuilder = astBuilder
+	}
 }
 
-func (u *QueryUseCaseImpl) AsyncQuery(ctx context.Context, req *domain.QueryAstRequest) (any, error) {
-	return "async query performed", nil
+func (uc *UseCaseImpl) SyncQuery(ctx context.Context, req *domain.QueryAstRequest) (*domain.QueryResponse, error) {
+	applyDefaults(req)
+
+	err := uc.astBuilder.Execute(req)
+	if err != nil {
+		uc.logger.Warn("error while building the query ast", "error", err.Error())
+		return nil, err
+	}
+
+	return uc.repository.ExecuteQuery(ctx, req)
+}
+
+func applyDefaults(req *domain.QueryAstRequest) {
+	if req.Limit == nil {
+		defaultLimit := 1000
+		req.Limit = &defaultLimit
+	}
+
+	if req.Offset == nil {
+		defaultOffset := 0
+		req.Offset = &defaultOffset
+	}
+
+	for i := range req.OrderBy {
+		if req.OrderBy[i].Direction == "" {
+			req.OrderBy[i].Direction = "DESC"
+		}
+	}
 }

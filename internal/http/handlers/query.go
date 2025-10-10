@@ -56,10 +56,15 @@ func (h *QueryHandler) Execute(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+
 func extractTenantID(ctx *gin.Context) string {
 	tenantID, exists := ctx.Get("tenant_id")
 	if !exists {
 		return "default"
 	}
-	return tenantID.(string)
+	if tenantIDStr, ok := tenantID.(string); ok {
+		return tenantIDStr
+	}
+	return "default"
 }
+

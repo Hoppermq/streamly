@@ -2,7 +2,6 @@ package query
 
 import (
 	"context"
-	"encoding/json"
 	"log/slog"
 
 	"github.com/hoppermq/streamly/internal/core/query/ast"
@@ -47,27 +46,13 @@ func WithAstBuilder(astBuilder *ast.Builder) UseCaseOption {
 func (uc *UseCaseImpl) SyncQuery(ctx context.Context, req *domain.QueryAstRequest) (*domain.QueryResponse, error) {
 	applyDefaults(req)
 
-	data, err := json.Marshal(req)
-	if err != nil {
-		uc.logger.Warn("failed to marshal query request", "error", err.Error())
-		return nil, err
-	}
-
-	err = uc.astBuilder.Execute(data)
+	err := uc.astBuilder.Execute(req)
 	if err != nil {
 		uc.logger.Warn("error while building the query ast", "error", err.Error())
 		return nil, err
 	}
 
-	if uc.repository != nil {
-		return uc.repository.ExecuteQuery(ctx, req)
-	}
-
-	return &domain.QueryResponse{
-		RequestID: req.RequestID,
-		Data:      []map[string]any{},
-		RowCount:  0,
-	}, nil
+	return uc.repository.ExecuteQuery(ctx, req)
 }
 
 func applyDefaults(req *domain.QueryAstRequest) {

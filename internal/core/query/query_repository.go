@@ -6,24 +6,28 @@ import (
 	"github.com/hoppermq/streamly/pkg/domain"
 )
 
-type QueryRepository struct {
+type Repository struct {
 	driver domain.Driver
 }
 
-type RepositoryOption func(*QueryRepository)
+type RepositoryOption func(*Repository)
 
 func WithDriver(driver domain.Driver) RepositoryOption {
-	return func(repository *QueryRepository) {
+	return func(repository *Repository) {
 		repository.driver = driver
 	}
 }
 
-func (q *QueryRepository) ExecuteQuery(ctx context.Context, req *domain.QueryAstRequest) (*domain.QueryResponse, error) {
-	return nil, nil
+func (q *Repository) ExecuteQuery(ctx context.Context, req *domain.QueryAstRequest) (*domain.QueryResponse, error) {
+	return &domain.QueryResponse{
+		RequestID: req.RequestID,
+		Data:      []map[string]any{},
+		RowCount:  0,
+	}, nil
 }
 
-func NewQueryRepository(opts ...RepositoryOption) *QueryRepository {
-	qr := &QueryRepository{}
+func NewQueryRepository(opts ...RepositoryOption) *Repository {
+	qr := &Repository{}
 	for _, opt := range opts {
 		opt(qr)
 	}

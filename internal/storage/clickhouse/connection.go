@@ -74,7 +74,8 @@ func (d *ClickHouseDriver) DB() *sql.DB {
 
 type DriverOption func(options *clickhouse.Options)
 
-func WithConfig(clickhouseConfig *config.IngestionConfig) DriverOption {
+// WithIngestionConfig TODO: extract since it's pure domain logic
+func WithIngestionConfig(clickhouseConfig *config.IngestionConfig) DriverOption {
 	return func(options *clickhouse.Options) {
 		options.Addr = []string{
 			clickhouseConfig.Ingestor.Storage.Clickhouse.Address +
@@ -83,6 +84,18 @@ func WithConfig(clickhouseConfig *config.IngestionConfig) DriverOption {
 		options.Auth.Database = clickhouseConfig.Ingestor.Storage.Clickhouse.Database
 		options.Auth.Username = clickhouseConfig.Ingestor.Storage.Clickhouse.UserName
 		options.Auth.Password = clickhouseConfig.Ingestor.Storage.Clickhouse.Password
+	}
+}
+
+// WithQueryConfig TODO: extract since it's pure domain logic
+func WithQueryConfig(clickhouseConfig *config.QueryConfig) DriverOption {
+	return func(options *clickhouse.Options) {
+		options.Addr = []string{
+			clickhouseConfig.Query.Storage.Clickhouse.Address + ":" + clickhouseConfig.Query.Storage.Clickhouse.Port,
+		}
+		options.Auth.Database = clickhouseConfig.Query.Storage.Clickhouse.Database
+		options.Auth.Username = clickhouseConfig.Query.Storage.Clickhouse.UserName
+		options.Auth.Password = clickhouseConfig.Query.Storage.Clickhouse.Password
 	}
 }
 

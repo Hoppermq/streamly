@@ -35,11 +35,11 @@ func main() {
 	}
 
 	clickhouseDriver := clickhouse.OpenConn(
-		clickhouse.WithConfig(ingestionConfig),
+		clickhouse.WithIngestionConfig(ingestionConfig),
 	)
 
 	migrationDriver := clickhouse.OpenConn(
-		clickhouse.WithConfig(ingestionConfig),
+		clickhouse.WithIngestionConfig(ingestionConfig),
 	)
 
 	// Extract *sql.DB from ClickHouseDriver for migrations

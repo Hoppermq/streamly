@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/hoppermq/streamly/cmd/config"
 	"github.com/hoppermq/streamly/internal/core/query"
+	"github.com/hoppermq/streamly/internal/core/query/ast"
 	"github.com/hoppermq/streamly/internal/http"
 	"github.com/hoppermq/streamly/internal/http/routes"
 	"github.com/zixyos/glog"
@@ -30,11 +31,23 @@ func main() {
 		logger.Warn("failed to load query config", "error", err)
 	}
 
-	engine := gin.New()
+	queryRepository := query.NewQueryRepository()
+
+	astValidator := ast.NewValidator(
+		ast.ValidatorWithLogger(logger),
+	)
+	astBuilder := ast.NewBuilder(
+		ast.BuilderWithLogger(logger),
+		ast.BuilderWithValidator(astValidator),
+	)
 
 	queryUseCase := query.NewQueryUseCase(
 		query.WithUseCaseLogger(logger),
+		query.WithRepository(queryRepository),
+		query.WithAstBuilder(astBuilder),
 	)
+
+	engine := gin.New()
 
 	httpServer := http.NewHTTPServer(
 		http.WithEngine(engine),

@@ -20,7 +20,7 @@ services:
       - bun_cache:/root/.bun
     environment:
       - NODE_ENV=development
-      - VITE_API_URL=http://localhost:8080
+      - VITE_API_URL=http://localhost:8091
       - VITE_APP_ENV=development
     depends_on:
       - ingestor-service
@@ -43,21 +43,21 @@ services:
         TARGET_OS: linux
         TARGET_ARCH: amd64
     ports:
-      - "8080:8080"
+      - "8091:8091"
     volumes:
       - ../:/app
       - go_mod_cache:/go/pkg/mod
       - go_build_cache:/root/.cache/go-build
     environment:
       - GO_ENV=development
-      - PORT=8080
+      - PORT=8091
       - CONFIG_PATH=/app/conf/config.dev.toml
       - SERVICE_PATH=./cmd/ingestion
     networks:
       - streamly-dev
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8091/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -86,7 +86,7 @@ services:
       - streamly-dev
     restart: unless-stopped
     healthcheck:
-      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health" ]
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8092/health" ]
       interval: 30s
       timeout: 10s
       retries: 3

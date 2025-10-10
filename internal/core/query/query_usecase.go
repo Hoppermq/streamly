@@ -2,20 +2,24 @@ package query
 
 import (
 	"context"
+	"encoding/json"
 	"log/slog"
 
+	"github.com/hoppermq/streamly/internal/core/query/ast"
 	"github.com/hoppermq/streamly/pkg/domain"
 )
 
-type QueryUseCaseImpl struct {
+type UseCaseImpl struct {
 	logger     *slog.Logger
 	repository domain.QueryRepository
+
+	astBuilder *ast.Builder
 }
 
-type UseCaseOption func(*QueryUseCaseImpl)
+type UseCaseOption func(*UseCaseImpl)
 
-func NewQueryUseCase(opts ...UseCaseOption) *QueryUseCaseImpl {
-	uc := &QueryUseCaseImpl{}
+func NewQueryUseCase(opts ...UseCaseOption) *UseCaseImpl {
+	uc := &UseCaseImpl{}
 	for _, opt := range opts {
 		opt(uc)
 	}
@@ -23,19 +27,37 @@ func NewQueryUseCase(opts ...UseCaseOption) *QueryUseCaseImpl {
 }
 
 func WithUseCaseLogger(logger *slog.Logger) UseCaseOption {
-	return func(uc *QueryUseCaseImpl) {
+	return func(uc *UseCaseImpl) {
 		uc.logger = logger
 	}
 }
 
 func WithRepository(repo domain.QueryRepository) UseCaseOption {
-	return func(uc *QueryUseCaseImpl) {
+	return func(uc *UseCaseImpl) {
 		uc.repository = repo
 	}
 }
 
-func (uc *QueryUseCaseImpl) SyncQuery(ctx context.Context, req *domain.QueryAstRequest) (*domain.QueryResponse, error) {
-	uc.applyDefaults(req)
+func WithAstBuilder(astBuilder *ast.Builder) UseCaseOption {
+	return func(uc *UseCaseImpl) {
+		uc.astBuilder = astBuilder
+	}
+}
+
+func (uc *UseCaseImpl) SyncQuery(ctx context.Context, req *domain.QueryAstRequest) (*domain.QueryResponse, error) {
+	applyDefaults(req)
+
+	data, err := json.Marshal(req)
+	if err != nil {
+		uc.logger.Warn("failed to marshal query request", "error", err.Error())
+		return nil, err
+	}
+
+	err = uc.astBuilder.Execute(data)
+	if err != nil {
+		uc.logger.Warn("error while building the query ast", "error", err.Error())
+		return nil, err
+	}
 
 	if uc.repository != nil {
 		return uc.repository.ExecuteQuery(ctx, req)
@@ -48,7 +70,7 @@ func (uc *QueryUseCaseImpl) SyncQuery(ctx context.Context, req *domain.QueryAstR
 	}, nil
 }
 
-func (uc *QueryUseCaseImpl) applyDefaults(req *domain.QueryAstRequest) {
+func applyDefaults(req *domain.QueryAstRequest) {
 	if req.Limit == nil {
 		defaultLimit := 1000
 		req.Limit = &defaultLimit

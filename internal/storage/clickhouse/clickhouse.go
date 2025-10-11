@@ -33,7 +33,7 @@ func WithLogger(logger *slog.Logger) Option {
 func (c *Client) Run(ctx context.Context) error {
 	c.logger.Info("running clickhouse connection")
 	go func() {
-		tx, err := c.driver.Begin()
+		tx, err := c.driver.BeginTx(ctx, nil)
 		if err != nil {
 			c.logger.Warn("failed to begin clickhouse transaction", "error", err)
 			return

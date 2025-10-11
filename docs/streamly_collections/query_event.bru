@@ -13,11 +13,6 @@ post {
 body:json {
   {
     "select": ["*"],
-    "from": "events",
-    "timeRange": {
-      "start": "now-1h",
-      "end": "now"
-    },
-    "limit": 50
+    "from": "events"
   }
 }

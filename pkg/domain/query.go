@@ -3,6 +3,8 @@ package domain
 import "context"
 
 type Datasource string
+type Query string
+type QueryArgs any
 
 const (
 	DataSourceEvents              Datasource = "events"
@@ -80,7 +82,7 @@ type QueryResponse struct {
 }
 
 type QueryRepository interface {
-	ExecuteQuery(ctx context.Context, req *QueryAstRequest) (*QueryResponse, error)
+	ExecuteQuery(ctx context.Context, query Query, args ...QueryArgs) (*QueryResponse, error)
 }
 
 type QueryUseCase interface {

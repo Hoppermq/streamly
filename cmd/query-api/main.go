@@ -11,6 +11,7 @@ import (
 	"github.com/hoppermq/streamly/internal/core/query/ast"
 	"github.com/hoppermq/streamly/internal/http"
 	"github.com/hoppermq/streamly/internal/http/routes"
+	"github.com/hoppermq/streamly/internal/storage/clickhouse"
 	"github.com/hoppermq/streamly/schemas"
 	"github.com/santhosh-tekuri/jsonschema/v6"
 	"github.com/zixyos/glog"
@@ -33,19 +34,30 @@ func main() {
 		logger.Warn("failed to load query config", "error", err)
 	}
 
-	queryRepository := query.NewQueryRepository()
+	clickhouseDriver := clickhouse.OpenConn(
+		// TODO : refactor for multi tenant
+		clickhouse.WithQueryConfig(queryConfig),
+	)
+
+	queryRepository := query.NewQueryRepository(
+		query.WithDriver(clickhouseDriver),
+	)
 
 	astValidator := ast.NewValidator(
 		ast.ValidatorWithLogger(logger),
 	)
 
 	jsonSchemaCompiler := jsonschema.NewCompiler()
+	queryTranslator := clickhouse.NewTranslator(
+		clickhouse.TranslatorWithLogger(logger),
+	)
 
 	astBuilder := ast.NewBuilder(
 		ast.BuilderWithLogger(logger),
 		ast.BuilderWithSchemaFS(schemas.FileFS),
 		ast.BuilderWithValidator(astValidator),
 		ast.BuilderWithJsonSchemaCompiler(jsonSchemaCompiler),
+		ast.BuilderWithTranslator(queryTranslator),
 	)
 
 	queryUseCase := query.NewQueryUseCase(

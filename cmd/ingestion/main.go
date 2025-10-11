@@ -35,16 +35,16 @@ func main() {
 	}
 
 	clickhouseDriver := clickhouse.OpenConn(
-		clickhouse.WithConfig(ingestionConfig),
+		clickhouse.WithIngestionConfig(ingestionConfig),
 	)
 
 	migrationDriver := clickhouse.OpenConn(
-		clickhouse.WithConfig(ingestionConfig),
+		clickhouse.WithIngestionConfig(ingestionConfig),
 	)
 
-	// Extract *sql.DB from ClickHouseDriver for migrations
+	// Extract *sql.DB from Driver for migrations
 	var sqlDB *sql.DB
-	if chDriver, ok := migrationDriver.(*clickhouse.ClickHouseDriver); ok {
+	if chDriver, ok := migrationDriver.(*clickhouse.Driver); ok {
 		sqlDB = chDriver.DB()
 	}
 

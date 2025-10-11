@@ -100,12 +100,7 @@ func (t *Translator) translateWhere(timeRange domain.TimeRange, whereClauses []d
 		if where.Op == "IN" {
 			values, ok := where.Value.([]any)
 			if !ok {
-				valueSlice, ok := where.Value.([]any)
-				if ok {
-					values = valueSlice
-				} else {
-					return fmt.Errorf("IN operator requires array value for field %s", where.Field)
-				}
+				return fmt.Errorf("IN operator requires array value for field %s", where.Field)
 			}
 			builder.WhereIn(where.Field, values)
 		} else {

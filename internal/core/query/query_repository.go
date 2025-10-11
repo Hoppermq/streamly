@@ -48,7 +48,10 @@ func (q *Repository) ExecuteQuery(ctx context.Context, query domain.Query, args 
 			rowMap[col] = values[i]
 		}
 		data = append(data, rowMap)
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
+}
 
 	defer func(rows *sql.Rows) {
 		err := rows.Close()

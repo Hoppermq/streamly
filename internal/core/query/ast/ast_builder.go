@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/hoppermq/streamly/internal/storage/clickhouse"
 	"github.com/hoppermq/streamly/pkg/domain"
 	"github.com/santhosh-tekuri/jsonschema/v6"
 )
@@ -16,19 +17,20 @@ type Builder struct {
 	schemaFS     embed.FS
 	jschCompiler *jsonschema.Compiler
 	validator    *Validator
+	translator   *clickhouse.Translator // should be domain driver.
 }
 
-type BuilderOption func(translator *Builder)
+type BuilderOption func(builder *Builder)
 
 func BuilderWithLogger(logger *slog.Logger) BuilderOption {
-	return func(translator *Builder) {
-		translator.logger = logger
+	return func(builder *Builder) {
+		builder.logger = logger
 	}
 }
 
 func BuilderWithValidator(validator *Validator) BuilderOption {
-	return func(translator *Builder) {
-		translator.validator = validator
+	return func(builder *Builder) {
+		builder.validator = validator
 	}
 }
 
@@ -39,8 +41,14 @@ func BuilderWithSchemaFS(schemaFS embed.FS) BuilderOption {
 }
 
 func BuilderWithJsonSchemaCompiler(jsonSchemaCompiler *jsonschema.Compiler) BuilderOption {
-	return func(translator *Builder) {
-		translator.jschCompiler = jsonSchemaCompiler
+	return func(builder *Builder) {
+		builder.jschCompiler = jsonSchemaCompiler
+	}
+}
+
+func BuilderWithTranslator(translator *clickhouse.Translator) BuilderOption {
+	return func(builder *Builder) {
+		builder.translator = translator
 	}
 }
 
@@ -87,13 +95,29 @@ func (tr *Builder) IsHealthy() bool {
 	return true
 }
 
-func (tr *Builder) Execute(data *domain.QueryAstRequest) error {
+func (tr *Builder) Execute(data *domain.QueryAstRequest) (domain.Query, []domain.QueryArgs, error) { // should be a domain type here
 	if err := tr.validator.Execute(data); err != nil {
 		tr.logger.Warn("error while executing the validation")
-		return err
+		return "", nil, err
+	}
+	query, err := tr.translator.Translate(data)
+	if err != nil {
+		tr.logger.Warn("error while translating data")
+		return "", nil, err
+	}
+	q, params, err := query.Build()
+	if err != nil {
+		tr.logger.Warn("error while building query")
+		return "", nil, err
 	}
 
-	return nil
+	queryArgs := make([]domain.QueryArgs, len(params))
+	for i, param := range params {
+		queryArgs[i] = param
+	}
+
+	tr.logger.Info("query built", "query", q, "params", params)
+	return domain.Query(q), queryArgs, nil
 }
 
 func NewBuilder(opts ...BuilderOption) *Builder {

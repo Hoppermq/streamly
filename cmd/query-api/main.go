@@ -48,12 +48,16 @@ func main() {
 	)
 
 	jsonSchemaCompiler := jsonschema.NewCompiler()
+	queryTranslator := clickhouse.NewTranslator(
+		clickhouse.TranslatorWithLogger(logger),
+	)
 
 	astBuilder := ast.NewBuilder(
 		ast.BuilderWithLogger(logger),
 		ast.BuilderWithSchemaFS(schemas.FileFS),
 		ast.BuilderWithValidator(astValidator),
 		ast.BuilderWithJsonSchemaCompiler(jsonSchemaCompiler),
+		ast.BuilderWithTranslator(queryTranslator),
 	)
 
 	queryUseCase := query.NewQueryUseCase(

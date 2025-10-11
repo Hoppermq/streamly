@@ -3,14 +3,15 @@ package clickhouse
 import (
 	"context"
 	"database/sql"
+	"fmt"
 
 	"github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/hoppermq/streamly/cmd/config"
 	"github.com/hoppermq/streamly/pkg/domain"
 )
 
-// ClickHouseDriver adapts *sql.DB to domain.Driver interface
-type ClickHouseDriver struct {
+// Driver adapts *sql.DB to domain.Driver interface
+type Driver struct {
 	db *sql.DB
 }
 
@@ -47,7 +48,7 @@ func (t *txAdapter) PrepareContext(ctx context.Context, query string) (domain.St
 	return &stmtAdapter{stmt: stmt}, nil
 }
 
-func (d *ClickHouseDriver) Begin() (domain.Tx, error) {
+func (d *Driver) Begin() (domain.Tx, error) {
 	tx, err := d.db.Begin()
 	if err != nil {
 		return nil, err
@@ -55,7 +56,7 @@ func (d *ClickHouseDriver) Begin() (domain.Tx, error) {
 	return &txAdapter{tx: tx}, nil
 }
 
-func (d *ClickHouseDriver) BeginTx(ctx context.Context, opts *sql.TxOptions) (domain.Tx, error) {
+func (d *Driver) BeginTx(ctx context.Context, opts *sql.TxOptions) (domain.Tx, error) {
 	tx, err := d.db.BeginTx(ctx, opts)
 	if err != nil {
 		return nil, err
@@ -64,12 +65,31 @@ func (d *ClickHouseDriver) BeginTx(ctx context.Context, opts *sql.TxOptions) (do
 	return &txAdapter{tx: tx}, nil
 }
 
-func (d *ClickHouseDriver) Close() error {
+func (d *Driver) Close() error {
 	return d.db.Close()
 }
 
-func (d *ClickHouseDriver) DB() *sql.DB {
+func (d *Driver) DB() *sql.DB {
 	return d.db
+}
+
+func (d *Driver) Query(query domain.Query, args ...domain.QueryArgs) (*sql.Rows, error) {
+	compliantArgs := make([]any, len(args))
+	for i, a := range args {
+		compliantArgs[i] = a
+	}
+	fmt.Println(compliantArgs)
+	return d.db.Query(string(query), compliantArgs...)
+}
+
+func (d *Driver) QueryContext(ctx context.Context, query domain.Query, args ...domain.QueryArgs) (*sql.Rows, error) {
+	compliantArgs := make([]any, len(args))
+	for i, a := range args {
+		compliantArgs[i] = a
+	}
+
+	fmt.Println(compliantArgs)
+	return d.db.QueryContext(ctx, string(query), compliantArgs...)
 }
 
 type DriverOption func(options *clickhouse.Options)
@@ -106,5 +126,5 @@ func OpenConn(opts ...DriverOption) domain.Driver {
 	}
 
 	db := clickhouse.OpenDB(options)
-	return &ClickHouseDriver{db: db}
+	return &Driver{db: db}
 }

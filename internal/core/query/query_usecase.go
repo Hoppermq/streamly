@@ -46,13 +46,13 @@ func WithAstBuilder(astBuilder *ast.Builder) UseCaseOption {
 func (uc *UseCaseImpl) SyncQuery(ctx context.Context, req *domain.QueryAstRequest) (*domain.QueryResponse, error) {
 	applyDefaults(req)
 
-	err := uc.astBuilder.Execute(req)
+	query, params, err := uc.astBuilder.Execute(req)
 	if err != nil {
 		uc.logger.Warn("error while building the query ast", "error", err.Error())
 		return nil, err
 	}
 
-	return uc.repository.ExecuteQuery(ctx, req)
+	return uc.repository.ExecuteQuery(ctx, query, params...)
 }
 
 func applyDefaults(req *domain.QueryAstRequest) {

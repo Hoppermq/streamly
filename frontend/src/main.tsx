@@ -10,19 +10,18 @@ import {
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import TanStackQueryDemo from './routes/demo.tanstack-query.tsx'
 
-import Header from './components/Header'
 
 import * as TanStackQueryProvider from './integrations/tanstack-query/root-provider.tsx'
 
-import './styles.css'
+import './index.css'
 import reportWebVitals from './reportWebVitals.ts'
 
 import App from './App.tsx'
+import { ThemeProvider } from './components/theme-provider.tsx'
 
 const rootRoute = createRootRoute({
   component: () => (
     <>
-      <Header />
       <Outlet />
       <TanStackRouterDevtools />
     </>
@@ -63,9 +62,11 @@ if (rootElement && !rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement)
   root.render(
     <StrictMode>
-      <TanStackQueryProvider.Provider {...TanStackQueryProviderContext}>
-        <RouterProvider router={router} />
-      </TanStackQueryProvider.Provider>
+      <ThemeProvider>
+        <TanStackQueryProvider.Provider {...TanStackQueryProviderContext}>
+          <RouterProvider router={router} />
+        </TanStackQueryProvider.Provider>
+      </ThemeProvider>
     </StrictMode>,
   )
 }

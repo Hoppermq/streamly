@@ -20,8 +20,8 @@
   --accent: oklch(0.967 0.001 286.375);
   --accent-foreground: oklch(0.21 0.006 285.885);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
+  --border: var(--main-container-border);
+  --input: var(--main-container-border);
   --ring: oklch(0.702 0.183 293.541);
   --chart-1: oklch(0.811 0.111 293.571);
   --chart-2: oklch(0.606 0.25 292.717);
@@ -57,8 +57,8 @@
   --accent: oklch(0.274 0.006 286.033);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
+  --border: var(--main-container-border);
+  --input: var(--main-container-border);
   --ring: oklch(0.38 0.189 293.745);
   --chart-1: oklch(0.811 0.111 293.571);
   --chart-2: oklch(0.606 0.25 292.717);
@@ -73,6 +73,30 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.38 0.189 293.745);
+}
+
+/* Custom sidebar icon hover */
+[data-sidebar="menu-button"]:hover svg {
+  color: hsl(var(--primary)) !important;
+  transition: color 0.2s ease;
+}
+
+/* Alternative approach - target by component structure */
+.sidebar-menu-hover:hover svg {
+  color: oklch(0.541 0.281 293.009) !important;
+  transition: color 0.2s ease;
+}
+
+/* Custom border utilities */
+.border-main {
+  border: 0.5px solid var(--main-container-border);
+}
+
+/* Custom input focus styles */
+.input-focus:focus {
+  border-color: oklch(from var(--primary) l c h / 0.5) !important;
+  box-shadow: 0 0 0 2px oklch(from var(--primary) l c h / 0.3) !important;
+  outline: none !important;
 }
 
 @theme inline {

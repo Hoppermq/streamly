@@ -47,7 +47,7 @@ export const NavBarComponent: FunctionComponent = () => {
             <SidebarMenu>
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
+                  <SidebarMenuButton asChild className="sidebar-menu-hover">
                     <a href={item.url}>
                       <item.icon />
                       <span>{item.title}</span>
@@ -63,6 +63,7 @@ export const NavBarComponent: FunctionComponent = () => {
             More
           </SidebarGroupLabel>
           <SidebarGroupContent>
+            { /* next features will come here */ }
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>

@@ -1,7 +1,7 @@
 import type {ReactNode} from "react";
 import {NavBarComponent} from "@/components/nav-bar.component.tsx";
 import {SidebarProvider, SidebarInset} from "@/components/ui/sidebar.tsx";
-import Header from "@/components/Header.tsx";
+import HeaderComponent from "@/components/header.component.tsx";
 
 const RootContainer = ({ children} :{children: ReactNode})=> (
   <div className='min-h-screen text-foreground'>
@@ -9,11 +9,10 @@ const RootContainer = ({ children} :{children: ReactNode})=> (
       <NavBarComponent />
       <SidebarInset className={"flex flex-1 flex-col"}>
         <div id={'content-header'}>
-          <Header />
+          <HeaderComponent />
         </div>
           <div id={'container-layout'}
-            className="bg-background rounded-b-md shadow-sm overflow-auto flex-1 p-2"
-             style={{ border: '0.5px solid var(--main-container-border' }}
+            className="bg-background border-main rounded-b-md shadow-sm overflow-auto flex-1 p-2"
           >
             {children}
           </div>

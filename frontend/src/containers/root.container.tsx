@@ -12,7 +12,7 @@ const RootContainer = ({ children} :{children: ReactNode})=> (
           <HeaderComponent />
         </div>
           <div id={'container-layout'}
-            className="bg-background border-main rounded-b-md shadow-sm overflow-auto flex-1 p-2"
+            className="bg-background border-top rounded-b-md shadow-sm overflow-auto flex-1 p-2"
           >
             {children}
           </div>

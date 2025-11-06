@@ -91,6 +91,9 @@
 .border-main {
   border: 0.5px solid var(--main-container-border);
 }
+.border-top {
+  border-top: 0.5px solid var(--main-container-border);
+}
 
 /* Custom input focus styles */
 .input-focus:focus {

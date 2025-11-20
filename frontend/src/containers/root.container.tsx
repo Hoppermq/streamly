@@ -4,7 +4,7 @@ import {SidebarProvider, SidebarInset} from "@/components/ui/sidebar.tsx";
 import HeaderComponent from "@/components/header.component.tsx";
 
 const RootContainer = ({ children} :{children: ReactNode})=> (
-  <div className='min-h-screen text-foreground'>
+  <div className='min-h-screen text-foreground overscroll-none'>
     <SidebarProvider>
       <NavBarComponent />
       <SidebarInset className={"flex flex-1 flex-col"}>

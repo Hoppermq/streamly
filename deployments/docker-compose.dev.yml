@@ -92,6 +92,65 @@ services:
       retries: 3
       start_period: 40s
 
+  zitadel:
+    restart: on-failure
+    image: ghcr.io/zitadel/zitadel:latest
+    command: 'start-from-init --config /init-config.yml --masterkeyFromEnv --tlsMode disabled'
+    volumes:
+      - "./zitadel/init-config.dev.yml:/init-config.yml:ro"
+    environment:
+      - ZITADEL_MASTERKEY=masterKeyShouldLast32Characters!
+      - ZITADEL_TLS_ENABLED=false
+    depends_on:
+      postgres:
+        condition: "service_healthy"
+    ports:
+      - "8888:8080"
+      - "3001:3000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/debug/ready"]
+      interval: 10s
+      timeout: 60s
+      retries: 5
+      start_period: 10s
+    networks:
+      - zitadel
+      - streamly-dev
+
+  zitadel-login:
+    restart: unless-stopped
+    image: ghcr.io/zitadel/zitadel-login:latest
+    environment:
+      - ZITADEL_API_URL=http://zitadel:8080
+      - NEXT_PUBLIC_BASE_PATH=/ui/v2/login
+      - ZITADEL_CONSOLE_URL=http://localhost:8888
+      - NEXTAUTH_URL=http://localhost:3002/ui/v2/login
+    user: "0"
+    ports:
+      - "3002:3000"
+    networks:
+      - zitadel
+      - streamly-dev
+    depends_on:
+      zitadel:
+        condition: service_healthy
+
+  rabbitmq:
+    image: rabbitmq:latest
+    container_name: rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=dev
+      - RABBITMQ_DEFAULT_PASS=password
+    volumes:
+      - rabbitmq-lib:/var/lib/rabbitmq/
+      - rabbitmq-log:/var/log/rabbitmq
+    networks:
+      - streamly-dev
+
   redis:
     image: redis:7-alpine
     ports:
@@ -109,12 +168,12 @@ services:
       retries: 3
 
   postgres:
-    image: postgres:15-alpine
+    image: postgres:17.7-alpine
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ../scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+      - ../scripts/sql/:/docker-entrypoint-initdb.d/
     environment:
       - POSTGRES_DB=streamly_dev
       - POSTGRES_USER=streamly
@@ -183,10 +242,17 @@ services:
       - streamly-dev
     restart: unless-stopped
 
+configs:
+  rabbitmq-plugins:
+    content: "[rabbitmq_management]."
+
 networks:
   streamly-dev:
     driver: bridge
     name: streamly-dev
+  zitadel:
+    driver: bridge
+    name: zitadel
 
 volumes:
   postgres_data:
@@ -195,6 +261,12 @@ volumes:
   clickhouse_data:
     driver: local
     name: streamly-dev-clickhouse
+  rabbitmq-lib:
+    driver: local
+    name: streamly-dev-rabbitmq-lib
+  rabbitmq-log:
+    driver: local
+    name: streamly-dev-rabbitmq-log
   redis_data:
     driver: local
     name: streamly-dev-redis

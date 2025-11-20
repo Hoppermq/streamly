@@ -1,0 +1,25 @@
+Log:
+  Level: 'info'
+
+ExternalSecure: false
+ExternalDomain: 'localhost'
+ExternalPort: 8888
+
+LoginUI:
+  ExternalLoginURL: 'http://localhost:3002/ui/v2/login/login'
+
+Database:
+  postgres:
+    Port: 5432
+    Host: 'postgres'
+    Database: 'streamly_dev'
+    User:
+      Username: 'streamly'
+      Password: 'dev_password_123'
+      SSL:
+        Mode: 'disable'
+    Admin:
+      Username: 'streamly'
+      Password: 'dev_password_123'
+      SSL:
+        Mode: 'disable'

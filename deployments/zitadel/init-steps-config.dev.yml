@@ -1,0 +1,15 @@
+FirstInstance:
+  Org:
+    Name: STREAMLY
+    Human:
+      Username: 'root'
+      Password: 'password'
+      Email: 'root@localhost'
+      FirstName: 'Root'
+      LastName: 'Admin'
+  # Disable email verification for local development  
+  LoginPolicy:
+    AllowUsernamePassword: true
+    AllowRegister: true
+    AllowExternalIDP: false
+    ForceMFA: false

@@ -62,3 +62,16 @@
   port = 8092
   read_timeout = 3600
   write_timeout = 3600
+
+[auth]
+  [auth.service]
+  name = "auth-service"
+  version = "0.0.1"
+
+  [auth.http]
+
+  [auth.storage]
+    [auth.storage.database]
+    [auth.storage.cache]
+
+  [auth.logging]

@@ -5,19 +5,6 @@ ExternalSecure: false
 ExternalDomain: 'localhost'
 ExternalPort: 8888
 
-DefaultInstance:
-  SMTPConfiguration:
-    SMTP:
-      Host: 'mailhog'
-      Port: 1025
-      User: ''
-      Password: ''
-    TLS: false
-    From: 'noreply@localhost'
-    FromName: 'ZITADEL'
-  # Disable email verification for local development
-  EmailVerificationRequired: false
-
 Database:
   postgres:
     Port: 5432

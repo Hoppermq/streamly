@@ -104,6 +104,25 @@ services:
       postgres:
         condition: "service_healthy"
 
+  auth-service:
+    build:
+      context: ../
+      dockerfile: docker/services.dev.Dockerfile
+      target: development
+      args:
+        TARGET_OS: linux
+        TARGET_ARCH: amd64
+    ports:
+      - "8093:8093"
+    volumes:
+      - ../:/app
+      - go_mod_cache:/go/pkg/mod
+      - go_build_cache:/root/.cache/go-build
+    environment:
+      - GO_ENV=dev
+      - PORT=8093
+      - CONFIG_PATH=/app/conf/config.dev.toml
+      - SERVICE_PATH=./cmd/auth
 
   zitadel:
     restart: on-failure

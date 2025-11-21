@@ -55,6 +55,20 @@ func WithQueryHTTPServer(conf *config.QueryConfig) Options {
 	}
 }
 
+func WithAuthHTTPServer(conf *config.AuthConfig) Options {
+	return func(h *HTTPServer) {
+		if h.engine == nil {
+			panic(errors.ErrEngineErrorOrder)
+		}
+		h.server = &http.Server{
+			Addr:         ":" + strconv.Itoa(conf.Auth.HTTP.Port),
+			Handler:      h.engine,
+			ReadTimeout:  conf.Auth.HTTP.ReadTimeout * time.Millisecond,
+			WriteTimeout: conf.Auth.HTTP.WriteTimeout * time.Millisecond,
+		}
+	}
+}
+
 // WithEngine set the engine.
 func WithEngine(engine *gin.Engine) Options {
 	return func(h *HTTPServer) {
@@ -69,7 +83,7 @@ func WithLogger(logger *slog.Logger) Options {
 	}
 }
 
-
+// WithRoutes register all routes to the engine.
 func WithRoutes(routerRegister func(engine *gin.Engine)) Options {
 	return func(h *HTTPServer) {
 		routerRegister(h.engine)

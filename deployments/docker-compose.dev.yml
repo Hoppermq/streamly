@@ -24,6 +24,8 @@ services:
       - VITE_APP_ENV=development
     depends_on:
       - ingestor-service
+      - query-service
+      - zitadel
     networks:
       - streamly-dev
     restart: unless-stopped
@@ -62,6 +64,11 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    depends_on:
+      clickhouse:
+        condition: "service_healthy"
+      postgres:
+        condition: "service_healthy"
 
   query-service:
     build:
@@ -91,6 +98,74 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    depends_on:
+      clickhouse:
+        condition: "service_healthy"
+      postgres:
+        condition: "service_healthy"
+
+  auth-service:
+    build:
+      context: ../
+      dockerfile: docker/services.dev.Dockerfile
+      target: development
+      args:
+        TARGET_OS: linux
+        TARGET_ARCH: amd64
+    ports:
+      - "8093:8093"
+    volumes:
+      - ../:/app
+      - go_mod_cache:/go/pkg/mod
+      - go_build_cache:/root/.cache/go-build
+    environment:
+      - GO_ENV=dev
+      - PORT=8093
+      - CONFIG_PATH=/app/conf/config.dev.toml
+      - SERVICE_PATH=./cmd/auth
+
+  zitadel:
+    restart: on-failure
+    image: ghcr.io/zitadel/zitadel:latest
+    command: 'start-from-init --config /init-config.yml --steps /init-steps-config.yml --masterkeyFromEnv --tlsMode disabled'
+    volumes:
+      - "./zitadel/init-config.dev.yml:/init-config.yml:ro"
+      - "./zitadel/init-steps-config.dev.yml:/init-steps-config.yml:ro"
+    environment:
+      - ZITADEL_MASTERKEY=masterKeyShouldLast32Characters!
+      - ZITADEL_TLS_ENABLED=false
+      - ZITADEL_DEFAULTINSTANCE_FEATURES_LOGINV2_REQUIRED=false
+    depends_on:
+      postgres:
+        condition: "service_healthy"
+    ports:
+      - "8888:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/debug/ready"]
+      interval: 10s
+      timeout: 60s
+      retries: 5
+      start_period: 10s
+    networks:
+      - zitadel
+      - streamly-dev
+
+
+  rabbitmq:
+    image: rabbitmq:latest
+    container_name: rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=dev
+      - RABBITMQ_DEFAULT_PASS=password
+    volumes:
+      - rabbitmq-lib:/var/lib/rabbitmq/
+      - rabbitmq-log:/var/log/rabbitmq
+    networks:
+      - streamly-dev
 
   redis:
     image: redis:7-alpine
@@ -109,12 +184,12 @@ services:
       retries: 3
 
   postgres:
-    image: postgres:15-alpine
+    image: postgres:17.7-alpine
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ../scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+      - ../scripts/sql/:/docker-entrypoint-initdb.d/
     environment:
       - POSTGRES_DB=streamly_dev
       - POSTGRES_USER=streamly
@@ -183,10 +258,17 @@ services:
       - streamly-dev
     restart: unless-stopped
 
+configs:
+  rabbitmq-plugins:
+    content: "[rabbitmq_management]."
+
 networks:
   streamly-dev:
     driver: bridge
     name: streamly-dev
+  zitadel:
+    driver: bridge
+    name: zitadel
 
 volumes:
   postgres_data:
@@ -195,6 +277,12 @@ volumes:
   clickhouse_data:
     driver: local
     name: streamly-dev-clickhouse
+  rabbitmq-lib:
+    driver: local
+    name: streamly-dev-rabbitmq-lib
+  rabbitmq-log:
+    driver: local
+    name: streamly-dev-rabbitmq-log
   redis_data:
     driver: local
     name: streamly-dev-redis

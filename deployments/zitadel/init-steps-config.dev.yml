@@ -1,0 +1,9 @@
+FirstInstance:
+  Org:
+    Name: STREAMLY
+    Human:
+      Username: 'root'
+      Password: 'Password123!'
+      Email: 'root@localhost'
+      FirstName: 'Root'
+      LastName: 'Admin'

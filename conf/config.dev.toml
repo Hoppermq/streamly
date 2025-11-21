@@ -62,3 +62,38 @@
   port = 8092
   read_timeout = 3600
   write_timeout = 3600
+
+[auth]
+  [auth.service]
+  name = "auth-service"
+  version = "0.0.1"
+
+  [auth.http]
+  port = 8093
+  read_timeout = 3600
+  write_timeout = 3600
+
+  [auth.storage]
+    [auth.storage.database]
+    host = "postgres"
+    port = "5432"
+    user = "streamly"
+    password = "dev_streamly_password"
+    database = "streamly_dev"
+
+    [auth.storage.cache]
+    host = "redis"
+    port = 6379
+    user = "root"
+    password = "password"
+    database = "0"
+
+  [auth.transport]
+    host = "rabbitmq"
+    port = 5672
+    user = "root"
+    password = "password"
+
+  [auth.logging]
+  level = "debug"
+  format = "json"

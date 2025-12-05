@@ -11,7 +11,7 @@ provider "zitadel" {
   domain = var.zitadel_domain
   insecure = var.zitadel_secure_mode
   port = var.zitadel_port
-  jwt_profile_file = var.zitadel_token_path
+  jwt_profile_file = var.zitadel_jwt_profile_file
 }
 
 module "common" {
@@ -28,7 +28,7 @@ module "iam" {
   project_name = var.project_name
 
   roles = module.common.roles
-  services = module.common.services
+  services = module.common.service_definitions
 }
 
 module "service-accounts" {

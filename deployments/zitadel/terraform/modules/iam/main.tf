@@ -24,3 +24,11 @@ resource "zitadel_machine_user" "default" {
 
   with_secret = true
 }
+
+resource "zitadel_machine_key" "default" {
+  for_each = zitadel_machine_user.default
+
+  org_id  = var.organization_id
+  user_id = each.value.id
+  key_type = "KEY_TYPE_JSON"
+}

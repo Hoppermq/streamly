@@ -12,9 +12,11 @@ variable "zitadel_port" {
   type = string
   description = "zitadel_port (actually for v1/ is the current zitadel port running."
 }
-variable "zitadel_token_path" {
+
+variable "zitadel_jwt_profile_file" {
   type = string
-  description = "path to the token profil file"
+  description = "Path to JWT profile file for Zitadel authentication"
+  sensitive = true
 }
 
 variable "project_name" {

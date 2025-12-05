@@ -16,3 +16,14 @@ output "role_ids" {
     for k, v in zitadel_project_role.default : k => v.id
   }
 }
+
+output "service_credentials" {
+  description = "Service account credentials (client_id and client_secret)"
+  sensitive   = true
+  value = {
+    for k, key in zitadel_machine_key.default : k => {
+      client_id     = key.user_id
+      client_secret = key.key_details
+    }
+  }
+}

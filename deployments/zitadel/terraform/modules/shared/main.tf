@@ -15,34 +15,37 @@ locals {
   }
 
   services = {
+    auth = {
+      scopes =["openid", "streamly:events:read", "streamly:events:write"],
+      roles = ["technical"],
+    },
     ingestor = {
-      name = "ingestor-service"
+      scopes =["openid", "streamly:events:read", "streamly:events:write"],
+      roles = ["technical"]
     },
-    query = {
-      name = "query-service"
-    },
+    query ={
+      scopes = ["openid", "streamly:events:read"],
+      roles = ["technical"],
+    } ,
     processor = {
-      name = "processor-service"// should be imported to kep consistancy across other comps
+      scopes = ["openid", "streamly:events:read", "streamly:events:write"],
+      roles = ["technical"]
     }
   }
 
+  # Derive service definitions for IAM module (machine user creation)
+  service_definitions = {
+    for key, config in local.services : key => {
+      name = key
+    }
+  }
+
+  # Derive service role mappings for service-accounts module
   service_role_mappings = {
-    ingestor = {
-      service_key = "ingestor"
+    for key, config in local.services : key => {
+      service_key = key
       roles = {
-        "technical" = "technical"
-      }
-    },
-    query = {
-      service_key = "query" 
-      roles = {
-        "technical" = "technical"
-      }
-    },
-    processor = {
-      service_key = "processor"
-      roles = {
-        "technical" = "technical"
+        for role in config.roles : role => role
       }
     }
   }

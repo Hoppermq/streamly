@@ -7,3 +7,14 @@ FirstInstance:
       Email: 'root@localhost'
       FirstName: 'Root'
       LastName: 'Admin'
+    Machine:
+      Machine:
+        Username: 'terraform-sa'
+        Name: 'Terraform Service Account'
+      MachineKey:
+        Type: 1  # KEY_TYPE_JSON
+        ExpirationDate: '2099-01-01T00:00:00Z'
+      PAT:
+        ExpirationDate: '2099-01-01T00:00:00Z'
+  MachineKeyPath: '/machinekey/zitadel-admin-sa.json'
+  PATPath: '/machinekey/zitadel-admin.pat'

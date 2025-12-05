@@ -1,2 +1,14 @@
 bin
 vendor
+deployments/zitadel/terraform/.terraform
+deployments/zitadel/terraform/terraform.tfvars.example
+deployments/zitadel/terraform/terraform.tfstate
+deployments/zitadel/terraform/.zitadel-pat
+deployments/zitadel/terraform/.zitadel-root-pat
+deployments/zitadel/terraform/zitadel-terraform-sa.json
+deployments/zitadel/terraform/provider-override.tf
+deployments/.env.zitadel
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
+deployments/zitadel/machinekey

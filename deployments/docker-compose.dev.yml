@@ -1,7 +1,7 @@
 # Development Docker Compose Configuration
 # Optimized for local development with hot reload and debugging
 
-version: '3.8'
+version: "3.8"
 
 services:
   frontend:
@@ -59,7 +59,15 @@ services:
       - streamly-dev
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8091/health"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:8091/health",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -93,7 +101,15 @@ services:
       - streamly-dev
     restart: unless-stopped
     healthcheck:
-      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8092/health" ]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:8092/health",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -103,6 +119,8 @@ services:
         condition: "service_healthy"
       postgres:
         condition: "service_healthy"
+      zitadel-bootstrap:
+        condition: service_completed_successfully
 
   auth-service:
     build:
@@ -123,25 +141,45 @@ services:
       - PORT=8093
       - CONFIG_PATH=/app/conf/config.dev.toml
       - SERVICE_PATH=./cmd/auth
+    networks:
+      - streamly-dev
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      zitadel-bootstrap:
+        condition: service_completed_successfully
 
   zitadel:
-    restart: on-failure
+    restart: unless-stopped
     image: ghcr.io/zitadel/zitadel:latest
-    command: 'start-from-init --config /init-config.yml --steps /init-steps-config.yml --masterkeyFromEnv --tlsMode disabled'
+    command: "start-from-init --config /init-config.yml --steps /init-steps-config.yml --masterkeyFromEnv --tlsMode disabled"
     volumes:
       - "./zitadel/init-config.dev.yml:/init-config.yml:ro"
       - "./zitadel/init-steps-config.dev.yml:/init-steps-config.yml:ro"
+      - "./zitadel/machinekey:/machinekey"
     environment:
       - ZITADEL_MASTERKEY=masterKeyShouldLast32Characters!
       - ZITADEL_TLS_ENABLED=false
-      - ZITADEL_DEFAULTINSTANCE_FEATURES_LOGINV2_REQUIRED=false
+      - ZITADEL_FIRSTINSTANCE_MACHINEKEYPATH=/machinekey/zitadel-admin-sa.json
+      - ZITADEL_FIRSTINSTANCE_PATPATH=/machinekey/zitadel-admin.pat
+      - ZITADEL_FIRSTINSTANCE_ORG_HUMAN_PASSWORDCHANGEREQUIRED=false
+      - ZITADEL_FIRSTINSTANCE_LOGINCLIENTPATPATH=/machinekey/login-client.pat
+      - ZITADEL_FIRSTINSTANCE_ORG_LOGINCLIENT_MACHINE_USERNAME=login-client
+      - ZITADEL_FIRSTINSTANCE_ORG_LOGINCLIENT_MACHINE_NAME=Automatically Initialized IAM_LOGIN_CLIENT
+      - ZITADEL_FIRSTINSTANCE_ORG_LOGINCLIENT_PAT_EXPIRATIONDATE=2029-01-01T00:00:00Z
+      - ZITADEL_DEFAULTINSTANCE_FEATURES_LOGINV2_REQUIRED=true
+      - ZITADEL_DEFAULTINSTANCE_FEATURES_LOGINV2_BASEURI=http://zitadel-login:3000/ui/v2/login
+      - ZITADEL_OIDC_DEFAULTLOGINURLV2=http://localhost:3003/ui/v2/login/login?authRequest=
+      - ZITADEL_OIDC_DEFAULTLOGOUTURLV2=http://localhost:3003/ui/v2/login/logout?post_logout_redirect=
+      - ZITADEL_SAML_DEFAULTLOGINURLV2=http://localhost:3003/ui/v2/login/login?samlRequest=
     depends_on:
       postgres:
         condition: "service_healthy"
     ports:
       - "8888:8080"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/debug/ready"]
+      test: ["CMD", "/app/zitadel", "ready"]
       interval: 10s
       timeout: 60s
       retries: 5
@@ -149,7 +187,58 @@ services:
     networks:
       - zitadel
       - streamly-dev
+    user: "0"
 
+  zitadel-login:
+    restart: unless-stopped
+    image: ghcr.io/zitadel/zitadel-login:latest
+    environment:
+      - ZITADEL_API_URL=http://zitadel:8080
+      - NEXT_PUBLIC_BASE_PATH=/ui/v2/login
+      - ZITADEL_SERVICE_USER_TOKEN_FILE=/machinekey/login-client.pat
+    volumes:
+      - "./zitadel/machinekey:/machinekey:ro"
+    networks:
+      - zitadel
+      - streamly-dev
+    user: "0"
+    depends_on:
+      zitadel:
+        condition: service_healthy
+    ports:
+      - "3003:3000"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 30s
+      retries: 5
+      start_period: 20s
+
+  zitadel-bootstrap:
+    image: hashicorp/terraform:1.9
+    volumes:
+      - ./:/deployments
+      - "./zitadel/machinekey:/machinekey:ro"
+    working_dir: /deployments
+    environment:
+      - ZITADEL_URL=http://zitadel:8080
+      - ZITADEL_DOMAIN=zitadel
+      - ZITADEL_PORT=8080
+      - ZITADEL_PAT_FILE=/machinekey/zitadel-admin.pat
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        apk add --no-cache bash curl jq
+        /deployments/scripts/bootstrap-zitadel.sh
+    depends_on:
+      zitadel:
+        condition: service_healthy
+      zitadel-login:
+        condition: service_healthy
+    networks:
+      - zitadel
+      - streamly-dev
+    restart: "no"
 
   rabbitmq:
     image: rabbitmq:latest
@@ -207,8 +296,8 @@ services:
   clickhouse:
     image: clickhouse/clickhouse-server
     ports:
-      - "5342:9000"  # TCP native protocol port (remapped from 9000 to follow PostgreSQL-like convention)
-      - "9000:8123"  # HTTP API port (remapped from 8123 for consistency)
+      - "5342:9000" # TCP native protocol port (remapped from 9000 to follow PostgreSQL-like convention)
+      - "9000:8123" # HTTP API port (remapped from 8123 for consistency)
     volumes:
       - clickhouse_data:/var/lib/clickhouse
     environment:
@@ -295,4 +384,6 @@ volumes:
   go_build_cache:
     driver: local
     name: streamly-dev-go-build
-
+  zitadel_machinekey:
+    driver: local
+    name: streamly-dev-zitadel-machinekey

@@ -322,6 +322,11 @@ services:
     image: spoonest/clickhouse-tabix-web-client:stable
     ports:
       - "8124:80"
+    healthcheck:
+      test: ["CMD", "echo", "ok"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     networks:
       - streamly-dev
     restart: unless-stopped

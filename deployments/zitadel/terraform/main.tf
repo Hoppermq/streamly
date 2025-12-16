@@ -2,7 +2,7 @@ terraform {
   required_providers {
     zitadel = {
       source  = "zitadel/zitadel"
-      version = "2.2.0"
+      version = "2.3.0"
     }
   }
 }
@@ -11,7 +11,7 @@ provider "zitadel" {
   domain = var.zitadel_domain
   insecure = var.zitadel_secure_mode
   port = var.zitadel_port
-  jwt_profile_file = var.zitadel_jwt_profile_file
+  jwt_profile_json = file(var.zitadel_jwt_profile_file)
 }
 
 module "common" {

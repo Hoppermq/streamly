@@ -78,7 +78,7 @@
     host = "postgres"
     port = "5432"
     user = "streamly"
-    password = "dev_streamly_password"
+    password = "dev_password_123"
     database = "streamly_dev"
 
     [auth.storage.cache]
@@ -97,3 +97,15 @@
   [auth.logging]
   level = "debug"
   format = "json"
+
+[platform]
+  [platform.service]
+  name = "platform-service"
+
+  [platform.storage]
+    [platform.storage.database]
+    host = "postgres"
+    port = 5432
+    user = "streamly"
+    password = "dev_password_123"
+    name = "streamly_dev"

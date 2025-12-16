@@ -3,10 +3,107 @@
 version: '3'
 
 vars:
-  GREETING: Hello, World!
+  COMPOSE_FILE: deployments/docker-compose.dev.yml
 
 tasks:
   default:
+    desc: Show available tasks
     cmds:
-      - echo "{{.GREETING}}"
+      - task --list
     silent: true
+
+  dev:
+    desc: Start dev environment with hot reload
+    cmds:
+      - docker-compose -f {{.COMPOSE_FILE}} up
+
+  dev:bg:
+    desc: Start dev environment in background
+    cmds:
+      - docker-compose -f {{.COMPOSE_FILE}} up -d
+
+  dev:down:
+    desc: Stop dev environment
+    cmds:
+      - docker-compose -f {{.COMPOSE_FILE}} down
+
+  logs:
+    desc: "View logs for specific service (usage: task logs service=platform-service)"
+    cmds:
+      - docker-compose -f {{.COMPOSE_FILE}} logs -f {{.service}}
+
+  shell:
+    desc: "Shell into container (usage: task shell service=platform-service)"
+    cmds:
+      - docker-compose -f {{.COMPOSE_FILE}} exec {{.service}} sh
+
+  test:
+    desc: Run all tests
+    cmds:
+      - go test ./... -v -race
+
+  test:unit:
+    desc: Run unit tests only
+    cmds:
+      - go test ./... -v -race -short
+
+  test:integration:
+    desc: Run integration tests only
+    cmds:
+      - go test ./... -v -race -run Integration
+
+  db:migrate:up:
+    desc: Run ClickHouse migrations up
+    cmds:
+      - migrate -path ./clickhouse/sql -database "clickhouse://localhost:9000/streamly_analytics" up
+
+  db:migrate:down:
+    desc: Rollback ClickHouse migrations
+    cmds:
+      - migrate -path ./clickhouse/sql -database "clickhouse://localhost:9000/streamly_analytics" down 1
+
+  db:seed:
+    desc: Seed database with sample events
+    cmds:
+      - go run scripts/seed-events.go
+
+  clean:
+    desc: Clean volumes and restart fresh
+    cmds:
+      - docker-compose -f {{.COMPOSE_FILE}} down -v
+      - docker-compose -f {{.COMPOSE_FILE}} up -d
+
+  build:
+    desc: Build all Go services
+    cmds:
+      - go build -o .bin/platform ./cmd/platform
+      - go build -o .bin/ingestion ./cmd/ingestion
+      - go build -o .bin/query ./cmd/query-api
+      - go build -o .bin/auth ./cmd/auth
+
+  lint:
+    desc: Run golangci-lint
+    cmds:
+      - golangci-lint run ./...
+
+  fmt:
+    desc: Format Go code
+    cmds:
+      - go fmt ./...
+      - gofmt -s -w .
+
+  mod:tidy:
+    desc: Tidy go modules
+    cmds:
+      - go mod tidy
+      - go mod verify
+
+  docker:rebuild:
+    desc: Rebuild Docker containers
+    cmds:
+      - docker-compose -f {{.COMPOSE_FILE}} build --no-cache
+
+  docker:prune:
+    desc: Prune Docker system
+    cmds:
+      - docker system prune -af --volumes

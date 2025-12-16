@@ -53,6 +53,69 @@ docker-compose -f deployments/docker-compose.dev.yml restart platform-service
 docker-compose -f deployments/docker-compose.dev.yml up -d --build platform-service
 ```
 
+### Task Commands
+
+We use [Task](https://taskfile.dev) as a task runner to simplify common development operations. Install Task if you don't have it:
+
+```bash
+# macOS
+brew install go-task
+
+# Linux/WSL
+sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b ~/.local/bin
+
+# Or using Go
+go install github.com/go-task/task/v3/cmd/task@latest
+```
+
+**Available commands:**
+
+```bash
+# Development
+task dev              # Start dev environment with hot reload
+task dev:bg           # Start in background
+task dev:down         # Stop dev environment
+task logs service=X   # View logs (e.g., task logs service=platform-service)
+task shell service=X  # Shell into container
+
+# Testing
+task test             # Run all tests with race detector
+task test:unit        # Run unit tests only
+task test:integration # Run integration tests only
+
+# Database
+task db:migrate:up    # Run ClickHouse migrations
+task db:migrate:down  # Rollback last migration
+task db:seed          # Seed with sample events
+
+# Code Quality
+task build            # Build all Go services
+task lint             # Run golangci-lint
+task fmt              # Format Go code
+task mod:tidy         # Tidy go modules
+
+# Docker
+task docker:rebuild   # Rebuild containers from scratch
+task docker:prune     # Clean up Docker system
+task clean            # Clean volumes and restart fresh
+```
+
+**Examples:**
+
+```bash
+# Start development environment
+task dev
+
+# View platform service logs in another terminal
+task logs service=streamly
+
+# Run tests before committing
+task test
+
+# Clean everything and start fresh
+task clean
+```
+
 ### Project Structure
 
 ```
@@ -76,7 +139,7 @@ streamly/
 ### Tech Stack
 
 **Backend:**
-- Go 1.24 with hot reload (Air)
+- Go 1.25 with hot reload (Air)
 - PostgreSQL (metadata, users, orgs)
 - ClickHouse (event analytics)
 - Redis (caching, pub/sub)

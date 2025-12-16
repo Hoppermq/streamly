@@ -69,6 +69,35 @@ echo "✅ Organization ID: $ZITADEL_ORG_ID"
 echo "🏗️  Provisioning service accounts with Terraform..."
 cd "$TERRAFORM_DIR"
 
+# Set project name for checking
+PROJECT_NAME="${TF_VAR_project_name:-local}"
+
+# Check if resources already exist by querying the project
+echo "🔍 Checking if resources already exist in Zitadel..."
+PROJECT_CHECK=$(curl -s "${ZITADEL_URL}/management/v1/projects/_search" \
+  -H "Authorization: Bearer ${PAT}" \
+  -H "Content-Type: application/json" \
+  -d "{\"queries\":[{\"nameQuery\":{\"name\":\"$PROJECT_NAME\",\"method\":\"TEXT_QUERY_METHOD_EQUALS\"}}]}" | jq -r '.result[0].id // empty' 2>/dev/null)
+
+if [ -n "$PROJECT_CHECK" ]; then
+  echo "✅ Bootstrap already completed - project '$PROJECT_NAME' exists (ID: $PROJECT_CHECK)"
+  echo "   Bootstrap skipped - services already configured in Zitadel"
+  echo "   To force re-run: Delete project in Zitadel UI or run 'docker-compose down -v' to clean everything"
+  exit 0
+fi
+
+# Check Terraform state as secondary check
+if [ -f "terraform.tfstate" ]; then
+  RESOURCE_COUNT=$(cat terraform.tfstate | jq -r '.resources | length' 2>/dev/null || echo "0")
+  if [ "$RESOURCE_COUNT" -gt 0 ]; then
+    echo "✅ Terraform state has $RESOURCE_COUNT resources"
+  else
+    echo "⚠️  Terraform state exists but empty - will attempt to provision"
+  fi
+else
+  echo "🆕 No Terraform state found - first run"
+fi
+
 export TF_VAR_zitadel_domain="$ZITADEL_DOMAIN"
 export TF_VAR_zitadel_port="$ZITADEL_PORT"
 export TF_VAR_zitadel_secure_mode="true"
@@ -81,15 +110,6 @@ echo "  ZITADEL_DOMAIN: $ZITADEL_DOMAIN"
 echo "  ZITADEL_PORT: $ZITADEL_PORT"
 echo "  JWT_FILE: $JWT_FILE"
 echo "  ORG_ID: $ZITADEL_ORG_ID"
-
-# Check if already bootstrapped
-BOOTSTRAP_MARKER=".bootstrap_complete"
-if [ -f "$BOOTSTRAP_MARKER" ]; then
-  echo "✅ Bootstrap already completed (found $BOOTSTRAP_MARKER)"
-  echo "   To re-run bootstrap, delete: $TERRAFORM_DIR/$BOOTSTRAP_MARKER"
-  echo "   Or run: docker-compose down -v to clean all volumes"
-  exit 0
-fi
 
 # Note: We keep Terraform state to make this idempotent
 # Only clean state if explicitly needed (e.g., corrupted state)
@@ -137,8 +157,6 @@ terraform output -json service_credentials 2>/dev/null | jq -r '
   "# \(.key) service\n\(.key | ascii_upcase)_CLIENT_ID=\(.value.client_id)\n\(.key | ascii_upcase)_CLIENT_SECRET=\(.value.client_secret)\n"
 ' > "${SCRIPT_DIR}/../.env.zitadel"
 
-# Mark as bootstrapped
-touch "$BOOTSTRAP_MARKER"
 echo "✅ Service accounts provisioned!"
 echo "📄 Credentials saved to .env.zitadel"
-echo "🎉 Bootstrap complete! Created marker file: $BOOTSTRAP_MARKER"
+echo "🎉 Bootstrap complete! Terraform state saved."

@@ -82,8 +82,21 @@ echo "  ZITADEL_PORT: $ZITADEL_PORT"
 echo "  JWT_FILE: $JWT_FILE"
 echo "  ORG_ID: $ZITADEL_ORG_ID"
 
-echo "🧹 Cleaning old Terraform state..."
-rm -rf .terraform .terraform.lock.hcl terraform.tfstate terraform.tfstate.backup
+# Check if already bootstrapped
+BOOTSTRAP_MARKER=".bootstrap_complete"
+if [ -f "$BOOTSTRAP_MARKER" ]; then
+  echo "✅ Bootstrap already completed (found $BOOTSTRAP_MARKER)"
+  echo "   To re-run bootstrap, delete: $TERRAFORM_DIR/$BOOTSTRAP_MARKER"
+  echo "   Or run: docker-compose down -v to clean all volumes"
+  exit 0
+fi
+
+# Note: We keep Terraform state to make this idempotent
+# Only clean state if explicitly needed (e.g., corrupted state)
+if [ "$CLEAN_STATE" = "true" ]; then
+  echo "🧹 Cleaning Terraform state (CLEAN_STATE=true)..."
+  rm -rf .terraform .terraform.lock.hcl terraform.tfstate terraform.tfstate.backup
+fi
 
 # Configure Terraform plugin cache
 export TF_PLUGIN_CACHE_DIR="/root/.terraform.d/plugin-cache"
@@ -124,5 +137,8 @@ terraform output -json service_credentials 2>/dev/null | jq -r '
   "# \(.key) service\n\(.key | ascii_upcase)_CLIENT_ID=\(.value.client_id)\n\(.key | ascii_upcase)_CLIENT_SECRET=\(.value.client_secret)\n"
 ' > "${SCRIPT_DIR}/../.env.zitadel"
 
+# Mark as bootstrapped
+touch "$BOOTSTRAP_MARKER"
 echo "✅ Service accounts provisioned!"
 echo "📄 Credentials saved to .env.zitadel"
+echo "🎉 Bootstrap complete! Created marker file: $BOOTSTRAP_MARKER"

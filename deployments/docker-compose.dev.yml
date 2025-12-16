@@ -75,6 +75,8 @@ services:
         condition: "service_healthy"
       postgres:
         condition: "service_healthy"
+      streamly:
+        condition: service_healthy
 
   query-service:
     build:
@@ -117,8 +119,8 @@ services:
         condition: "service_healthy"
       postgres:
         condition: "service_healthy"
-      zitadel-bootstrap:
-        condition: service_completed_successfully
+      streamly:
+        condition: service_healthy
 
   auth-service:
     build:
@@ -145,8 +147,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      zitadel-bootstrap:
-        condition: service_completed_successfully
+      streamly:
+        condition: service_healthy
 
   streamly:
     build:

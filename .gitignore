@@ -16,3 +16,4 @@ cmd/auth/tmp
 cmd/ingestion/tmp
 cmd/platform/tmp
 cmd/query-api/tmp
+.bin

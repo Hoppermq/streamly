@@ -12,3 +12,7 @@ deployments/.env.zitadel
 *.tfstate.backup
 .terraform.lock.hcl
 deployments/zitadel/machinekey
+cmd/auth/tmp
+cmd/ingestion/tmp
+cmd/platform/tmp
+cmd/query-api/tmp

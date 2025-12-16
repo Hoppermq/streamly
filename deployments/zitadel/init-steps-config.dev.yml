@@ -4,7 +4,7 @@ FirstInstance:
     Human:
       Username: 'root'
       Password: 'Password123!'
-      Email: 'root@localhost'
+      Email: 'root@streamly.localhost'
       FirstName: 'Root'
       LastName: 'Admin'
     Machine:

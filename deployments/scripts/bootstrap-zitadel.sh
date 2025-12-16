@@ -82,7 +82,40 @@ echo "  ZITADEL_PORT: $ZITADEL_PORT"
 echo "  JWT_FILE: $JWT_FILE"
 echo "  ORG_ID: $ZITADEL_ORG_ID"
 
-terraform init -reconfigure
+echo "🧹 Cleaning old Terraform state..."
+rm -rf .terraform .terraform.lock.hcl terraform.tfstate terraform.tfstate.backup
+
+# Configure Terraform plugin cache
+export TF_PLUGIN_CACHE_DIR="/root/.terraform.d/plugin-cache"
+mkdir -p "$TF_PLUGIN_CACHE_DIR"
+echo "📦 Using Terraform plugin cache at $TF_PLUGIN_CACHE_DIR"
+
+# Configure GitHub token for provider downloads if available
+if [ -n "${GITHUB_TOKEN}" ]; then
+  echo "🔑 Using GitHub token for provider downloads..."
+  git config --global url."https://${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
+fi
+
+# Retry terraform init with exponential backoff
+MAX_RETRIES=5
+RETRY=0
+while [ $RETRY -lt $MAX_RETRIES ]; do
+  echo "🔄 Terraform init attempt $((RETRY + 1))/$MAX_RETRIES..."
+  if terraform init -reconfigure; then
+    echo "✅ Terraform initialized successfully"
+    break
+  else
+    RETRY=$((RETRY + 1))
+    if [ $RETRY -lt $MAX_RETRIES ]; then
+      WAIT_TIME=$((2 ** RETRY))
+      echo "⏳ Retrying in ${WAIT_TIME}s..."
+      sleep $WAIT_TIME
+    else
+      echo "❌ Terraform init failed after $MAX_RETRIES attempts"
+      exit 1
+    fi
+  fi
+done
 terraform apply -auto-approve
 
 # Save credentials

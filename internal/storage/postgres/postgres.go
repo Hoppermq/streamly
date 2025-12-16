@@ -2,12 +2,10 @@ package postgres
 
 import (
 	"context"
-	"database/sql"
 	"log/slog"
 
 	"github.com/hoppermq/streamly/scripts/sql/migrations"
 	"github.com/uptrace/bun"
-	"github.com/uptrace/bun/dialect/sqlitedialect"
 	"github.com/uptrace/bun/migrate"
 )
 
@@ -19,10 +17,9 @@ type Client struct {
 
 type Option func(*Client) error
 
-func WithDB(sqlDB *sql.DB) Option {
+func WithDB(db *bun.DB) Option {
 	return func(c *Client) error {
-		c.dbClient = bun.NewDB(sqlDB, sqlitedialect.New())
-
+		c.dbClient = db
 		return nil
 	}
 }

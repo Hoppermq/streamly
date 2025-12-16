@@ -1,8 +1,6 @@
 # Development Docker Compose Configuration
 # Optimized for local development with hot reload and debugging
 
-version: "3.8"
-
 services:
   frontend:
     build:
@@ -150,6 +148,48 @@ services:
       zitadel-bootstrap:
         condition: service_completed_successfully
 
+  streamly:
+    build:
+      context: ../
+      dockerfile: docker/services.dev.Dockerfile
+      target: development
+      args:
+        TARGET_OS: linux
+        TARGET_ARCH: amd64
+    ports:
+      - "8093:8093"
+    volumes:
+      - ../:/app
+      - go_mod_cache:/go/pkg/mod
+      - go_build_cache:/root/.cache/go-build
+    environment:
+      - GO_ENV=development
+      - PORT=8093
+      - CONFIG_PATH=/app/conf/config.local.toml
+      - SERVICE_PATH=./cmd/platform
+    networks:
+      - streamly-dev
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:8091/health",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    depends_on:
+      postgres:
+        condition: "service_healthy"
+      zitadel:
+        condition: "service_healthy"
+
   zitadel:
     restart: unless-stopped
     image: ghcr.io/zitadel/zitadel:latest
@@ -169,7 +209,7 @@ services:
       - ZITADEL_FIRSTINSTANCE_ORG_LOGINCLIENT_MACHINE_NAME=Automatically Initialized IAM_LOGIN_CLIENT
       - ZITADEL_FIRSTINSTANCE_ORG_LOGINCLIENT_PAT_EXPIRATIONDATE=2029-01-01T00:00:00Z
       - ZITADEL_DEFAULTINSTANCE_FEATURES_LOGINV2_REQUIRED=true
-      - ZITADEL_DEFAULTINSTANCE_FEATURES_LOGINV2_BASEURI=http://zitadel-login:3000/ui/v2/login
+      - ZITADEL_DEFAULTINSTANCE_FEATURES_LOGINV2_BASEURI=http://localhost:3003/ui/v2/login
       - ZITADEL_OIDC_DEFAULTLOGINURLV2=http://localhost:3003/ui/v2/login/login?authRequest=
       - ZITADEL_OIDC_DEFAULTLOGOUTURLV2=http://localhost:3003/ui/v2/login/logout?post_logout_redirect=
       - ZITADEL_SAML_DEFAULTLOGINURLV2=http://localhost:3003/ui/v2/login/login?samlRequest=
@@ -216,24 +256,25 @@ services:
 
   zitadel-bootstrap:
     image: hashicorp/terraform:1.9
+    platform: linux/amd64
     volumes:
       - ./:/deployments
       - "./zitadel/machinekey:/machinekey:ro"
+      - terraform_plugins:/root/.terraform.d/plugin-cache
     working_dir: /deployments
     environment:
       - ZITADEL_URL=http://zitadel:8080
       - ZITADEL_DOMAIN=zitadel
       - ZITADEL_PORT=8080
       - ZITADEL_PAT_FILE=/machinekey/zitadel-admin.pat
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
-        apk add --no-cache bash curl jq
+        apk add --no-cache bash curl jq git
         /deployments/scripts/bootstrap-zitadel.sh
     depends_on:
       zitadel:
-        condition: service_healthy
-      zitadel-login:
         condition: service_healthy
     networks:
       - zitadel
@@ -392,3 +433,6 @@ volumes:
   zitadel_machinekey:
     driver: local
     name: streamly-dev-zitadel-machinekey
+  terraform_plugins:
+    driver: local
+    name: streamly-dev-terraform-plugins

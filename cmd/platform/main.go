@@ -6,7 +6,11 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/hoppermq/streamly/cmd/config"
 	"github.com/hoppermq/streamly/internal/storage/postgres"
+	"github.com/uptrace/bun"
+	"github.com/uptrace/bun/dialect/pgdialect"
+	"github.com/uptrace/bun/driver/pgdriver"
 	"github.com/zixyos/glog"
 )
 
@@ -20,13 +24,19 @@ func main() {
 	}
 
 	ctx := context.Background()
-	logger.InfoContext(ctx, "starting platform service")
-
-	db, err := sql.Open("pg", "")
+	platformConf, err := config.LoadPlatformConfig()
 	if err != nil {
-		logger.ErrorContext(ctx, "failed to open database", err)
+		logger.Warn("failed to load platform config", "error", err)
 		os.Exit(84)
 	}
+
+	logger.InfoContext(ctx, "starting platform service")
+
+	sqldb := sql.OpenDB(
+		pgdriver.NewConnector(pgdriver.WithDSN(platformConf.DatabaseDSN())),
+	)
+
+	db := bun.NewDB(sqldb, pgdialect.New())
 
 	d := postgres.NewClient(
 		postgres.WithLogger(logger),
@@ -34,7 +44,10 @@ func main() {
 	)
 
 	if err = d.Bootstrap(ctx); err != nil {
-		logger.ErrorContext(ctx, "failed to bootstrap database", err)
+		logger.ErrorContext(ctx, "failed to bootstrap database", "error", err)
 		os.Exit(84)
+	}
+
+	for {
 	}
 }

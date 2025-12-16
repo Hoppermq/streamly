@@ -9,7 +9,8 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.2
 	github.com/uptrace/bun v1.2.16
-	github.com/uptrace/bun/dialect/sqlitedialect v1.2.16
+	github.com/uptrace/bun/dialect/pgdialect v1.2.16
+	github.com/uptrace/bun/driver/pgdriver v1.2.16
 	github.com/zixyos/glog v0.1.0
 	github.com/zixyos/goloader v0.2.0
 )
@@ -85,4 +86,5 @@ require (
 	golang.org/x/text v0.31.0 // indirect
 	google.golang.org/protobuf v1.36.9 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+	mellium.im/sasl v0.3.2 // indirect
 )

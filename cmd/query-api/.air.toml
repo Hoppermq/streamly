@@ -1,12 +1,12 @@
-# Air config for ingestion service hot reload
+# Air config for query service hot reload
 root = "."
 testdata_dir = "testdata"
 tmp_dir = "tmp"
 
 [build]
   args_bin = []
-  bin = "./tmp/ingestion"
-  cmd = "go build -o ./tmp/ingestion ."
+  bin = "./tmp/query"
+  cmd = "go build -o ./tmp/query ."
   delay = 1000
   exclude_dir = ["assets", "tmp", "vendor", "testdata", "frontend", "node_modules"]
   exclude_file = []

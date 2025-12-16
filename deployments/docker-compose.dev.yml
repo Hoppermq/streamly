@@ -120,48 +120,6 @@ services:
       zitadel-bootstrap:
         condition: service_completed_successfully
 
-  platform-service:
-    build:
-      context: ../
-      dockerfile: docker/services.dev.Dockerfile
-      target: development
-      args:
-        TARGET_OS: linux
-        TARGET_ARCH: amd64
-    ports:
-      - "8084:8084"
-    volumes:
-      - ../:/app
-      - go_mod_cache:/go/pkg/mod
-      - go_build_cache:/root/.cache/go-build
-    environment:
-      - GO_ENV=development
-      - PORT=8084
-      - CONFIG_PATH=/app/conf/config.dev.toml
-      - SERVICE_PATH=./cmd/platform
-    networks:
-      - streamly-dev
-    restart: unless-stopped
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "wget",
-          "--no-verbose",
-          "--tries=1",
-          "--spider",
-          "http://localhost:8084/health",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    depends_on:
-      postgres:
-        condition: service_healthy
-      zitadel-bootstrap:
-        condition: service_completed_successfully
-
   auth-service:
     build:
       context: ../
@@ -199,15 +157,15 @@ services:
         TARGET_OS: linux
         TARGET_ARCH: amd64
     ports:
-      - "8093:8093"
+      - "8094:8094"
     volumes:
       - ../:/app
       - go_mod_cache:/go/pkg/mod
       - go_build_cache:/root/.cache/go-build
     environment:
       - GO_ENV=development
-      - PORT=8093
-      - CONFIG_PATH=/app/conf/config.local.toml
+      - PORT=8094
+      - CONFIG_PATH=/app/conf/config.dev.toml
       - SERVICE_PATH=./cmd/platform
     networks:
       - streamly-dev
@@ -220,7 +178,7 @@ services:
           "--no-verbose",
           "--tries=1",
           "--spider",
-          "http://localhost:8091/health",
+          "http://localhost:8084/health",
         ]
       interval: 30s
       timeout: 10s
@@ -228,9 +186,9 @@ services:
       start_period: 40s
     depends_on:
       postgres:
-        condition: "service_healthy"
-      zitadel:
-        condition: "service_healthy"
+        condition: service_healthy
+      zitadel-bootstrap:
+        condition: service_completed_successfully
 
   zitadel:
     restart: unless-stopped
@@ -290,7 +248,15 @@ services:
     ports:
       - "3003:3000"
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:3000/health",
+        ]
       interval: 10s
       timeout: 30s
       retries: 5

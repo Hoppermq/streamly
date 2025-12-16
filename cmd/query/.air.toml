@@ -1,12 +1,12 @@
 # Air config for query service hot reload
-root = "."
+root = "../.."
 testdata_dir = "testdata"
-tmp_dir = "tmp"
+tmp_dir = "cmd/query/tmp"
 
 [build]
   args_bin = []
-  bin = "./tmp/query"
-  cmd = "go build -o ./tmp/query ./cmd/query"
+  bin = "./cmd/query/tmp/query"
+  cmd = "go build -o ./cmd/query/tmp/query ./cmd/query"
   delay = 1000
   exclude_dir = ["assets", "tmp", "vendor", "testdata", "frontend", "node_modules"]
   exclude_file = []

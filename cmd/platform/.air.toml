@@ -6,7 +6,7 @@ tmp_dir = "tmp"
 [build]
   args_bin = []
   bin = "./tmp/platform"
-  cmd = "go build -o ./tmp/platform ./cmd/platform"
+  cmd = "go build -o ./tmp/platform ."
   delay = 1000
   exclude_dir = ["assets", "tmp", "vendor", "testdata", "frontend", "node_modules"]
   exclude_file = []

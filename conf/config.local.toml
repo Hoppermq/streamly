@@ -102,6 +102,11 @@
   [platform.service]
   name = "platform-service"
 
+  [platform.http]
+  port = 8094
+  read_timeout = 3600
+  write_timeout = 3600
+
   [platform.storage]
     [platform.storage.database]
     host = "postgres"

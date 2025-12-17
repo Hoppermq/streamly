@@ -67,9 +67,9 @@ func (c *Client) Bootstrap(ctx context.Context) error {
 
 	if grp.ID == 0 {
 		c.logger.Info("no new migrations to run.")
-	} else {
-		c.logger.InfoContext(ctx, "migrator migration created", "id", grp.ID)
+		return nil
 	}
+	c.logger.InfoContext(ctx, "migrator migration created", "id", grp.ID)
 
 	return nil
 }

@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/hoppermq/streamly/conf"
 	"github.com/zixyos/goloader/config"
@@ -13,6 +14,12 @@ type PlatformConfig struct {
 			Name    string `toml:"name"`
 			Version string `toml:"version"`
 		}
+
+		HTTP struct {
+			Port         int           `toml:"port"`
+			ReadTimeout  time.Duration `toml:"read_timeout"`
+			WriteTimeout time.Duration `toml:"write_timeout"`
+		} `toml:"http"`
 
 		Storage struct {
 			Database struct {

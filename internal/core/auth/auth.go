@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"sync"
 
@@ -75,12 +76,17 @@ func (a *Auth) Stop(ctx context.Context) error {
 		a.cancel()
 	}
 
+	var errs []error
 	for _, handler := range a.handlers {
 		if err := handler.Shutdown(ctx); err != nil {
 			a.logger.Warn("failed to shutdown handler", "component", handler.Name(), "err", err)
-			return err // this would stop the entire shutdown process ? should not fail fast here i guess.
+			errs = append(errs, err)
 		}
 		a.logger.Info("shutdown handler", "component", handler.Name())
+	}
+
+	if len(errs) > 0 {
+		return errors.ErrUnsupported
 	}
 
 	a.wg.Wait()

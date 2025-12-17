@@ -69,6 +69,20 @@ func WithAuthHTTPServer(conf *config.AuthConfig) Options {
 	}
 }
 
+func WithPlatformHTTPServer(conf *config.PlatformConfig) Options {
+	return func(h *HTTPServer) {
+		if h.engine == nil {
+			panic(errors.ErrEngineErrorOrder)
+		}
+		h.server = &http.Server{
+			Addr:         ":" + strconv.Itoa(conf.Platform.HTTP.Port),
+			Handler:      h.engine,
+			ReadTimeout:  conf.Platform.HTTP.ReadTimeout * time.Millisecond,
+			WriteTimeout: conf.Platform.HTTP.WriteTimeout * time.Millisecond,
+		}
+	}
+}
+
 // WithEngine set the engine.
 func WithEngine(engine *gin.Engine) Options {
 	return func(h *HTTPServer) {

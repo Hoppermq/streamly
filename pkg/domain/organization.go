@@ -20,3 +20,8 @@ type OrganizationRepository interface {
 	Update(ctx context.Context, org Organization) error
 	Delete(ctx context.Context, id string) error
 }
+
+type CreateOrganization struct {
+	Name     string            `form:"name"      binding:"required"`
+	Metadata map[string]string `form:"metadata"     binding:"required"`
+}

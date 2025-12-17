@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/hoppermq/streamly/cmd/config"
 	"github.com/hoppermq/streamly/internal/core/platform"
+	"github.com/hoppermq/streamly/internal/core/platform/organization"
 	"github.com/hoppermq/streamly/internal/http"
 	"github.com/hoppermq/streamly/internal/http/routes"
 	"github.com/hoppermq/streamly/internal/storage/postgres"
@@ -30,7 +31,6 @@ func main() {
 
 	ctx := context.Background()
 	platformConf, err := config.LoadPlatformConfig()
-	logger.Info("conf", platformConf)
 	if err != nil {
 		logger.Warn("failed to load platform config", "error", err)
 		os.Exit(84)
@@ -54,14 +54,36 @@ func main() {
 		os.Exit(84)
 	}
 
+	orgRepos, err := organization.NewRepository(
+		organization.RepositoryWithLogger(logger),
+		organization.RepositoryWithDB(db),
+	)
+
+	if err != nil {
+		logger.ErrorContext(ctx, "failed to create organization repository", "error", err)
+		os.Exit(84)
+	}
+
+	organizationUC, err := organization.NewUseCase(
+		organization.UseCaseWithLogger(logger),
+		organization.UseCaseWithRepository(orgRepos),
+	)
+
+	if err != nil {
+		logger.ErrorContext(ctx, "failed to create organization usecase", "error", err)
+		os.Exit(84)
+	}
+
 	engine := gin.New()
 	httpServer := http.NewHTTPServer(
 		http.WithEngine(engine),
 		http.WithPlatformHTTPServer(platformConf),
 		http.WithLogger(logger),
-		http.WithRoutes(routes.CreateRouteRegistrar(
-			routes.CreatePlatformRegistrar(logger),
-		)),
+		http.WithRoutes(
+			routes.CreateRouteRegistrar(
+				routes.CreatePlatformRegistrar(logger, organizationUC),
+			),
+		),
 	)
 
 	platformService := platform.NewStreamlyService(

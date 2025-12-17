@@ -7,11 +7,10 @@ import (
 )
 
 type Organization struct {
-	bun.BaseModel `bun:"table:organizations,alias:org"`
-	ID            string            `bun:"id,pk,type:uuid,scanonly"`
-	Identifier    string            `bun:"identifier,notnull,unique,type:uuid"`
-	Name          string            `bun:"name,notnull"`
-	Metadata      map[string]string `bun:"metadata,type:jsonb"`
-	CreatedAt     time.Time         `bun:"created_at,notnull,default:now()"`
-	UpdatedAt     time.Time         `bun:"updated_at,notnull,default:now()"`
+	bun.BaseModel `bun:"table:tenants,alias:org"`
+	ID            string    `bun:"id,pk,type:uuid,scanonly"`
+	Identifier    string    `bun:"identifier,notnull,unique,type:uuid"`
+	Name          string    `bun:"name,notnull"`
+	CreatedAt     time.Time `bun:"created_at,notnull,default:now()"`
+	UpdatedAt     time.Time `bun:"updated_at,notnull,default:now()"`
 }

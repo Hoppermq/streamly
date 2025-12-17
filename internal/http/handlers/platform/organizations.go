@@ -5,12 +5,13 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/hoppermq/streamly/internal/core/platform/organization"
 	"github.com/hoppermq/streamly/pkg/domain"
 )
 
 type Organization struct {
 	logger *slog.Logger
-	uc     any
+	uc     *organization.UseCase
 }
 
 type OrganizationOption func(*Organization) error
@@ -18,6 +19,13 @@ type OrganizationOption func(*Organization) error
 func OrganizationWithLogger(logger *slog.Logger) OrganizationOption {
 	return func(o *Organization) error {
 		o.logger = logger
+		return nil
+	}
+}
+
+func OrganizationWithUseCase(uc *organization.UseCase) OrganizationOption {
+	return func(o *Organization) error {
+		o.uc = uc
 		return nil
 	}
 }
@@ -41,5 +49,15 @@ func (o *Organization) Create(c *gin.Context) {
 		return
 	}
 
+	if err := o.uc.Create(c, org); err != nil {
+		// should compare error from here.
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
 	c.JSON(http.StatusCreated, gin.H{"message": "Organization created successfully"})
+	return
+}
+
+func (o *Organization) FindOne(c *gin.Context) {
 }

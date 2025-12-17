@@ -24,6 +24,13 @@ func RepositoryWithLogger(logger *slog.Logger) OptionRepository {
 	}
 }
 
+func RepositoryWithDB(db *bun.DB) OptionRepository {
+	return func(organizationRepo *OrganizationRepository) error {
+		organizationRepo.db = db
+		return nil
+	}
+}
+
 func NewRepository(opts ...OptionRepository) (*OrganizationRepository, error) {
 	org := &OrganizationRepository{}
 
@@ -60,7 +67,6 @@ func (organizationRepo *OrganizationRepository) GetByID(
 	res := domain.Organization{
 		Identifier: org.Identifier,
 		Name:       org.Name,
-		Metada:     org.Metadata,
 		CreatedAt:  org.CreatedAt,
 		UpdatedAt:  org.UpdatedAt,
 	}
@@ -83,9 +89,8 @@ func (organizationRepo *OrganizationRepository) Create(
 	model := &models.Organization{
 		Identifier: org.Identifier,
 		Name:       org.Name,
-		Metadata:   org.Metada,
 	}
-	res, err := organizationRepo.db.NewInsert().Model(&model).Exec(ctx)
+	res, err := organizationRepo.db.NewInsert().Model(model).Exec(ctx)
 	if err != nil {
 		organizationRepo.logger.WarnContext(ctx, "failed to insert new org", "error", err)
 		return err
@@ -103,7 +108,6 @@ func (organizationRepo *OrganizationRepository) Update(
 	model := &models.Organization{
 		Identifier: org.Identifier,
 		Name:       org.Name,
-		Metadata:   org.Metada,
 		UpdatedAt:  org.UpdatedAt,
 	}
 

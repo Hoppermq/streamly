@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/google/uuid"
 	"github.com/hoppermq/streamly/pkg/domain"
 )
 
@@ -39,11 +40,33 @@ func NewUseCase(opts ...UseCaseOption) (*UseCase, error) {
 	return uc, nil
 }
 
+func (uc *UseCase) FindOneByID(ctx context.Context, id string) (*domain.Organization, error) {
+	uc.logger.Info("finding organization by id", "id", id)
+	return uc.repository.FindOneByID(ctx, id)
+}
+
+func (uc *UseCase) FindAll(ctx context.Context, limit, offset int) ([]*domain.Organization, error) {
+	uc.logger.Info("finding all organizations", "limit", limit, "offset", offset)
+	return uc.repository.FindAll(ctx, limit, offset)
+}
+
 func (uc *UseCase) Create(ctx context.Context, newOrg domain.CreateOrganization) error {
+	orgIdentifier := uuid.New()
+
 	org := &domain.Organization{
-		Identifier: "new-identifier-generated",
+		Identifier: orgIdentifier,
 		Name:       newOrg.Name,
 	}
 
 	return uc.repository.Create(ctx, org)
+}
+func (uc *UseCase) Update(ctx context.Context, id string, updateOrg domain.UpdateOrganization) error {
+	org, err := uc.repository.FindOneByID(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	org.Name = updateOrg.Name
+
+	return uc.repository.Update(ctx, org)
 }

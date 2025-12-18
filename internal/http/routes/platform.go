@@ -2,7 +2,6 @@ package routes
 
 import (
 	"log/slog"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/hoppermq/streamly/internal/core/platform/organization"
@@ -22,14 +21,9 @@ func RegisterPlatformRoutes(
 			handlers.OrganizationWithUseCase(organizationUseCase),
 		)
 
-		organizationGroup.GET("/:id", func(ctx *gin.Context) {
-			id := ctx.Param("id")
-			logger.Info("performing get request", "id", id)
-
-			ctx.JSON(http.StatusOK, gin.H{"id": id})
-		})
-
 		organizationGroup.POST("/", hndler.Create)
+
+		organizationGroup.GET("/:id", hndler.FindOneByID)
 	}
 }
 

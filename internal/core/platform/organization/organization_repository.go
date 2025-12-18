@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log/slog"
 
+	"github.com/google/uuid"
 	"github.com/hoppermq/streamly/internal/models"
 	"github.com/hoppermq/streamly/pkg/domain"
 	"github.com/uptrace/bun"
@@ -43,7 +44,7 @@ func NewRepository(opts ...OptionRepository) (*OrganizationRepository, error) {
 	return org, nil
 }
 
-func (organizationRepo *OrganizationRepository) GetByID(
+func (organizationRepo *OrganizationRepository) FindOneByID(
 	ctx context.Context,
 	identifier string,
 ) (*domain.Organization, error) {
@@ -51,8 +52,14 @@ func (organizationRepo *OrganizationRepository) GetByID(
 
 	org := &models.Organization{}
 
-	if err := organizationRepo.db.NewSelect().Model(&org).Where("identifier = ?", identifier).Scan(ctx); err != nil {
+	if err := organizationRepo.db.NewSelect().Model(org).Where("identifier = ?", identifier).Scan(ctx); err != nil {
 		organizationRepo.logger.WarnContext(ctx, "failed to select org", "identifier", identifier, "error", err)
+		return nil, err
+	}
+
+	organizationRepo.logger.Info("organization", "data", org)
+	if org.Identifier == uuid.Nil {
+		return nil, errors.New("organization not found") // to create.
 	}
 
 	organizationRepo.logger.InfoContext(
@@ -74,7 +81,7 @@ func (organizationRepo *OrganizationRepository) GetByID(
 	return &res, nil
 }
 
-func (organizationRepo *OrganizationRepository) List(
+func (organizationRepo *OrganizationRepository) FindAll(
 	ctx context.Context,
 	limit, offset int,
 ) ([]*domain.Organization, error) {

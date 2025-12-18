@@ -56,8 +56,20 @@ func (o *Organization) Create(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, gin.H{"message": "Organization created successfully"})
-	return
 }
 
-func (o *Organization) FindOne(c *gin.Context) {
+func (o *Organization) FindOneByID(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "no parameter set"})
+		return
+	}
+
+	org, err := o.uc.FindOneByID(c, id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": org})
 }

@@ -3,8 +3,10 @@ package organization
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 
+	"github.com/google/uuid"
 	"github.com/hoppermq/streamly/internal/models"
 	"github.com/hoppermq/streamly/pkg/domain"
 	"github.com/uptrace/bun"
@@ -24,6 +26,13 @@ func RepositoryWithLogger(logger *slog.Logger) OptionRepository {
 	}
 }
 
+func RepositoryWithDB(db *bun.DB) OptionRepository {
+	return func(organizationRepo *OrganizationRepository) error {
+		organizationRepo.db = db
+		return nil
+	}
+}
+
 func NewRepository(opts ...OptionRepository) (*OrganizationRepository, error) {
 	org := &OrganizationRepository{}
 
@@ -36,7 +45,7 @@ func NewRepository(opts ...OptionRepository) (*OrganizationRepository, error) {
 	return org, nil
 }
 
-func (organizationRepo *OrganizationRepository) GetByID(
+func (organizationRepo *OrganizationRepository) FindOneByID(
 	ctx context.Context,
 	identifier string,
 ) (*domain.Organization, error) {
@@ -44,8 +53,14 @@ func (organizationRepo *OrganizationRepository) GetByID(
 
 	org := &models.Organization{}
 
-	if err := organizationRepo.db.NewSelect().Model(&org).Where("identifier = ?", identifier).Scan(ctx); err != nil {
+	if err := organizationRepo.db.NewSelect().Model(org).Where("identifier = ?", identifier).Scan(ctx); err != nil {
 		organizationRepo.logger.WarnContext(ctx, "failed to select org", "identifier", identifier, "error", err)
+		return nil, err
+	}
+
+	organizationRepo.logger.Info("organization", "data", org)
+	if org.Identifier == uuid.Nil {
+		return nil, errors.New("organization not found") // TODO: return a custom error type for not found.
 	}
 
 	organizationRepo.logger.InfoContext(
@@ -60,7 +75,6 @@ func (organizationRepo *OrganizationRepository) GetByID(
 	res := domain.Organization{
 		Identifier: org.Identifier,
 		Name:       org.Name,
-		Metada:     org.Metadata,
 		CreatedAt:  org.CreatedAt,
 		UpdatedAt:  org.UpdatedAt,
 	}
@@ -68,11 +82,31 @@ func (organizationRepo *OrganizationRepository) GetByID(
 	return &res, nil
 }
 
-func (organizationRepo *OrganizationRepository) List(
+func (organizationRepo *OrganizationRepository) FindAll(
 	ctx context.Context,
 	limit, offset int,
-) ([]*domain.Organization, error) {
-	return nil, nil
+) ([]domain.Organization, error) {
+	fmt.Println("hello world")
+	orgs := []models.Organization{}
+	if err := organizationRepo.db.NewSelect().Model(&orgs).Limit(limit).Offset(offset).Scan(ctx); err != nil {
+		fmt.Println("oh no errror here")
+		organizationRepo.logger.Warn("failed to query tenants", "error", err)
+		return nil, err
+	}
+	organizationRepo.logger.Info("ORGA ARE HERE", "org", orgs)
+
+	organizations := make([]domain.Organization, len(orgs))
+
+	for i, org := range orgs {
+		organizations[i] = domain.Organization{
+			Identifier: org.Identifier,
+			Name:       org.Name,
+			CreatedAt:  org.CreatedAt,
+			UpdatedAt:  org.UpdatedAt,
+		}
+	}
+
+	return organizations, nil
 }
 
 func (organizationRepo *OrganizationRepository) Create(
@@ -83,9 +117,8 @@ func (organizationRepo *OrganizationRepository) Create(
 	model := &models.Organization{
 		Identifier: org.Identifier,
 		Name:       org.Name,
-		Metadata:   org.Metada,
 	}
-	res, err := organizationRepo.db.NewInsert().Model(&model).Exec(ctx)
+	res, err := organizationRepo.db.NewInsert().Model(model).Exec(ctx)
 	if err != nil {
 		organizationRepo.logger.WarnContext(ctx, "failed to insert new org", "error", err)
 		return err
@@ -103,7 +136,6 @@ func (organizationRepo *OrganizationRepository) Update(
 	model := &models.Organization{
 		Identifier: org.Identifier,
 		Name:       org.Name,
-		Metadata:   org.Metada,
 		UpdatedAt:  org.UpdatedAt,
 	}
 

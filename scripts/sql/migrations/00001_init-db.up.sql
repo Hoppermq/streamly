@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS tenants
   name       VARCHAR(255)        NOT NULL,
 
   created_at TIMESTAMP           NOT NULL DEFAULT now(),
-  updated_at TIMESTAMP           NOT NULL
+  updated_at TIMESTAMP           NOT NULL DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS users
@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS users
   role             roles                default 'user',
 
   created_at       TIMESTAMP   NOT NULL DEFAULT now(),
-  updated_at       TIMESTAMP   NOT NULL
+  updated_at       TIMESTAMP   NOT NULL DEFAULT now()
 );
 
 CREATE TABLE emails
@@ -52,7 +52,7 @@ CREATE TABLE emails
     ) STORED,
 
   created_at TIMESTAMP           NOT NULL DEFAULT now(),
-  updated_at TIMESTAMP           NOT NULL
+  updated_at TIMESTAMP           NOT NULL DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS tenant_members
@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS tenant_members
   joined_at  TIMESTAMP NOT NULL DEFAULT now(),
 
   created_at TIMESTAMP NOT NULL DEFAULT now(),
-  updated_at TIMESTAMP NOT NULL
+  updated_at TIMESTAMP NOT NULL DEFAULT now()
 );
 
 --bun:split

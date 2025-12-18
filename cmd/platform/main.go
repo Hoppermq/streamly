@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/hoppermq/streamly/cmd/config"
 	"github.com/hoppermq/streamly/internal/core/platform"
 	"github.com/hoppermq/streamly/internal/core/platform/organization"
@@ -64,9 +65,12 @@ func main() {
 		os.Exit(84)
 	}
 
+	generator := uuid.New
+
 	organizationUC, err := organization.NewUseCase(
 		organization.UseCaseWithLogger(logger),
 		organization.UseCaseWithRepository(orgRepos),
+		organization.UseCaseWithGenerator(generator),
 	)
 
 	if err != nil {

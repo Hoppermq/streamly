@@ -58,6 +58,26 @@ func (o *Organization) Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "Organization created successfully"})
 }
 
+func (o *Organization) Update(c *gin.Context) {
+	var dataToUpdate domain.UpdateOrganization
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "no parameter set"})
+		return
+	}
+
+	if err := c.ShouldBind(&dataToUpdate); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := o.uc.Update(c, id, dataToUpdate); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Organization updated successfully"})
+}
+
 func (o *Organization) FindOneByID(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
@@ -72,4 +92,14 @@ func (o *Organization) FindOneByID(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"data": org})
+}
+
+func (o *Organization) FindAll(c *gin.Context) {
+	orgs, err := o.uc.FindAll(c, 100, 100)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": orgs})
 }

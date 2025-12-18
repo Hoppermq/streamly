@@ -16,7 +16,7 @@ type Organization struct {
 
 type OrganizationRepository interface {
 	FindOneByID(ctx context.Context, identifier string) (*Organization, error)
-	FindAll(ctx context.Context, limit, offset int) ([]*Organization, error)
+	FindAll(ctx context.Context, limit, offset int) ([]Organization, error)
 	Create(ctx context.Context, org *Organization) error
 	Update(ctx context.Context, org *Organization) error
 	Delete(ctx context.Context, id string) error

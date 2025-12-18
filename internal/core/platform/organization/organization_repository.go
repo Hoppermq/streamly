@@ -84,7 +84,16 @@ func (organizationRepo *OrganizationRepository) FindOneByID(
 func (organizationRepo *OrganizationRepository) FindAll(
 	ctx context.Context,
 	limit, offset int,
-) ([]*domain.Organization, error) {
+) ([]domain.Organization, error) {
+	orgs := []models.Organization{}
+	if err := organizationRepo.db.NewSelect().Model(orgs).Scan(ctx); err != nil {
+		return nil, err
+	}
+
+	for _, org := range orgs {
+		organizationRepo.logger.Info("data", "models", org)
+	}
+
 	return nil, nil
 }
 

@@ -21,9 +21,11 @@ func RegisterPlatformRoutes(
 			handlers.OrganizationWithUseCase(organizationUseCase),
 		)
 
+		organizationGroup.GET("/", hndler.FindAll)
 		organizationGroup.POST("/", hndler.Create)
 
 		organizationGroup.GET("/:id", hndler.FindOneByID)
+		organizationGroup.PATCH("/:id", hndler.Update)
 	}
 }
 

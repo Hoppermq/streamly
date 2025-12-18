@@ -60,7 +60,7 @@ func (organizationRepo *OrganizationRepository) FindOneByID(
 
 	organizationRepo.logger.Info("organization", "data", org)
 	if org.Identifier == uuid.Nil {
-		return nil, errors.New("organization not found") // to create.
+		return nil, errors.New("organization not found") // TODO: return a custom error type for not found.
 	}
 
 	organizationRepo.logger.InfoContext(

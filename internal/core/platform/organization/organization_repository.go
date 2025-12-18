@@ -3,6 +3,7 @@ package organization
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 
 	"github.com/google/uuid"
@@ -85,16 +86,27 @@ func (organizationRepo *OrganizationRepository) FindAll(
 	ctx context.Context,
 	limit, offset int,
 ) ([]domain.Organization, error) {
+	fmt.Println("hello world")
 	orgs := []models.Organization{}
-	if err := organizationRepo.db.NewSelect().Model(orgs).Scan(ctx); err != nil {
+	if err := organizationRepo.db.NewSelect().Model(&orgs).Limit(limit).Offset(offset).Scan(ctx); err != nil {
+		fmt.Println("oh no errror here")
+		organizationRepo.logger.Warn("failed to query tenants", "error", err)
 		return nil, err
 	}
+	organizationRepo.logger.Info("ORGA ARE HERE", "org", orgs)
 
-	for _, org := range orgs {
-		organizationRepo.logger.Info("data", "models", org)
+	organizations := make([]domain.Organization, len(orgs))
+
+	for i, org := range orgs {
+		organizations[i] = domain.Organization{
+			Identifier: org.Identifier,
+			Name:       org.Name,
+			CreatedAt:  org.CreatedAt,
+			UpdatedAt:  org.UpdatedAt,
+		}
 	}
 
-	return nil, nil
+	return organizations, nil
 }
 
 func (organizationRepo *OrganizationRepository) Create(

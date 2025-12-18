@@ -95,11 +95,13 @@ func (o *Organization) FindOneByID(c *gin.Context) {
 }
 
 func (o *Organization) FindAll(c *gin.Context) {
-	orgs, err := o.uc.FindAll(c, 100, 100)
+	orgs, err := o.uc.FindAll(c, 100, 0)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	o.logger.Info("organizagtions founded", "organizations", orgs)
 
 	c.JSON(http.StatusOK, gin.H{"data": orgs})
 }

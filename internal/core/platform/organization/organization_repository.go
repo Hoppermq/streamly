@@ -12,29 +12,29 @@ import (
 	"github.com/uptrace/bun"
 )
 
-type OrganizationRepository struct {
+type Repository struct {
 	logger *slog.Logger
 	db     *bun.DB
 }
 
-type OptionRepository func(*OrganizationRepository) error
+type OptionRepository func(*Repository) error
 
 func RepositoryWithLogger(logger *slog.Logger) OptionRepository {
-	return func(organizationRepo *OrganizationRepository) error {
+	return func(organizationRepo *Repository) error {
 		organizationRepo.logger = logger
 		return nil
 	}
 }
 
 func RepositoryWithDB(db *bun.DB) OptionRepository {
-	return func(organizationRepo *OrganizationRepository) error {
+	return func(organizationRepo *Repository) error {
 		organizationRepo.db = db
 		return nil
 	}
 }
 
-func NewRepository(opts ...OptionRepository) (*OrganizationRepository, error) {
-	org := &OrganizationRepository{}
+func NewRepository(opts ...OptionRepository) (*Repository, error) {
+	org := &Repository{}
 
 	for _, opt := range opts {
 		if err := opt(org); err != nil {
@@ -45,7 +45,7 @@ func NewRepository(opts ...OptionRepository) (*OrganizationRepository, error) {
 	return org, nil
 }
 
-func (organizationRepo *OrganizationRepository) FindOneByID(
+func (organizationRepo *Repository) FindOneByID(
 	ctx context.Context,
 	identifier uuid.UUID,
 ) (*domain.Organization, error) {
@@ -82,7 +82,7 @@ func (organizationRepo *OrganizationRepository) FindOneByID(
 	return &res, nil
 }
 
-func (organizationRepo *OrganizationRepository) FindAll(
+func (organizationRepo *Repository) FindAll(
 	ctx context.Context,
 	limit, offset int,
 ) ([]domain.Organization, error) {
@@ -105,7 +105,7 @@ func (organizationRepo *OrganizationRepository) FindAll(
 	return organizations, nil
 }
 
-func (organizationRepo *OrganizationRepository) Create(
+func (organizationRepo *Repository) Create(
 	ctx context.Context,
 	org *domain.Organization,
 ) error {
@@ -124,7 +124,7 @@ func (organizationRepo *OrganizationRepository) Create(
 	return nil
 }
 
-func (organizationRepo *OrganizationRepository) Update(
+func (organizationRepo *Repository) Update(
 	ctx context.Context,
 	org *domain.Organization,
 ) error {
@@ -158,7 +158,7 @@ func (organizationRepo *OrganizationRepository) Update(
 	return nil
 }
 
-func (organizationRepo *OrganizationRepository) Delete(
+func (organizationRepo *Repository) Delete(
 	ctx context.Context,
 	identifier uuid.UUID,
 ) error {

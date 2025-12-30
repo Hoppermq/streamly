@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/hoppermq/streamly/internal/models"
 	"github.com/hoppermq/streamly/pkg/domain"
 	"github.com/uptrace/bun"
@@ -24,6 +26,13 @@ func RepositoryWithLogger(logger *slog.Logger) OptionRepository {
 	}
 }
 
+func RepositoryWithDB(db *bun.DB) OptionRepository {
+	return func(organizationRepo *OrganizationRepository) error {
+		organizationRepo.db = db
+		return nil
+	}
+}
+
 func NewRepository(opts ...OptionRepository) (*OrganizationRepository, error) {
 	org := &OrganizationRepository{}
 
@@ -36,16 +45,22 @@ func NewRepository(opts ...OptionRepository) (*OrganizationRepository, error) {
 	return org, nil
 }
 
-func (organizationRepo *OrganizationRepository) GetByID(
+func (organizationRepo *OrganizationRepository) FindOneByID(
 	ctx context.Context,
-	identifier string,
+	identifier uuid.UUID,
 ) (*domain.Organization, error) {
 	organizationRepo.logger.InfoContext(ctx, "getting organization from id", "id", identifier)
 
 	org := &models.Organization{}
 
-	if err := organizationRepo.db.NewSelect().Model(&org).Where("identifier = ?", identifier).Scan(ctx); err != nil {
+	if err := organizationRepo.db.NewSelect().Model(org).Where("identifier = ?", identifier).Where("deleted = ?", false).Scan(ctx); err != nil {
 		organizationRepo.logger.WarnContext(ctx, "failed to select org", "identifier", identifier, "error", err)
+		return nil, err
+	}
+
+	organizationRepo.logger.Info("organization", "data", org)
+	if org.Identifier == uuid.Nil {
+		return nil, errors.New("organization not found") // TODO: return a custom error type for not found.
 	}
 
 	organizationRepo.logger.InfoContext(
@@ -60,7 +75,6 @@ func (organizationRepo *OrganizationRepository) GetByID(
 	res := domain.Organization{
 		Identifier: org.Identifier,
 		Name:       org.Name,
-		Metada:     org.Metadata,
 		CreatedAt:  org.CreatedAt,
 		UpdatedAt:  org.UpdatedAt,
 	}
@@ -68,11 +82,27 @@ func (organizationRepo *OrganizationRepository) GetByID(
 	return &res, nil
 }
 
-func (organizationRepo *OrganizationRepository) List(
+func (organizationRepo *OrganizationRepository) FindAll(
 	ctx context.Context,
 	limit, offset int,
-) ([]*domain.Organization, error) {
-	return nil, nil
+) ([]domain.Organization, error) {
+	var orgs []models.Organization
+	if err := organizationRepo.db.NewSelect().Model(&orgs).Where("deleted = ?", false).Limit(limit).Offset(offset).Scan(ctx); err != nil {
+		organizationRepo.logger.Warn("failed to query tenants", "error", err)
+		return nil, err
+	}
+
+	organizations := make([]domain.Organization, len(orgs))
+	for i, org := range orgs {
+		organizations[i] = domain.Organization{
+			Identifier: org.Identifier,
+			Name:       org.Name,
+			CreatedAt:  org.CreatedAt,
+			UpdatedAt:  org.UpdatedAt,
+		}
+	}
+
+	return organizations, nil
 }
 
 func (organizationRepo *OrganizationRepository) Create(
@@ -83,9 +113,8 @@ func (organizationRepo *OrganizationRepository) Create(
 	model := &models.Organization{
 		Identifier: org.Identifier,
 		Name:       org.Name,
-		Metadata:   org.Metada,
 	}
-	res, err := organizationRepo.db.NewInsert().Model(&model).Exec(ctx)
+	res, err := organizationRepo.db.NewInsert().Model(model).Exec(ctx)
 	if err != nil {
 		organizationRepo.logger.WarnContext(ctx, "failed to insert new org", "error", err)
 		return err
@@ -103,15 +132,15 @@ func (organizationRepo *OrganizationRepository) Update(
 	model := &models.Organization{
 		Identifier: org.Identifier,
 		Name:       org.Name,
-		Metadata:   org.Metada,
 		UpdatedAt:  org.UpdatedAt,
 	}
 
 	res, err := organizationRepo.
 		db.NewUpdate().
-		Model(&model).
+		Model(model).
 		Column("name", "metadata", "updated_at").
 		Where("identifier = ?", org.Identifier).
+		Where("deleted = ?", false).
 		Exec(ctx)
 
 	if err != nil {
@@ -131,7 +160,34 @@ func (organizationRepo *OrganizationRepository) Update(
 
 func (organizationRepo *OrganizationRepository) Delete(
 	ctx context.Context,
-	identifier string,
+	identifier uuid.UUID,
 ) error {
+	organizationRepo.logger.InfoContext(ctx, "deleting org", "org_id", identifier)
+	org := &models.Organization{
+		Identifier: identifier,
+	}
+
+	res, err := organizationRepo.
+		db.
+		NewUpdate().
+		Model(org).
+		Where("identifier = ?", identifier).
+		Where("deleted = ?", false).
+		Set("deleted_at = ?", time.Now()).
+		Set("deleted = ?", true).
+		Exec(ctx)
+
+	if err != nil {
+		organizationRepo.logger.WarnContext(ctx, "failed to delete org", "error", err)
+		return err
+	}
+
+	if res, err := res.RowsAffected(); res == 0 || err != nil {
+		if err != nil {
+			organizationRepo.logger.WarnContext(ctx, "failed to get rows affected", "error", err)
+		}
+		return errors.New("failed to delete org")
+	}
+
 	return nil
 }

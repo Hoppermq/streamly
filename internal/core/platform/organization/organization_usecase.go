@@ -78,3 +78,14 @@ func (uc *UseCase) Update(ctx context.Context, id string, updateOrg domain.Updat
 
 	return uc.repository.Update(ctx, org)
 }
+
+func (uc *UseCase) Delete(ctx context.Context, id string) error {
+	uc.logger.Info("deleting organization", "id", id)
+
+	org, err := uc.repository.FindOneByID(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	return uc.repository.Delete(ctx, org)
+}

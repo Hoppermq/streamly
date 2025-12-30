@@ -1,1 +1,473 @@
 package organization_test
+
+import (
+	"context"
+	"errors"
+	"io"
+	"log/slog"
+	"testing"
+
+	"github.com/google/uuid"
+	"github.com/hoppermq/streamly/internal/core/platform/organization"
+	"github.com/hoppermq/streamly/pkg/domain"
+	"github.com/hoppermq/streamly/pkg/domain/mocks"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
+)
+
+func TestUseCaseCreate(t *testing.T) {
+	t.Parallel()
+
+	fixedUUID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
+
+	tests := []struct {
+		name      string
+		input     domain.CreateOrganization
+		setupMock func(*mocks.MockOrganizationRepository)
+		assertErr assert.ErrorAssertionFunc
+	}{
+		{
+			name: "success - creates organization with generated UUID",
+			input: domain.CreateOrganization{
+				Name:     "Acme Corp",
+				Metadata: map[string]string{"industry": "tech"},
+			},
+			setupMock: func(repo *mocks.MockOrganizationRepository) {
+				repo.EXPECT().
+					Create(mock.Anything, mock.MatchedBy(func(org *domain.Organization) bool {
+						return org.Name == "Acme Corp" && org.Identifier == fixedUUID
+					})).
+					Return(nil).
+					Once()
+			},
+			assertErr: assert.NoError,
+		},
+		{
+			name: "error - repository fails to insert",
+			input: domain.CreateOrganization{
+				Name:     "Test Org",
+				Metadata: map[string]string{"key": "value"},
+			},
+			setupMock: func(repo *mocks.MockOrganizationRepository) {
+				repo.EXPECT().
+					Create(mock.Anything, mock.Anything).
+					Return(errors.New("database connection failed")).
+					Once()
+			},
+			assertErr: assert.Error,
+		},
+		{
+			name: "success - handles empty metadata map",
+			input: domain.CreateOrganization{
+				Name:     "Minimal Org",
+				Metadata: map[string]string{},
+			},
+			setupMock: func(repo *mocks.MockOrganizationRepository) {
+				repo.EXPECT().
+					Create(mock.Anything, mock.MatchedBy(func(org *domain.Organization) bool {
+						return org.Name == "Minimal Org" && org.Identifier == fixedUUID
+					})).
+					Return(nil).
+					Once()
+			},
+			assertErr: assert.NoError,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			repo := mocks.NewMockOrganizationRepository(t)
+			tt.setupMock(repo)
+
+			logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+			ctx := context.Background()
+
+			uc, err := organization.NewUseCase(
+				organization.UseCaseWithGenerator(func() uuid.UUID { return fixedUUID }),
+				organization.UseCaseWithLogger(logger),
+				organization.UseCaseWithRepository(repo),
+			)
+			require.NoError(t, err)
+
+			err = uc.Create(ctx, tt.input)
+
+			tt.assertErr(t, err)
+		})
+	}
+}
+
+func TestUseCaseFindOneByID(t *testing.T) {
+	t.Parallel()
+
+	orgID := "123e4567-e89b-12d3-a456-426614174000"
+	nonExistingOrgID := "123e4567-e89b-12d3-a456-42661417400r10"
+	expectedOrg := &domain.Organization{
+		Identifier: uuid.MustParse(orgID),
+		Name:       "Test Org",
+	}
+
+	tests := []struct {
+		name        string
+		orgID       string
+		setupMock   func(*mocks.MockOrganizationRepository)
+		assertErr   assert.ErrorAssertionFunc
+		assertValue assert.ValueAssertionFunc
+	}{
+		{
+			name:  "success - finds existing organization",
+			orgID: orgID,
+			setupMock: func(repo *mocks.MockOrganizationRepository) {
+				repo.EXPECT().
+					FindOneByID(mock.Anything, orgID).
+					Return(expectedOrg, nil).
+					Once()
+			},
+			assertErr:   assert.NoError,
+			assertValue: assert.NotNil,
+		},
+		{
+			name:  "error - organization not found",
+			orgID: nonExistingOrgID,
+			setupMock: func(repo *mocks.MockOrganizationRepository) {
+				repo.EXPECT().
+					FindOneByID(mock.Anything, nonExistingOrgID).
+					Return(nil, errors.New("organization not found")).
+					Once()
+			},
+			assertErr:   assert.Error,
+			assertValue: assert.Nil,
+		},
+		{
+			name:  "error - repository query failure",
+			orgID: orgID,
+			setupMock: func(repo *mocks.MockOrganizationRepository) {
+				repo.EXPECT().
+					FindOneByID(mock.Anything, orgID).
+					Return(nil, errors.New("database connection failed")).
+					Once()
+			},
+			assertErr:   assert.Error,
+			assertValue: assert.Nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			repo := mocks.NewMockOrganizationRepository(t)
+			tt.setupMock(repo)
+
+			logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+			ctx := context.Background()
+
+			uc, err := organization.NewUseCase(
+				organization.UseCaseWithGenerator(uuid.New),
+				organization.UseCaseWithLogger(logger),
+				organization.UseCaseWithRepository(repo),
+			)
+			require.NoError(t, err)
+
+			result, err := uc.FindOneByID(ctx, tt.orgID)
+
+			tt.assertErr(t, err)
+			tt.assertValue(t, result)
+		})
+	}
+}
+
+func TestUseCaseFindAll(t *testing.T) {
+	t.Parallel()
+
+	expectedOrgs := []domain.Organization{
+		{Identifier: uuid.MustParse("123e4567-e89b-12d3-a456-426614174000"), Name: "Org 1"},
+		{Identifier: uuid.MustParse("223e4567-e89b-12d3-a456-426614174000"), Name: "Org 2"},
+	}
+
+	tests := []struct {
+		name        string
+		limit       int
+		offset      int
+		setupMock   func(*mocks.MockOrganizationRepository)
+		assertErr   assert.ErrorAssertionFunc
+		assertValue assert.ValueAssertionFunc
+	}{
+		{
+			name:   "success - returns multiple organizations",
+			limit:  10,
+			offset: 0,
+			setupMock: func(repo *mocks.MockOrganizationRepository) {
+				repo.EXPECT().
+					FindAll(mock.Anything, 10, 0).
+					Return(expectedOrgs, nil).
+					Once()
+			},
+			assertErr:   assert.NoError,
+			assertValue: assert.NotNil,
+		},
+		{
+			name:   "success - empty list when no organizations",
+			limit:  10,
+			offset: 0,
+			setupMock: func(repo *mocks.MockOrganizationRepository) {
+				repo.EXPECT().
+					FindAll(mock.Anything, 10, 0).
+					Return([]domain.Organization{}, nil).
+					Once()
+			},
+			assertErr:   assert.NoError,
+			assertValue: assert.NotNil,
+		},
+		{
+			name:   "success - pagination with offset",
+			limit:  5,
+			offset: 10,
+			setupMock: func(repo *mocks.MockOrganizationRepository) {
+				repo.EXPECT().
+					FindAll(mock.Anything, 5, 10).
+					Return(expectedOrgs[:1], nil).
+					Once()
+			},
+			assertErr:   assert.NoError,
+			assertValue: assert.NotNil,
+		},
+		{
+			name:   "error - repository query failure",
+			limit:  10,
+			offset: 0,
+			setupMock: func(repo *mocks.MockOrganizationRepository) {
+				repo.EXPECT().
+					FindAll(mock.Anything, 10, 0).
+					Return(nil, errors.New("database connection failed")).
+					Once()
+			},
+			assertErr:   assert.Error,
+			assertValue: assert.Nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			repo := mocks.NewMockOrganizationRepository(t)
+			tt.setupMock(repo)
+
+			logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+			ctx := context.Background()
+
+			uc, err := organization.NewUseCase(
+				organization.UseCaseWithGenerator(uuid.New),
+				organization.UseCaseWithLogger(logger),
+				organization.UseCaseWithRepository(repo),
+			)
+			require.NoError(t, err)
+
+			result, err := uc.FindAll(ctx, tt.limit, tt.offset)
+
+			tt.assertErr(t, err)
+			tt.assertValue(t, result)
+		})
+	}
+}
+
+func TestUseCaseUpdate(t *testing.T) {
+	t.Parallel()
+
+	orgID := "123e4567-e89b-12d3-a456-426614174000"
+	nonExistingOrgID := "123e4567-e89b-12d3-a456-426614174001"
+	type args struct {
+		existingOrg *domain.Organization
+		updateInput domain.UpdateOrganization
+	}
+
+	tests := []struct {
+		name      string
+		args      args
+		setupMock func(*mocks.MockOrganizationRepository, *domain.Organization)
+		assertErr assert.ErrorAssertionFunc
+	}{
+		{
+			name: "success - updates organization name",
+			args: args{
+				existingOrg: &domain.Organization{
+					Identifier: uuid.MustParse(orgID),
+					Name:       "Old Name",
+				},
+				updateInput: domain.UpdateOrganization{Name: "New Name"},
+			},
+			setupMock: func(repo *mocks.MockOrganizationRepository, existingOrg *domain.Organization) {
+				repo.EXPECT().
+					FindOneByID(mock.Anything, orgID).
+					Return(existingOrg, nil).
+					Once()
+				repo.EXPECT().
+					Update(mock.Anything, mock.MatchedBy(func(org *domain.Organization) bool {
+						return org.Identifier.String() == orgID && org.Name == "New Name"
+					})).
+					Return(nil).
+					Once()
+			},
+			assertErr: assert.NoError,
+		},
+		{
+			name: "error - repository update failure",
+			args: args{
+				existingOrg: &domain.Organization{
+					Identifier: uuid.MustParse(nonExistingOrgID),
+				},
+				updateInput: domain.UpdateOrganization{Name: "New Name"},
+			},
+			setupMock: func(repo *mocks.MockOrganizationRepository, org *domain.Organization) {
+				repo.EXPECT().
+					FindOneByID(mock.Anything, nonExistingOrgID).
+					Return(nil, errors.New("organization not found")).
+					Once()
+			},
+			assertErr: assert.Error,
+		},
+		{
+
+			name: "error - repository update failure",
+			args: args{
+				existingOrg: &domain.Organization{
+					Identifier: uuid.MustParse(nonExistingOrgID),
+				},
+				updateInput: domain.UpdateOrganization{Name: "New Name"},
+			},
+			setupMock: func(repo *mocks.MockOrganizationRepository, org *domain.Organization) {
+				repo.EXPECT().
+					FindOneByID(mock.Anything, nonExistingOrgID).
+					Return(org, nil).
+					Once()
+				repo.EXPECT().
+					Update(mock.Anything, mock.Anything).
+					Return(errors.New("database connection failed")).
+					Once()
+			},
+			assertErr: assert.Error,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			repo := mocks.NewMockOrganizationRepository(t)
+			tt.setupMock(repo, tt.args.existingOrg)
+
+			logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+			ctx := context.Background()
+
+			uc, err := organization.NewUseCase(
+				organization.UseCaseWithGenerator(uuid.New),
+				organization.UseCaseWithLogger(logger),
+				organization.UseCaseWithRepository(repo),
+			)
+			require.NoError(t, err)
+
+			err = uc.Update(ctx, tt.args.existingOrg.Identifier.String(), tt.args.updateInput)
+
+			tt.assertErr(t, err)
+		})
+	}
+}
+
+func TestUseCaseDelete(t *testing.T) {
+	t.Parallel()
+
+	orgID := "123e4567-e89b-12d3-a456-426614174000"
+	nonExistingOrgID := "123e4567-e89b-12d3-a456-426614174001"
+
+	type args struct {
+		existingOrg *domain.Organization
+	}
+
+	tests := []struct {
+		name      string
+		args      args
+		setupMock func(*mocks.MockOrganizationRepository, *domain.Organization)
+		assertErr assert.ErrorAssertionFunc
+	}{
+		{
+			name: "success - deletes organization",
+			args: args{
+				existingOrg: &domain.Organization{
+					Identifier: uuid.MustParse(orgID),
+					Name:       "default",
+				},
+			},
+			setupMock: func(repo *mocks.MockOrganizationRepository, org *domain.Organization) {
+				repo.EXPECT().
+					FindOneByID(mock.Anything, orgID).
+					Return(org, nil).
+					Once()
+				repo.EXPECT().
+					Delete(mock.Anything, org).
+					Return(nil).
+					Once()
+			},
+			assertErr: assert.NoError,
+		},
+		{
+			name: "error - organization not found",
+			args: args{
+				existingOrg: &domain.Organization{
+					Identifier: uuid.MustParse(nonExistingOrgID),
+				},
+			},
+			setupMock: func(repo *mocks.MockOrganizationRepository, org *domain.Organization) {
+				repo.EXPECT().
+					FindOneByID(mock.Anything, nonExistingOrgID).
+					Return(nil, errors.New("organization not found")).
+					Once()
+			},
+			assertErr: assert.Error,
+		},
+		{
+			name: "error - repository delete failure",
+			args: args{
+				existingOrg: &domain.Organization{
+					Identifier: uuid.MustParse(orgID),
+				},
+			},
+			setupMock: func(repo *mocks.MockOrganizationRepository, org *domain.Organization) {
+				repo.EXPECT().
+					FindOneByID(mock.Anything, orgID).
+					Return(org, nil).
+					Once()
+				repo.EXPECT().
+					Delete(mock.Anything, org).
+					Return(errors.New("database constraint violation")).
+					Once()
+			},
+			assertErr: assert.Error,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			repo := mocks.NewMockOrganizationRepository(t)
+			tt.setupMock(repo, tt.args.existingOrg)
+
+			logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+			ctx := context.Background()
+
+			uc, err := organization.NewUseCase(
+				organization.UseCaseWithGenerator(uuid.New),
+				organization.UseCaseWithLogger(logger),
+				organization.UseCaseWithRepository(repo),
+			)
+			require.NoError(t, err)
+
+			err = uc.Delete(ctx, tt.args.existingOrg.Identifier.String())
+
+			tt.assertErr(t, err)
+		})
+	}
+}

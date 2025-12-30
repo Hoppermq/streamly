@@ -29,7 +29,7 @@ func main() {
 	ctx := context.Background()
 
 	ingestionConfig, err := config.LoadIngestionConfig()
-	logger.Info("conf", ingestionConfig)
+	logger.Info("configuration loaded", "config", ingestionConfig)
 	if err != nil {
 		logger.Warn("failed to load ingestion config", "error", err)
 	}

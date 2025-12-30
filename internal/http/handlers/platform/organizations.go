@@ -101,7 +101,5 @@ func (o *Organization) FindAll(c *gin.Context) {
 		return
 	}
 
-	o.logger.Info("organizagtions founded", "organizations", orgs)
-
 	c.JSON(http.StatusOK, gin.H{"data": orgs})
 }

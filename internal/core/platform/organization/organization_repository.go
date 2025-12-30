@@ -3,7 +3,6 @@ package organization
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log/slog"
 
 	"github.com/google/uuid"
@@ -86,17 +85,13 @@ func (organizationRepo *OrganizationRepository) FindAll(
 	ctx context.Context,
 	limit, offset int,
 ) ([]domain.Organization, error) {
-	fmt.Println("hello world")
 	orgs := []models.Organization{}
 	if err := organizationRepo.db.NewSelect().Model(&orgs).Limit(limit).Offset(offset).Scan(ctx); err != nil {
-		fmt.Println("oh no errror here")
 		organizationRepo.logger.Warn("failed to query tenants", "error", err)
 		return nil, err
 	}
-	organizationRepo.logger.Info("ORGA ARE HERE", "org", orgs)
 
 	organizations := make([]domain.Organization, len(orgs))
-
 	for i, org := range orgs {
 		organizations[i] = domain.Organization{
 			Identifier: org.Identifier,
@@ -163,7 +158,23 @@ func (organizationRepo *OrganizationRepository) Update(
 
 func (organizationRepo *OrganizationRepository) Delete(
 	ctx context.Context,
-	identifier string,
+	org *domain.Organization,
 ) error {
+	organizationRepo.logger.InfoContext(ctx, "deleting org", "org_id", org.Identifier)
+
+	res, err := organizationRepo.db.NewUpdate().Model(&org).Exec(ctx)
+
+	if err != nil {
+		organizationRepo.logger.WarnContext(ctx, "failed to delete org", "error", err)
+		return err
+	}
+
+	if res, err := res.RowsAffected(); res == 0 || err != nil {
+		if err != nil {
+			organizationRepo.logger.WarnContext(ctx, "failed to get rows affected", "error", err)
+		}
+		return errors.New("failed to delete org")
+	}
+
 	return nil
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/hoppermq/streamly/internal/models"
@@ -52,7 +53,7 @@ func (organizationRepo *OrganizationRepository) FindOneByID(
 
 	org := &models.Organization{}
 
-	if err := organizationRepo.db.NewSelect().Model(org).Where("identifier = ?", identifier).Scan(ctx); err != nil {
+	if err := organizationRepo.db.NewSelect().Model(org).Where("identifier = ?", identifier).Where("deleted = ?", false).Scan(ctx); err != nil {
 		organizationRepo.logger.WarnContext(ctx, "failed to select org", "identifier", identifier, "error", err)
 		return nil, err
 	}
@@ -86,7 +87,7 @@ func (organizationRepo *OrganizationRepository) FindAll(
 	limit, offset int,
 ) ([]domain.Organization, error) {
 	var orgs []models.Organization
-	if err := organizationRepo.db.NewSelect().Model(&orgs).Limit(limit).Offset(offset).Scan(ctx); err != nil {
+	if err := organizationRepo.db.NewSelect().Model(&orgs).Where("deleted = ?", false).Limit(limit).Offset(offset).Scan(ctx); err != nil {
 		organizationRepo.logger.Warn("failed to query tenants", "error", err)
 		return nil, err
 	}
@@ -136,7 +137,7 @@ func (organizationRepo *OrganizationRepository) Update(
 
 	res, err := organizationRepo.
 		db.NewUpdate().
-		Model(&model).
+		Model(model).
 		Column("name", "metadata", "updated_at").
 		Where("identifier = ?", org.Identifier).
 		Exec(ctx)
@@ -161,11 +162,19 @@ func (organizationRepo *OrganizationRepository) Delete(
 	identifier uuid.UUID,
 ) error {
 	organizationRepo.logger.InfoContext(ctx, "deleting org", "org_id", identifier)
-	org := &domain.Organization{
+	org := &models.Organization{
 		Identifier: identifier,
 	}
 
-	res, err := organizationRepo.db.NewUpdate().Model(org).Where("identifier = ?", identifier).Exec(ctx)
+	res, err := organizationRepo.
+		db.
+		NewUpdate().
+		Model(org).
+		Where("identifier = ?", identifier).
+		Where("deleted = ?", false).
+		Set("deleted_at = ?", time.Now()).
+		Set("deleted = ?", true).
+		Exec(ctx)
 
 	if err != nil {
 		organizationRepo.logger.WarnContext(ctx, "failed to delete org", "error", err)

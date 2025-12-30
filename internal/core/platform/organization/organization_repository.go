@@ -140,6 +140,7 @@ func (organizationRepo *OrganizationRepository) Update(
 		Model(model).
 		Column("name", "metadata", "updated_at").
 		Where("identifier = ?", org.Identifier).
+		Where("deleted = ?", false).
 		Exec(ctx)
 
 	if err != nil {

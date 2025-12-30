@@ -138,7 +138,7 @@ func (organizationRepo *Repository) Update(
 	res, err := organizationRepo.
 		db.NewUpdate().
 		Model(model).
-		Column("name", "metadata", "updated_at").
+		Column("name", "updated_at").
 		Where("identifier = ?", org.Identifier).
 		Where("deleted = ?", false).
 		Exec(ctx)

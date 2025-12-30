@@ -102,10 +102,10 @@ func TestUseCaseCreate(t *testing.T) {
 func TestUseCaseFindOneByID(t *testing.T) {
 	t.Parallel()
 
-	orgID := "123e4567-e89b-12d3-a456-426614174000"
-	nonExistingOrgID := "123e4567-e89b-12d3-a456-42661417400r10"
+	orgID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
+	nonExistingOrgID := uuid.MustParse("123e4567-e89b-12d3-a456-42661417400e")
 	expectedOrg := &domain.Organization{
-		Identifier: uuid.MustParse(orgID),
+		Identifier: orgID,
 		Name:       "Test Org",
 	}
 
@@ -118,7 +118,7 @@ func TestUseCaseFindOneByID(t *testing.T) {
 	}{
 		{
 			name:  "success - finds existing organization",
-			orgID: orgID,
+			orgID: orgID.String(),
 			setupMock: func(repo *mocks.MockOrganizationRepository) {
 				repo.EXPECT().
 					FindOneByID(mock.Anything, orgID).
@@ -130,7 +130,7 @@ func TestUseCaseFindOneByID(t *testing.T) {
 		},
 		{
 			name:  "error - organization not found",
-			orgID: nonExistingOrgID,
+			orgID: nonExistingOrgID.String(),
 			setupMock: func(repo *mocks.MockOrganizationRepository) {
 				repo.EXPECT().
 					FindOneByID(mock.Anything, nonExistingOrgID).
@@ -142,7 +142,7 @@ func TestUseCaseFindOneByID(t *testing.T) {
 		},
 		{
 			name:  "error - repository query failure",
-			orgID: orgID,
+			orgID: orgID.String(),
 			setupMock: func(repo *mocks.MockOrganizationRepository) {
 				repo.EXPECT().
 					FindOneByID(mock.Anything, orgID).
@@ -277,8 +277,8 @@ func TestUseCaseFindAll(t *testing.T) {
 func TestUseCaseUpdate(t *testing.T) {
 	t.Parallel()
 
-	orgID := "123e4567-e89b-12d3-a456-426614174000"
-	nonExistingOrgID := "123e4567-e89b-12d3-a456-426614174001"
+	orgID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
+	nonExistingOrgID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174001")
 	type args struct {
 		existingOrg *domain.Organization
 		updateInput domain.UpdateOrganization
@@ -294,7 +294,7 @@ func TestUseCaseUpdate(t *testing.T) {
 			name: "success - updates organization name",
 			args: args{
 				existingOrg: &domain.Organization{
-					Identifier: uuid.MustParse(orgID),
+					Identifier: orgID,
 					Name:       "Old Name",
 				},
 				updateInput: domain.UpdateOrganization{Name: "New Name"},
@@ -306,7 +306,7 @@ func TestUseCaseUpdate(t *testing.T) {
 					Once()
 				repo.EXPECT().
 					Update(mock.Anything, mock.MatchedBy(func(org *domain.Organization) bool {
-						return org.Identifier.String() == orgID && org.Name == "New Name"
+						return org.Identifier.String() == orgID.String() && org.Name == "New Name"
 					})).
 					Return(nil).
 					Once()
@@ -317,7 +317,7 @@ func TestUseCaseUpdate(t *testing.T) {
 			name: "error - repository update failure",
 			args: args{
 				existingOrg: &domain.Organization{
-					Identifier: uuid.MustParse(nonExistingOrgID),
+					Identifier: nonExistingOrgID,
 				},
 				updateInput: domain.UpdateOrganization{Name: "New Name"},
 			},
@@ -334,7 +334,7 @@ func TestUseCaseUpdate(t *testing.T) {
 			name: "error - repository update failure",
 			args: args{
 				existingOrg: &domain.Organization{
-					Identifier: uuid.MustParse(nonExistingOrgID),
+					Identifier: nonExistingOrgID,
 				},
 				updateInput: domain.UpdateOrganization{Name: "New Name"},
 			},
@@ -379,8 +379,8 @@ func TestUseCaseUpdate(t *testing.T) {
 func TestUseCaseDelete(t *testing.T) {
 	t.Parallel()
 
-	orgID := "123e4567-e89b-12d3-a456-426614174000"
-	nonExistingOrgID := "123e4567-e89b-12d3-a456-426614174001"
+	orgID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
+	nonExistingOrgID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174001")
 
 	type args struct {
 		existingOrg *domain.Organization
@@ -396,17 +396,13 @@ func TestUseCaseDelete(t *testing.T) {
 			name: "success - deletes organization",
 			args: args{
 				existingOrg: &domain.Organization{
-					Identifier: uuid.MustParse(orgID),
+					Identifier: orgID,
 					Name:       "default",
 				},
 			},
 			setupMock: func(repo *mocks.MockOrganizationRepository, org *domain.Organization) {
 				repo.EXPECT().
-					FindOneByID(mock.Anything, orgID).
-					Return(org, nil).
-					Once()
-				repo.EXPECT().
-					Delete(mock.Anything, org).
+					Delete(mock.Anything, org.Identifier).
 					Return(nil).
 					Once()
 			},
@@ -416,13 +412,13 @@ func TestUseCaseDelete(t *testing.T) {
 			name: "error - organization not found",
 			args: args{
 				existingOrg: &domain.Organization{
-					Identifier: uuid.MustParse(nonExistingOrgID),
+					Identifier: nonExistingOrgID,
 				},
 			},
 			setupMock: func(repo *mocks.MockOrganizationRepository, org *domain.Organization) {
 				repo.EXPECT().
-					FindOneByID(mock.Anything, nonExistingOrgID).
-					Return(nil, errors.New("organization not found")).
+					Delete(mock.Anything, nonExistingOrgID).
+					Return(errors.New("organization not found")).
 					Once()
 			},
 			assertErr: assert.Error,
@@ -431,16 +427,12 @@ func TestUseCaseDelete(t *testing.T) {
 			name: "error - repository delete failure",
 			args: args{
 				existingOrg: &domain.Organization{
-					Identifier: uuid.MustParse(orgID),
+					Identifier: orgID,
 				},
 			},
 			setupMock: func(repo *mocks.MockOrganizationRepository, org *domain.Organization) {
 				repo.EXPECT().
-					FindOneByID(mock.Anything, orgID).
-					Return(org, nil).
-					Once()
-				repo.EXPECT().
-					Delete(mock.Anything, org).
+					Delete(mock.Anything, org.Identifier).
 					Return(errors.New("database constraint violation")).
 					Once()
 			},

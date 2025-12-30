@@ -103,3 +103,19 @@ func (o *Organization) FindAll(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"data": orgs})
 }
+
+func (o *Organization) Delete(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "no parameter set"})
+		return
+	}
+
+	err := o.uc.Delete(c, id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Organization deleted successfully"})
+}

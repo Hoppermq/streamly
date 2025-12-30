@@ -7,6 +7,7 @@ package mocks
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/hoppermq/streamly/pkg/domain"
 	mock "github.com/stretchr/testify/mock"
 )
@@ -96,16 +97,16 @@ func (_c *MockOrganizationRepository_Create_Call) RunAndReturn(run func(ctx cont
 }
 
 // Delete provides a mock function for the type MockOrganizationRepository
-func (_mock *MockOrganizationRepository) Delete(ctx context.Context, org *domain.Organization) error {
-	ret := _mock.Called(ctx, org)
+func (_mock *MockOrganizationRepository) Delete(ctx context.Context, identifier uuid.UUID) error {
+	ret := _mock.Called(ctx, identifier)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Delete")
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, *domain.Organization) error); ok {
-		r0 = returnFunc(ctx, org)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID) error); ok {
+		r0 = returnFunc(ctx, identifier)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -119,20 +120,20 @@ type MockOrganizationRepository_Delete_Call struct {
 
 // Delete is a helper method to define mock.On call
 //   - ctx context.Context
-//   - org *domain.Organization
-func (_e *MockOrganizationRepository_Expecter) Delete(ctx interface{}, org interface{}) *MockOrganizationRepository_Delete_Call {
-	return &MockOrganizationRepository_Delete_Call{Call: _e.mock.On("Delete", ctx, org)}
+//   - identifier uuid.UUID
+func (_e *MockOrganizationRepository_Expecter) Delete(ctx interface{}, identifier interface{}) *MockOrganizationRepository_Delete_Call {
+	return &MockOrganizationRepository_Delete_Call{Call: _e.mock.On("Delete", ctx, identifier)}
 }
 
-func (_c *MockOrganizationRepository_Delete_Call) Run(run func(ctx context.Context, org *domain.Organization)) *MockOrganizationRepository_Delete_Call {
+func (_c *MockOrganizationRepository_Delete_Call) Run(run func(ctx context.Context, identifier uuid.UUID)) *MockOrganizationRepository_Delete_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 *domain.Organization
+		var arg1 uuid.UUID
 		if args[1] != nil {
-			arg1 = args[1].(*domain.Organization)
+			arg1 = args[1].(uuid.UUID)
 		}
 		run(
 			arg0,
@@ -147,7 +148,7 @@ func (_c *MockOrganizationRepository_Delete_Call) Return(err error) *MockOrganiz
 	return _c
 }
 
-func (_c *MockOrganizationRepository_Delete_Call) RunAndReturn(run func(ctx context.Context, org *domain.Organization) error) *MockOrganizationRepository_Delete_Call {
+func (_c *MockOrganizationRepository_Delete_Call) RunAndReturn(run func(ctx context.Context, identifier uuid.UUID) error) *MockOrganizationRepository_Delete_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -227,7 +228,7 @@ func (_c *MockOrganizationRepository_FindAll_Call) RunAndReturn(run func(ctx con
 }
 
 // FindOneByID provides a mock function for the type MockOrganizationRepository
-func (_mock *MockOrganizationRepository) FindOneByID(ctx context.Context, identifier string) (*domain.Organization, error) {
+func (_mock *MockOrganizationRepository) FindOneByID(ctx context.Context, identifier uuid.UUID) (*domain.Organization, error) {
 	ret := _mock.Called(ctx, identifier)
 
 	if len(ret) == 0 {
@@ -236,17 +237,17 @@ func (_mock *MockOrganizationRepository) FindOneByID(ctx context.Context, identi
 
 	var r0 *domain.Organization
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (*domain.Organization, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID) (*domain.Organization, error)); ok {
 		return returnFunc(ctx, identifier)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) *domain.Organization); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID) *domain.Organization); ok {
 		r0 = returnFunc(ctx, identifier)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*domain.Organization)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, string) error); ok {
+	if returnFunc, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
 		r1 = returnFunc(ctx, identifier)
 	} else {
 		r1 = ret.Error(1)
@@ -261,20 +262,20 @@ type MockOrganizationRepository_FindOneByID_Call struct {
 
 // FindOneByID is a helper method to define mock.On call
 //   - ctx context.Context
-//   - identifier string
+//   - identifier uuid.UUID
 func (_e *MockOrganizationRepository_Expecter) FindOneByID(ctx interface{}, identifier interface{}) *MockOrganizationRepository_FindOneByID_Call {
 	return &MockOrganizationRepository_FindOneByID_Call{Call: _e.mock.On("FindOneByID", ctx, identifier)}
 }
 
-func (_c *MockOrganizationRepository_FindOneByID_Call) Run(run func(ctx context.Context, identifier string)) *MockOrganizationRepository_FindOneByID_Call {
+func (_c *MockOrganizationRepository_FindOneByID_Call) Run(run func(ctx context.Context, identifier uuid.UUID)) *MockOrganizationRepository_FindOneByID_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 string
+		var arg1 uuid.UUID
 		if args[1] != nil {
-			arg1 = args[1].(string)
+			arg1 = args[1].(uuid.UUID)
 		}
 		run(
 			arg0,
@@ -289,7 +290,7 @@ func (_c *MockOrganizationRepository_FindOneByID_Call) Return(organization *doma
 	return _c
 }
 
-func (_c *MockOrganizationRepository_FindOneByID_Call) RunAndReturn(run func(ctx context.Context, identifier string) (*domain.Organization, error)) *MockOrganizationRepository_FindOneByID_Call {
+func (_c *MockOrganizationRepository_FindOneByID_Call) RunAndReturn(run func(ctx context.Context, identifier uuid.UUID) (*domain.Organization, error)) *MockOrganizationRepository_FindOneByID_Call {
 	_c.Call.Return(run)
 	return _c
 }

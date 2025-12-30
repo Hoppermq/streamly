@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/google/uuid"
 	"github.com/hoppermq/streamly/pkg/domain"
 )
 
@@ -49,7 +50,12 @@ func NewUseCase(opts ...UseCaseOption) (*UseCase, error) {
 
 func (uc *UseCase) FindOneByID(ctx context.Context, id string) (*domain.Organization, error) {
 	uc.logger.Info("finding organization by id", "id", id)
-	return uc.repository.FindOneByID(ctx, id)
+	identifier, err := uuid.Parse(id)
+	if err != nil {
+		uc.logger.Warn("failed to parse uuid", "error", err)
+		return nil, err
+	}
+	return uc.repository.FindOneByID(ctx, identifier)
 }
 
 func (uc *UseCase) FindAll(ctx context.Context, limit, offset int) ([]domain.Organization, error) {
@@ -69,7 +75,13 @@ func (uc *UseCase) Create(ctx context.Context, newOrg domain.CreateOrganization)
 }
 
 func (uc *UseCase) Update(ctx context.Context, id string, updateOrg domain.UpdateOrganization) error {
-	org, err := uc.repository.FindOneByID(ctx, id)
+	identifier, err := uuid.Parse(id)
+	if err != nil {
+		uc.logger.Warn("failed to parse uuid", "error", err)
+		return err
+	}
+
+	org, err := uc.repository.FindOneByID(ctx, identifier)
 	if err != nil {
 		return err
 	}
@@ -81,11 +93,10 @@ func (uc *UseCase) Update(ctx context.Context, id string, updateOrg domain.Updat
 
 func (uc *UseCase) Delete(ctx context.Context, id string) error {
 	uc.logger.Info("deleting organization", "id", id)
-
-	org, err := uc.repository.FindOneByID(ctx, id)
+	identifier, err := uuid.Parse(id)
 	if err != nil {
+		uc.logger.Warn("failed to parse uuid", "error", err)
 		return err
 	}
-
-	return uc.repository.Delete(ctx, org)
+	return uc.repository.Delete(ctx, identifier)
 }

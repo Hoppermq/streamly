@@ -46,7 +46,7 @@ func NewRepository(opts ...OptionRepository) (*OrganizationRepository, error) {
 
 func (organizationRepo *OrganizationRepository) FindOneByID(
 	ctx context.Context,
-	identifier string,
+	identifier uuid.UUID,
 ) (*domain.Organization, error) {
 	organizationRepo.logger.InfoContext(ctx, "getting organization from id", "id", identifier)
 
@@ -85,7 +85,7 @@ func (organizationRepo *OrganizationRepository) FindAll(
 	ctx context.Context,
 	limit, offset int,
 ) ([]domain.Organization, error) {
-	orgs := []models.Organization{}
+	var orgs []models.Organization
 	if err := organizationRepo.db.NewSelect().Model(&orgs).Limit(limit).Offset(offset).Scan(ctx); err != nil {
 		organizationRepo.logger.Warn("failed to query tenants", "error", err)
 		return nil, err
@@ -158,11 +158,14 @@ func (organizationRepo *OrganizationRepository) Update(
 
 func (organizationRepo *OrganizationRepository) Delete(
 	ctx context.Context,
-	org *domain.Organization,
+	identifier uuid.UUID,
 ) error {
-	organizationRepo.logger.InfoContext(ctx, "deleting org", "org_id", org.Identifier)
+	organizationRepo.logger.InfoContext(ctx, "deleting org", "org_id", identifier)
+	org := &domain.Organization{
+		Identifier: identifier,
+	}
 
-	res, err := organizationRepo.db.NewUpdate().Model(&org).Exec(ctx)
+	res, err := organizationRepo.db.NewUpdate().Model(org).Where("identifier = ?", identifier).Exec(ctx)
 
 	if err != nil {
 		organizationRepo.logger.WarnContext(ctx, "failed to delete org", "error", err)

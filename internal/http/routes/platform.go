@@ -26,6 +26,7 @@ func RegisterPlatformRoutes(
 
 		organizationGroup.GET("/:id", hndler.FindOneByID)
 		organizationGroup.PATCH("/:id", hndler.Update)
+		organizationGroup.DELETE("/:id", hndler.Delete)
 	}
 }
 

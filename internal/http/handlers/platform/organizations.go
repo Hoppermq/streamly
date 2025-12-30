@@ -73,6 +73,7 @@ func (o *Organization) Update(c *gin.Context) {
 
 	if err := o.uc.Update(c, id, dataToUpdate); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Organization updated successfully"})

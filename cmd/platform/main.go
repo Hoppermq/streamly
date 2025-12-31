@@ -66,11 +66,13 @@ func main() {
 	}
 
 	generator := uuid.New
+	uuidParser := uuid.Parse
 
 	organizationUC, err := organization.NewUseCase(
 		organization.UseCaseWithLogger(logger),
 		organization.UseCaseWithRepository(orgRepos),
 		organization.UseCaseWithGenerator(generator),
+		organization.UseCaseWithUUIDParser(uuidParser),
 	)
 
 	if err != nil {

@@ -14,3 +14,12 @@ func FindSubstring(text, substring string) bool {
 	}
 	return false
 }
+
+func ApplyStringUpdate(existing, update *string, fieldName string, fields []string) []string {
+	if update != nil && *update != *existing {
+		*existing = *update
+		return append(fields, fieldName)
+	}
+
+	return fields
+}

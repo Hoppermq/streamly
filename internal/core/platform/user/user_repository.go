@@ -10,13 +10,13 @@ import (
 )
 
 type Repository struct {
-	logger slog.Logger
+	logger *slog.Logger
 	db     *bun.DB
 }
 
 type OptionRepository func(*Repository) error
 
-func RepositoryWithLogger(logger slog.Logger) OptionRepository {
+func RepositoryWithLogger(logger *slog.Logger) OptionRepository {
 	return func(r *Repository) error {
 		r.logger = logger
 		return nil

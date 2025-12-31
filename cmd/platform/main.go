@@ -11,6 +11,7 @@ import (
 	"github.com/hoppermq/streamly/cmd/config"
 	"github.com/hoppermq/streamly/internal/core/platform"
 	"github.com/hoppermq/streamly/internal/core/platform/organization"
+	"github.com/hoppermq/streamly/internal/core/platform/user"
 	"github.com/hoppermq/streamly/internal/http"
 	"github.com/hoppermq/streamly/internal/http/routes"
 	"github.com/hoppermq/streamly/internal/storage/postgres"
@@ -65,6 +66,11 @@ func main() {
 		os.Exit(84)
 	}
 
+	userRepo, err := user.NewRepository(
+		user.RepositoryWithLogger(logger),
+		user.RepositoryWithDB(db),
+	)
+
 	generator := uuid.New
 	uuidParser := uuid.Parse
 
@@ -80,6 +86,18 @@ func main() {
 		os.Exit(84)
 	}
 
+	userUC, err := user.NewUseCase(
+		user.WithLogger(logger),
+		user.WithRepository(userRepo),
+		user.WithGenerator(generator),
+		user.WithUUIDParser(uuidParser),
+	)
+
+	if err != nil {
+		logger.ErrorContext(ctx, "failed to create user usecase", "error", err)
+		os.Exit(84)
+	}
+
 	engine := gin.New()
 	httpServer := http.NewHTTPServer(
 		http.WithEngine(engine),
@@ -88,6 +106,7 @@ func main() {
 		http.WithRoutes(
 			routes.CreateRouteRegistrar(
 				routes.CreatePlatformRegistrar(logger, organizationUC),
+				routes.CreateWebhookRegistrar(logger, userUC),
 			),
 		),
 	)

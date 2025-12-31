@@ -16,6 +16,48 @@ type UseCase struct {
 	uuidParser domain.UUIDParser
 }
 
+type UseCaseOption func(*UseCase) error
+
+func WithLogger(logger *slog.Logger) UseCaseOption {
+	return func(u *UseCase) error {
+		u.logger = logger
+		return nil
+	}
+}
+
+func WithRepository(repo domain.UserRepository) UseCaseOption {
+	return func(u *UseCase) error {
+		u.repo = repo
+		return nil
+	}
+}
+
+func WithUUIDParser(parser domain.UUIDParser) UseCaseOption {
+	return func(u *UseCase) error {
+		u.uuidParser = parser
+		return nil
+	}
+}
+
+func WithGenerator(generator domain.Generator) UseCaseOption {
+	return func(u *UseCase) error {
+		u.generator = generator
+		return nil
+	}
+}
+
+func NewUseCase(opts ...UseCaseOption) (*UseCase, error) {
+	uc := &UseCase{}
+
+	for _, opt := range opts {
+		if err := opt(uc); err != nil {
+			return nil, err
+		}
+	}
+
+	return uc, nil
+}
+
 func (uc *UseCase) FindOne(ctx context.Context, id string) (*domain.User, error) {
 	uc.logger.Info("finding user by id", "identifier", id)
 	identifier, err := uc.uuidParser(id)

@@ -9,7 +9,7 @@ import (
 
 type User struct {
 	Identifier uuid.UUID
-	ZitadelID  uuid.UUID
+	ZitadelID  string
 
 	UserName     string
 	FirstName    string
@@ -35,8 +35,7 @@ type CreateUser struct {
 	LastName     string `form:"last_name" json:"last_name" binding:"required"`
 	PrimaryEmail string `form:"primary_email" json:"primary_email" binding:"required"`
 	Role         string `form:"role" json:"role"`
-
-	ZitadelID uuid.UUID `form:"zitadel_id" json:"zitadel_id"`
+	ZitadelID    string `form:"zitadel_id" json:"zitadel_id"`
 }
 
 type UpdateUser struct {

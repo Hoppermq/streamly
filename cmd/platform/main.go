@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/hoppermq/streamly/cmd/config"
+	"github.com/hoppermq/streamly/internal/core/auth"
 	"github.com/hoppermq/streamly/internal/core/platform"
 	"github.com/hoppermq/streamly/internal/core/platform/organization"
 	"github.com/hoppermq/streamly/internal/core/platform/user"
@@ -70,6 +71,20 @@ func main() {
 		user.RepositoryWithLogger(logger),
 		user.RepositoryWithDB(db),
 	)
+	if err != nil {
+		logger.ErrorContext(ctx, "failed to create user repository", "error", err)
+		os.Exit(84)
+	}
+
+	authRepo, err := auth.NewRepository(
+		auth.RepositoryWithLogger(logger),
+		auth.RepositoryWithDB(db),
+	)
+
+	if err != nil {
+		logger.ErrorContext(ctx, "failed to create auth repository", "error", err)
+		os.Exit(84)
+	}
 
 	generator := uuid.New
 	uuidParser := uuid.Parse
@@ -88,7 +103,8 @@ func main() {
 
 	userUC, err := user.NewUseCase(
 		user.WithLogger(logger),
-		user.WithRepository(userRepo),
+		user.WithUserRepository(userRepo),
+		user.WithAuthRepository(authRepo),
 		user.WithGenerator(generator),
 		user.WithUUIDParser(uuidParser),
 	)

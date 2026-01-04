@@ -59,9 +59,13 @@ func (u *User) FindAll(c *gin.Context) {}
 
 func (u *User) Create(c *gin.Context) {
 	u.logger.Info("🎯 WEBHOOK RECEIVED - Zitadel user created")
+	zitadelSignature := c.GetHeader("zitadel-signature")
+	if zitadelSignature == "" {
+		u.logger.Warn("invalid signature key")
+		c.AbortWithStatus(http.StatusBadRequest)
+	}
 
-	// Log the raw payload for debugging
-	var payload map[string]interface{}
+	var payload domain.ZitadelEventUserCreated
 	if err := c.ShouldBindJSON(&payload); err != nil {
 		u.logger.Error("failed to parse webhook payload", "error", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid payload"})
@@ -69,8 +73,11 @@ func (u *User) Create(c *gin.Context) {
 	}
 
 	u.logger.Info("webhook payload received", "payload", payload)
-
-	// TODO: Parse Zitadel payload and call u.uc.Create()
+	if err := u.uc.CreateFromEvent(c, &payload); err != nil {
+		u.logger.Warn("failed to create from event", "error", err)
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
 
 	c.JSON(http.StatusCreated, gin.H{"message": "user created"})
 }

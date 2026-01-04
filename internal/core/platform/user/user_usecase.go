@@ -11,7 +11,8 @@ import (
 type UseCase struct {
 	logger *slog.Logger
 
-	repo       domain.UserRepository
+	userRepo   domain.UserRepository
+	authRepo   domain.AuthRepository
 	generator  domain.Generator
 	uuidParser domain.UUIDParser
 }
@@ -25,9 +26,16 @@ func WithLogger(logger *slog.Logger) UseCaseOption {
 	}
 }
 
-func WithRepository(repo domain.UserRepository) UseCaseOption {
+func WithUserRepository(repo domain.UserRepository) UseCaseOption {
 	return func(u *UseCase) error {
-		u.repo = repo
+		u.userRepo = repo
+		return nil
+	}
+}
+
+func WithAuthRepository(repo domain.AuthRepository) UseCaseOption {
+	return func(u *UseCase) error {
+		u.authRepo = repo
 		return nil
 	}
 }
@@ -67,22 +75,21 @@ func (uc *UseCase) FindOne(ctx context.Context, id string) (*domain.User, error)
 		return nil, err
 	}
 
-	return uc.repo.FindOneByID(ctx, identifier)
+	return uc.userRepo.FindOneByID(ctx, identifier)
 }
 
 func (uc *UseCase) FindAll(ctx context.Context, limit, offset int) ([]domain.User, error) {
 	uc.logger.Info("finding users", "limit", limit, "offset", offset)
-	return uc.repo.FindAll(ctx, limit, offset)
+	return uc.userRepo.FindAll(ctx, limit, offset)
 }
 
 func (uc *UseCase) Create(ctx context.Context, userInput *domain.CreateUser) error {
 	uc.logger.Info("creating new user")
 	userIdentifier := uc.generator()
-	zitadelIdentifier := uc.generator()
 
 	user := &domain.User{
 		Identifier: userIdentifier,
-		ZitadelID:  zitadelIdentifier,
+		ZitadelID:  userInput.ZitadelID,
 
 		UserName:     userInput.UserName,
 		FirstName:    userInput.FirstName,
@@ -92,7 +99,29 @@ func (uc *UseCase) Create(ctx context.Context, userInput *domain.CreateUser) err
 		Role: userInput.Role,
 	}
 
-	return uc.repo.Create(ctx, user)
+	return uc.userRepo.Create(ctx, user)
+}
+
+func (uc *UseCase) CreateFromEvent(ctx context.Context, event *domain.ZitadelEventUserCreated) error {
+	uc.logger.Info("creating new user from event")
+	u, err := uc.authRepo.FindUserByUsername(ctx, event.Request.UserName)
+	if err != nil {
+		uc.logger.Warn("failed to find user by email", "email", event.Request.Email.Email, "error", err.Error())
+		return err
+	}
+
+	createUser := &domain.CreateUser{
+		UserName:  u.UserName,
+		FirstName: u.FirstName,
+		LastName:  u.LastName,
+
+		PrimaryEmail: u.PrimaryEmail,
+		ZitadelID:    u.ZitadelID,
+
+		Role: u.Role,
+	}
+
+	return uc.Create(ctx, createUser)
 }
 
 func (uc *UseCase) Update(ctx context.Context, id string, updateUserInput *domain.UpdateUser) error {
@@ -103,7 +132,7 @@ func (uc *UseCase) Update(ctx context.Context, id string, updateUserInput *domai
 		return err
 	}
 
-	existingUser, err := uc.repo.FindOneByID(ctx, identifier)
+	existingUser, err := uc.userRepo.FindOneByID(ctx, identifier)
 	if err != nil {
 		uc.logger.Warn("failed to find user by id", "identifier", id, "error", err.Error())
 		return err
@@ -145,7 +174,7 @@ func (uc *UseCase) Update(ctx context.Context, id string, updateUserInput *domai
 		"identifier", id,
 		"updated_fields", updateFields)
 
-	return uc.repo.Update(ctx, existingUser)
+	return uc.userRepo.Update(ctx, existingUser)
 }
 
 func (uc *UseCase) Delete(ctx context.Context, id string) error {
@@ -156,5 +185,5 @@ func (uc *UseCase) Delete(ctx context.Context, id string) error {
 		return err
 	}
 
-	return uc.repo.Delete(ctx, identifier)
+	return uc.userRepo.Delete(ctx, identifier)
 }

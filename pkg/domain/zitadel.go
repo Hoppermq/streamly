@@ -1,5 +1,18 @@
 package domain
 
+import (
+	"context"
+
+	"github.com/google/uuid"
+)
+
+type Client interface {
+	GetUserByUserName(ctx context.Context, userName string) (*User, error)
+	GetUserByEmail(ctx context.Context, email string) (*User, error)
+	GetUserByID(ctx context.Context, userId string) (*User, error)
+
+	GetOrganizationByID(ctx context.Context, organizationId uuid.UUID) (*Organization, error)
+}
 type ZitadelEventUserCreatedRequest struct {
 	Email struct {
 		Email      string `json:"email" binding:"required,email"`

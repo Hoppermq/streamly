@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS users
 (
   id               UUID PRIMARY KEY     DEFAULT uuid_generate_v4(),
   identifier       UUID UNIQUE NOT NULL,
-  zitadel_user_id  UUID        NOT NULL,
+  zitadel_user_id  VARCHAR(25)        NOT NULL,
 
 
   first_name       VARCHAR(255),

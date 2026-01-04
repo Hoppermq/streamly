@@ -3,7 +3,7 @@ FirstInstance:
     Name: STREAMLY
     Human:
       Username: 'root'
-      Password: 'Password123!'
+      Password: 'RootPassword123!'
       Email: 'root@streamly.localhost'
       FirstName: 'Root'
       LastName: 'Admin'

@@ -4,7 +4,6 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/google/uuid"
 	"github.com/hoppermq/streamly/pkg/domain"
 )
 
@@ -13,6 +12,7 @@ type UseCase struct {
 
 	repository domain.OrganizationRepository
 	generator  domain.Generator
+	uuidParser domain.UUIDParser
 }
 
 type UseCaseOption func(*UseCase) error
@@ -38,6 +38,13 @@ func UseCaseWithGenerator(generator domain.Generator) UseCaseOption {
 	}
 }
 
+func UseCaseWithUUIDParser(uuidParser domain.UUIDParser) UseCaseOption {
+	return func(u *UseCase) error {
+		u.uuidParser = uuidParser
+		return nil
+	}
+}
+
 func NewUseCase(opts ...UseCaseOption) (*UseCase, error) {
 	uc := &UseCase{}
 	for _, opt := range opts {
@@ -50,7 +57,7 @@ func NewUseCase(opts ...UseCaseOption) (*UseCase, error) {
 
 func (uc *UseCase) FindOneByID(ctx context.Context, id string) (*domain.Organization, error) {
 	uc.logger.Info("finding organization by id", "id", id)
-	identifier, err := uuid.Parse(id)
+	identifier, err := uc.uuidParser(id)
 	if err != nil {
 		uc.logger.Warn("failed to parse uuid", "error", err)
 		return nil, err
@@ -75,7 +82,7 @@ func (uc *UseCase) Create(ctx context.Context, newOrg domain.CreateOrganization)
 }
 
 func (uc *UseCase) Update(ctx context.Context, id string, updateOrg domain.UpdateOrganization) error {
-	identifier, err := uuid.Parse(id)
+	identifier, err := uc.uuidParser(id)
 	if err != nil {
 		uc.logger.Warn("failed to parse uuid", "error", err)
 		return err
@@ -93,7 +100,7 @@ func (uc *UseCase) Update(ctx context.Context, id string, updateOrg domain.Updat
 
 func (uc *UseCase) Delete(ctx context.Context, id string) error {
 	uc.logger.Info("deleting organization", "id", id)
-	identifier, err := uuid.Parse(id)
+	identifier, err := uc.uuidParser(id)
 	if err != nil {
 		uc.logger.Warn("failed to parse uuid", "error", err)
 		return err

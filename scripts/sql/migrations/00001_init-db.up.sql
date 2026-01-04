@@ -29,7 +29,6 @@ CREATE TABLE IF NOT EXISTS users
   username         VARCHAR(255),
   primary_email VARCHAR(255),
 
-  tenants_id       UUID NOT NULL,
   role             roles                default 'user',
 
   created_at       TIMESTAMP   NOT NULL DEFAULT now(),

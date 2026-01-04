@@ -210,16 +210,12 @@ services:
       - ZITADEL_FIRSTINSTANCE_ORG_LOGINCLIENT_MACHINE_USERNAME=login-client
       - ZITADEL_FIRSTINSTANCE_ORG_LOGINCLIENT_MACHINE_NAME=Automatically Initialized IAM_LOGIN_CLIENT
       - ZITADEL_FIRSTINSTANCE_ORG_LOGINCLIENT_PAT_EXPIRATIONDATE=2029-01-01T00:00:00Z
-      - ZITADEL_DEFAULTINSTANCE_FEATURES_LOGINV2_REQUIRED=true
-      - ZITADEL_DEFAULTINSTANCE_FEATURES_LOGINV2_BASEURI=http://localhost:3003/ui/v2/login
-      - ZITADEL_OIDC_DEFAULTLOGINURLV2=http://localhost:3003/ui/v2/login/login?authRequest=
-      - ZITADEL_OIDC_DEFAULTLOGOUTURLV2=http://localhost:3003/ui/v2/login/logout?post_logout_redirect=
-      - ZITADEL_SAML_DEFAULTLOGINURLV2=http://localhost:3003/ui/v2/login/login?samlRequest=
+      - ZITADEL_DEFAULTINSTANCE_FEATURES_LOGINV2_REQUIRED=false
     depends_on:
       postgres:
         condition: "service_healthy"
     ports:
-      - "8888:8080"
+      - "8080:8080"
     healthcheck:
       test: ["CMD", "/app/zitadel", "ready"]
       interval: 10s
@@ -231,38 +227,40 @@ services:
       - streamly-dev
     user: "0"
 
-  zitadel-login:
-    restart: unless-stopped
-    image: ghcr.io/zitadel/zitadel-login:latest
-    environment:
-      - ZITADEL_API_URL=http://zitadel:8080
-      - NEXT_PUBLIC_BASE_PATH=/ui/v2/login
-      - ZITADEL_SERVICE_USER_TOKEN_FILE=/machinekey/login-client.pat
-    volumes:
-      - "./zitadel/machinekey:/machinekey:ro"
-    networks:
-      - zitadel
-      - streamly-dev
-    user: "0"
-    depends_on:
-      zitadel:
-        condition: service_healthy
-    ports:
-      - "3003:3000"
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "wget",
-          "--no-verbose",
-          "--tries=1",
-          "--spider",
-          "http://localhost:3000/health",
-        ]
-      interval: 10s
-      timeout: 30s
-      retries: 5
-      start_period: 20s
+# zitadel-login: Disabled for development - using built-in Zitadel login UI
+  # To enable, uncomment and set ZITADEL_DEFAULTINSTANCE_FEATURES_LOGINV2_REQUIRED=true
+  # zitadel-login:
+  #   restart: unless-stopped
+  #   image: ghcr.io/zitadel/zitadel-login:latest
+  #   environment:
+  #     - ZITADEL_API_URL=http://zitadel:8080
+  #     - NEXT_PUBLIC_BASE_PATH=/ui/v2/login
+  #     - ZITADEL_SERVICE_USER_TOKEN_FILE=/machinekey/login-client.pat
+  #   volumes:
+  #     - "./zitadel/machinekey:/machinekey:ro"
+  #   networks:
+  #     - zitadel
+  #     - streamly-dev
+  #   user: "0"
+  #   depends_on:
+  #     zitadel:
+  #       condition: service_healthy
+  #   ports:
+  #     - "3003:3000"
+  #   healthcheck:
+  #     test:
+  #       [
+  #         "CMD",
+  #         "wget",
+  #         "--no-verbose",
+  #         "--tries=1",
+  #         "--spider",
+  #         "http://localhost:3000/health",
+  #       ]
+  #     interval: 10s
+  #     timeout: 30s
+  #     retries: 5
+  #     start_period: 20s
 
   zitadel-bootstrap:
     image: hashicorp/terraform:1.9

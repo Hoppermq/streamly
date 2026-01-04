@@ -9,8 +9,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/hoppermq/streamly/cmd/config"
+	"github.com/hoppermq/streamly/internal/core/auth"
 	"github.com/hoppermq/streamly/internal/core/platform"
 	"github.com/hoppermq/streamly/internal/core/platform/organization"
+	"github.com/hoppermq/streamly/internal/core/platform/user"
 	"github.com/hoppermq/streamly/internal/http"
 	"github.com/hoppermq/streamly/internal/http/routes"
 	"github.com/hoppermq/streamly/internal/storage/postgres"
@@ -65,16 +67,50 @@ func main() {
 		os.Exit(84)
 	}
 
+	userRepo, err := user.NewRepository(
+		user.RepositoryWithLogger(logger),
+		user.RepositoryWithDB(db),
+	)
+	if err != nil {
+		logger.ErrorContext(ctx, "failed to create user repository", "error", err)
+		os.Exit(84)
+	}
+
+	authRepo, err := auth.NewRepository(
+		auth.RepositoryWithLogger(logger),
+		auth.RepositoryWithDB(db),
+	)
+
+	if err != nil {
+		logger.ErrorContext(ctx, "failed to create auth repository", "error", err)
+		os.Exit(84)
+	}
+
 	generator := uuid.New
+	uuidParser := uuid.Parse
 
 	organizationUC, err := organization.NewUseCase(
 		organization.UseCaseWithLogger(logger),
 		organization.UseCaseWithRepository(orgRepos),
 		organization.UseCaseWithGenerator(generator),
+		organization.UseCaseWithUUIDParser(uuidParser),
 	)
 
 	if err != nil {
 		logger.ErrorContext(ctx, "failed to create organization usecase", "error", err)
+		os.Exit(84)
+	}
+
+	userUC, err := user.NewUseCase(
+		user.WithLogger(logger),
+		user.WithUserRepository(userRepo),
+		user.WithAuthRepository(authRepo),
+		user.WithGenerator(generator),
+		user.WithUUIDParser(uuidParser),
+	)
+
+	if err != nil {
+		logger.ErrorContext(ctx, "failed to create user usecase", "error", err)
 		os.Exit(84)
 	}
 
@@ -86,6 +122,7 @@ func main() {
 		http.WithRoutes(
 			routes.CreateRouteRegistrar(
 				routes.CreatePlatformRegistrar(logger, organizationUC),
+				routes.CreateWebhookRegistrar(logger, userUC),
 			),
 		),
 	)

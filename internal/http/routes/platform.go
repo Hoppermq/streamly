@@ -16,18 +16,35 @@ func RegisterPlatformRoutes(
 	v1 := router.Group("/v1")
 	organizationGroup := v1.Group("/organizations")
 	{
-		hndler := handlers.NewOrganization(
+		orgHandler := handlers.NewOrganization(
 			handlers.OrganizationWithLogger(logger),
 			handlers.OrganizationWithUseCase(organizationUseCase),
 		)
 
-		organizationGroup.GET("/", hndler.FindAll)
-		organizationGroup.POST("/", hndler.Create)
+		organizationGroup.GET("/", orgHandler.FindAll)
+		organizationGroup.POST("/", orgHandler.Create)
 
-		organizationGroup.GET("/:id", hndler.FindOneByID)
-		organizationGroup.PATCH("/:id", hndler.Update)
-		organizationGroup.DELETE("/:id", hndler.Delete)
+		organizationGroup.GET("/:id", orgHandler.FindOneByID)
+		organizationGroup.PATCH("/:id", orgHandler.Update)
+		organizationGroup.DELETE("/:id", orgHandler.Delete)
 	}
+
+	membershipGroup := v1.Group("/memberships")
+	{
+		membershipGroup.POST("/add-user", func(context *gin.Context) {})
+	}
+
+	userGroup := v1.Group("/users")
+	{
+
+		userGroup.GET("/", func(context *gin.Context) {})
+		userGroup.POST("/new", func(context *gin.Context) {})
+
+		userGroup.GET("/:id", func(context *gin.Context) {})
+		userGroup.PATCH("/:id", func(context *gin.Context) {})
+		userGroup.DELETE("/:id", func(context *gin.Context) {})
+	}
+
 }
 
 func CreatePlatformRegistrar(

@@ -21,6 +21,12 @@ type PlatformConfig struct {
 			WriteTimeout time.Duration `toml:"write_timeout"`
 		} `toml:"http"`
 
+		Zitadel struct {
+			Port     uint16 `toml:"port"`
+			Domain   string `toml:"domain"`
+			PatPath  string `toml:"patpath"` // Path to PAT file (v0: file path, prod: empty if using env var)
+		} `toml:"zitadel"`
+
 		Storage struct {
 			Database struct {
 				Host         string `toml:"host"`
@@ -56,4 +62,9 @@ func (c *PlatformConfig) DatabaseDSN() string {
 		c.Platform.Storage.Database.Port,
 		c.Platform.Storage.Database.Name,
 	)
+}
+
+// ZitadelPATPath returns the PAT path (prefer env var, fallback to config)
+func (c *PlatformConfig) ZitadelPATPath() string {
+	return c.Platform.Zitadel.PatPath
 }

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
 
@@ -58,11 +59,12 @@ func (u *User) FindOne(c *gin.Context) {
 func (u *User) FindAll(c *gin.Context) {}
 
 func (u *User) Create(c *gin.Context) {
-	u.logger.Info("🎯 WEBHOOK RECEIVED - Zitadel user created")
+	u.logger.InfoContext(c.Request.Context(), "webhook received creating user")
 	zitadelSignature := c.GetHeader("zitadel-signature")
 	if zitadelSignature == "" {
 		u.logger.Warn("invalid signature key")
 		c.AbortWithStatus(http.StatusBadRequest)
+		return
 	}
 
 	var payload domain.ZitadelEventUserCreated
@@ -73,13 +75,24 @@ func (u *User) Create(c *gin.Context) {
 	}
 
 	u.logger.Info("webhook payload received", "payload", payload)
-	if err := u.uc.CreateFromEvent(c, &payload); err != nil {
-		u.logger.Warn("failed to create from event", "error", err)
-		c.AbortWithStatus(http.StatusBadRequest)
-		return
-	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": "user created"})
+	go func() {
+		ctx := context.Background()
+		if err := u.uc.CreateFromEvent(ctx, &payload); err != nil {
+			// TODO: Push to dead-letter queue for manual intervention
+		} else {
+			u.logger.Info(
+				"user created successfully",
+				"username", payload.Request.UserName,
+				"email", payload.Request.Email.Email,
+			)
+		}
+	}()
+
+	c.JSON(http.StatusAccepted, gin.H{
+		"status":  "accepted",
+		"message": "user creation queued for processing",
+	})
 }
 
 func (u *User) Update(c *gin.Context) {}

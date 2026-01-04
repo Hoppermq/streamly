@@ -107,6 +107,12 @@
   read_timeout = 3600
   write_timeout = 3600
 
+  [platform.zitadel]
+  port = 8080
+  domain = "http://zitadel"
+  pat_path = "/app/deployments/zitadel/machinekey/zitadel-admin.pat"
+
+
   [platform.storage]
     [platform.storage.database]
     host = "postgres"

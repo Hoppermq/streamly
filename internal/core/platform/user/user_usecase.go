@@ -3,9 +3,11 @@ package user
 import (
 	"context"
 	"log/slog"
+	"time"
 
 	"github.com/hoppermq/streamly/internal/common"
 	"github.com/hoppermq/streamly/pkg/domain"
+	"github.com/hoppermq/streamly/pkg/shared/zitadel/client"
 )
 
 type UseCase struct {
@@ -15,6 +17,8 @@ type UseCase struct {
 	authRepo   domain.AuthRepository
 	generator  domain.Generator
 	uuidParser domain.UUIDParser
+
+	zitadelApi *client.Zitadel
 }
 
 type UseCaseOption func(*UseCase) error
@@ -50,6 +54,13 @@ func WithUUIDParser(parser domain.UUIDParser) UseCaseOption {
 func WithGenerator(generator domain.Generator) UseCaseOption {
 	return func(u *UseCase) error {
 		u.generator = generator
+		return nil
+	}
+}
+
+func WithZitadelAPI(zitadelApi *client.Zitadel) UseCaseOption {
+	return func(u *UseCase) error {
+		u.zitadelApi = zitadelApi
 		return nil
 	}
 }
@@ -104,21 +115,44 @@ func (uc *UseCase) Create(ctx context.Context, userInput *domain.CreateUser) err
 
 func (uc *UseCase) CreateFromEvent(ctx context.Context, event *domain.ZitadelEventUserCreated) error {
 	uc.logger.Info("creating new user from event")
-	u, err := uc.authRepo.FindUserByUsername(ctx, event.Request.UserName)
+
+	var u *domain.User
+	var err error
+	maxRetries := 6
+	retryDelay := 500 * time.Millisecond
+
+	for attempt := 1; attempt <= maxRetries; attempt++ {
+		u, err = uc.zitadelApi.GetUserByUserName(ctx, event.Request.UserName)
+		if err == nil {
+			break
+		}
+
+		if attempt < maxRetries {
+			uc.logger.Info("user not found yet, retrying...",
+				"attempt", attempt,
+				"username", event.Request.UserName,
+				"retry_in_ms", retryDelay.Milliseconds())
+			time.Sleep(retryDelay)
+		}
+	}
+
 	if err != nil {
-		uc.logger.Warn("failed to find user by email", "email", event.Request.Email.Email, "error", err.Error())
+		uc.logger.Warn("failed to find user after retries",
+			"email", event.Request.Email.Email,
+			"attempts", maxRetries,
+			"error", err.Error())
 		return err
 	}
 
 	createUser := &domain.CreateUser{
 		UserName:  u.UserName,
-		FirstName: u.FirstName,
-		LastName:  u.LastName,
+		FirstName: event.Request.Profile.FirstName,
+		LastName:  event.Request.Profile.LastName,
 
-		PrimaryEmail: u.PrimaryEmail,
+		PrimaryEmail: event.Request.Email.Email,
 		ZitadelID:    u.ZitadelID,
 
-		Role: u.Role,
+		Role: "user",
 	}
 
 	return uc.Create(ctx, createUser)

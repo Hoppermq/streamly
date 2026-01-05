@@ -5,6 +5,7 @@ import (
 	"log/slog"
 
 	"github.com/google/uuid"
+	"github.com/hoppermq/streamly/internal/models"
 	"github.com/hoppermq/streamly/pkg/domain"
 	"github.com/uptrace/bun"
 )
@@ -53,8 +54,26 @@ func (r *Repository) FindAll(ctx context.Context, limit, offset int) ([]domain.U
 }
 
 func (r *Repository) Create(ctx context.Context, user *domain.User) error {
-	//TODO implement me
-	panic("implement me")
+	r.logger.InfoContext(ctx, "creating new user", "user", user)
+	u := &models.User{
+		Identifier:   user.Identifier,
+		ZitadelID:    user.ZitadelID,
+		Username:     user.UserName,
+		FirstName:    user.FirstName,
+		LastName:     user.LastName,
+		PrimaryEmail: user.PrimaryEmail,
+		Role:         user.Role,
+	}
+
+	_, err := r.db.NewInsert().Model(u).Exec(ctx)
+	if err != nil {
+		r.logger.WarnContext(ctx, "failed to create a new user", "error", err)
+		return err
+	}
+
+	r.logger.InfoContext(ctx, "user created successfully", "user_id", u.ID, "zitadel_id", u.ZitadelID)
+	return nil
+
 }
 
 func (r *Repository) Update(ctx context.Context, user *domain.User) error {

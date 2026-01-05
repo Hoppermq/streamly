@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"log/slog"
 	"os"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -16,6 +17,7 @@ import (
 	"github.com/hoppermq/streamly/internal/http"
 	"github.com/hoppermq/streamly/internal/http/routes"
 	"github.com/hoppermq/streamly/internal/storage/postgres"
+	"github.com/hoppermq/streamly/pkg/shared/zitadel/client"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/driver/pgdriver"
@@ -40,6 +42,10 @@ func main() {
 	}
 
 	logger.InfoContext(ctx, "starting platform service")
+	logger.InfoContext(ctx, "🔍 DEBUG: Zitadel config loaded",
+		"domain", platformConf.Platform.Zitadel.Domain,
+		"port", platformConf.Platform.Zitadel.Port,
+		"patpath", platformConf.Platform.Zitadel.PatPath)
 
 	sqldb := sql.OpenDB(
 		pgdriver.NewConnector(pgdriver.WithDSN(platformConf.DatabaseDSN())),
@@ -86,6 +92,22 @@ func main() {
 		os.Exit(84)
 	}
 
+	zitadelClient, err := client.NewZitadelClient(
+		ctx,
+		client.NewZitadel(
+			platformConf.Platform.Zitadel.Domain,
+			client.WithPort(platformConf.Platform.Zitadel.Port),
+			client.WithInsecure(strconv.Itoa(int(platformConf.Platform.Zitadel.Port))),
+		),
+		client.WithLogger(logger),
+		client.WithPATFromFile(platformConf.ZitadelPATPath()),
+	)
+
+	if err != nil {
+		logger.ErrorContext(ctx, "failed to create zitadel client", "error", err)
+		os.Exit(84)
+	}
+
 	generator := uuid.New
 	uuidParser := uuid.Parse
 
@@ -102,11 +124,12 @@ func main() {
 	}
 
 	userUC, err := user.NewUseCase(
-		user.WithLogger(logger),
-		user.WithUserRepository(userRepo),
-		user.WithAuthRepository(authRepo),
-		user.WithGenerator(generator),
-		user.WithUUIDParser(uuidParser),
+		user.UseCaseWithLogger(logger),
+		user.UseCaseWithUserRepository(userRepo),
+		user.UseCaseWithAuthRepository(authRepo),
+		user.UseCaseWithGenerator(generator),
+		user.UseCaseWithUUIDParser(uuidParser),
+		user.UseCaseWithZitadelAPI(zitadelClient),
 	)
 
 	if err != nil {

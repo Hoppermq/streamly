@@ -8,24 +8,30 @@ import (
 
 type Client interface {
 	GetUserByUserName(ctx context.Context, userName string) (*User, error)
-	GetUserByEmail(ctx context.Context, email string) (*User, error)
 	GetUserByID(ctx context.Context, userId string) (*User, error)
 
 	GetOrganizationByID(ctx context.Context, organizationId uuid.UUID) (*Organization, error)
 }
+
+type ZitadelOrganization struct {
+	OrganizationID string `json:"orgId" binding:"required"`
+}
+
+type ZitadelProfile struct {
+	FirstName string `binding:"required" json:"givenName"`
+	LastName  string `binding:"required" json:"familyName"`
+}
+
+type ZitadelEmail struct {
+	Email      string `json:"email" binding:"required,email"`
+	IsVerified bool   `json:"isVerified" binding:"required"`
+}
+
 type ZitadelEventUserCreatedRequest struct {
-	Email struct {
-		Email      string `json:"email" binding:"required,email"`
-		IsVerified bool   `json:"isVerified" binding:"required"`
-	} `json:"email" binding:"required"`
-	Organization struct {
-		OrganizationID string `json:"orgId" binding:"required"`
-	} `json:"organization" binding:"required"`
-	Profile struct {
-		FirstName string `binding:"required" json:"givenName"`
-		LastName  string `binding:"required" json:"familyName"`
-	} `json:"profile" binding:"required"`
-	UserName string `json:"userName" binding:"required"`
+	Email        ZitadelEmail        `json:"email" binding:"required"`
+	Organization ZitadelOrganization `json:"organization" binding:"required"`
+	Profile      ZitadelProfile      `json:"profile" binding:"required"`
+	UserName     string              `json:"userName" binding:"required"`
 }
 type ZitadelEventUserCreated struct {
 	InstanceID     string                         `json:"instanceId" binding:"required"`

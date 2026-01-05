@@ -21,10 +21,12 @@ type ZitadelProfile struct {
 	FirstName string `binding:"required" json:"givenName"`
 	LastName  string `binding:"required" json:"familyName"`
 }
+
 type ZitadelEmail struct {
 	Email      string `json:"email" binding:"required,email"`
 	IsVerified bool   `json:"isVerified" binding:"required"`
 }
+
 type ZitadelEventUserCreatedRequest struct {
 	Email        ZitadelEmail        `json:"email" binding:"required"`
 	Organization ZitadelOrganization `json:"organization" binding:"required"`

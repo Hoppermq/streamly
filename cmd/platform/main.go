@@ -124,12 +124,12 @@ func main() {
 	}
 
 	userUC, err := user.NewUseCase(
-		user.WithLogger(logger),
-		user.WithUserRepository(userRepo),
-		user.WithAuthRepository(authRepo),
-		user.WithGenerator(generator),
-		user.WithUUIDParser(uuidParser),
-		user.WithZitadelAPI(zitadelClient),
+		user.UseCaseWithLogger(logger),
+		user.UseCaseWithUserRepository(userRepo),
+		user.UseCaseWithAuthRepository(authRepo),
+		user.UseCaseWithGenerator(generator),
+		user.UseCaseWithUUIDParser(uuidParser),
+		user.UseCaseWithZitadelAPI(zitadelClient),
 	)
 
 	if err != nil {

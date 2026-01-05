@@ -2,12 +2,12 @@ package user
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"time"
 
 	"github.com/hoppermq/streamly/internal/common"
 	"github.com/hoppermq/streamly/pkg/domain"
-	"github.com/hoppermq/streamly/pkg/shared/zitadel/client"
 )
 
 type UseCase struct {
@@ -18,47 +18,47 @@ type UseCase struct {
 	generator  domain.Generator
 	uuidParser domain.UUIDParser
 
-	zitadelApi *client.Zitadel
+	zitadelApi domain.Client
 }
 
 type UseCaseOption func(*UseCase) error
 
-func WithLogger(logger *slog.Logger) UseCaseOption {
+func UseCaseWithLogger(logger *slog.Logger) UseCaseOption {
 	return func(u *UseCase) error {
 		u.logger = logger
 		return nil
 	}
 }
 
-func WithUserRepository(repo domain.UserRepository) UseCaseOption {
+func UseCaseWithUserRepository(repo domain.UserRepository) UseCaseOption {
 	return func(u *UseCase) error {
 		u.userRepo = repo
 		return nil
 	}
 }
 
-func WithAuthRepository(repo domain.AuthRepository) UseCaseOption {
+func UseCaseWithAuthRepository(repo domain.AuthRepository) UseCaseOption {
 	return func(u *UseCase) error {
 		u.authRepo = repo
 		return nil
 	}
 }
 
-func WithUUIDParser(parser domain.UUIDParser) UseCaseOption {
+func UseCaseWithUUIDParser(parser domain.UUIDParser) UseCaseOption {
 	return func(u *UseCase) error {
 		u.uuidParser = parser
 		return nil
 	}
 }
 
-func WithGenerator(generator domain.Generator) UseCaseOption {
+func UseCaseWithGenerator(generator domain.Generator) UseCaseOption {
 	return func(u *UseCase) error {
 		u.generator = generator
 		return nil
 	}
 }
 
-func WithZitadelAPI(zitadelApi *client.Zitadel) UseCaseOption {
+func UseCaseWithZitadelAPI(zitadelApi domain.Client) UseCaseOption {
 	return func(u *UseCase) error {
 		u.zitadelApi = zitadelApi
 		return nil
@@ -96,6 +96,12 @@ func (uc *UseCase) FindAll(ctx context.Context, limit, offset int) ([]domain.Use
 
 func (uc *UseCase) Create(ctx context.Context, userInput *domain.CreateUser) error {
 	uc.logger.Info("creating new user")
+	if userInput == nil {
+		// will be static error.
+		err := errors.New("userInput cannot be nil")
+		uc.logger.Warn("userInput is nil", "error", err)
+		return err
+	}
 	userIdentifier := uc.generator()
 
 	user := &domain.User{
@@ -118,8 +124,8 @@ func (uc *UseCase) CreateFromEvent(ctx context.Context, event *domain.ZitadelEve
 
 	var u *domain.User
 	var err error
-	maxRetries := 6
-	retryDelay := 500 * time.Millisecond
+	maxRetries := 6                      // should be held in the ctx?
+	retryDelay := 500 * time.Millisecond // should be held in the ctx ?
 
 	for attempt := 1; attempt <= maxRetries; attempt++ {
 		u, err = uc.zitadelApi.GetUserByUserName(ctx, event.Request.UserName)

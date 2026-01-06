@@ -43,7 +43,7 @@ func NewRepository(opts ...OptionRepository) (*Repository, error) {
 	return r, nil
 }
 
-func (r *Repository) WithTx(tx interface{}) domain.UserRepository {
+func (r *Repository) WithTx(tx domain.TxContext) domain.UserRepository {
 	bunTx, ok := tx.(bun.IDB)
 	if !ok {
 		r.logger.Warn("Transaction does not implement github.com/uptrace/bun.DB")

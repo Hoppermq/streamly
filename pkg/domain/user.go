@@ -22,7 +22,7 @@ type User struct {
 }
 
 type UserRepository interface {
-	WithTx(tx interface{}) UserRepository
+	WithTx(tx TxContext) UserRepository
 
 	FindOneByID(ctx context.Context, id uuid.UUID) (*User, error)
 	FindAll(ctx context.Context, limit, offset int) ([]User, error)

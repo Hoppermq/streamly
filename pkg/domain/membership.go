@@ -8,7 +8,7 @@ import (
 )
 
 type MembershipRepository interface {
-	WithTx(tx interface{}) MembershipRepository
+	WithTx(tx TxContext) MembershipRepository
 
 	Create(ctx context.Context, membership *Membership) error
 }

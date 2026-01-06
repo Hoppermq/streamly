@@ -15,7 +15,7 @@ type Organization struct {
 }
 
 type OrganizationRepository interface {
-	WithTx(tx interface{}) OrganizationRepository
+	WithTx(tx TxContext) OrganizationRepository
 
 	FindOneByID(ctx context.Context, identifier uuid.UUID) (*Organization, error)
 	FindAll(ctx context.Context, limit, offset int) ([]Organization, error)

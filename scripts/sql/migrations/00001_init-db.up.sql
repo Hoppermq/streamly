@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS tenant_members
   tenant_id  UUID NOT NULL,
   user_id    UUID NOT NULL,
 
-  joined_at  TIMESTAMP NOT NULL DEFAULT now(),
+  joined_at  TIMESTAMP,
 
   created_at TIMESTAMP NOT NULL DEFAULT now(),
   updated_at TIMESTAMP NOT NULL DEFAULT now()

@@ -49,8 +49,11 @@ func (o *Organization) Create(c *gin.Context) {
 		return
 	}
 
-	if err := o.uc.Create(c, org); err != nil {
-		// should compare error from here.
+	// TODO: implement auth to extract jwt here.
+	zitadelUserID := "354116995202968329"
+
+	if err := o.uc.Create(c, org, zitadelUserID); err != nil {
+		// TODO: should compare error from here.
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

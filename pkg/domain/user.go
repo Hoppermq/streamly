@@ -27,6 +27,7 @@ type UserRepository interface {
 	Create(ctx context.Context, user *User) error
 	Update(ctx context.Context, user *User) error
 	Delete(ctx context.Context, id uuid.UUID) error
+	Exist(ctx context.Context, identifier uuid.UUID) (bool, error)
 }
 
 type CreateUser struct {

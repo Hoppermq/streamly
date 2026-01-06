@@ -85,3 +85,16 @@ func (r *Repository) Delete(ctx context.Context, id uuid.UUID) error {
 	//TODO implement me
 	panic("implement me")
 }
+
+func (r *Repository) Exist(ctx context.Context, identifier uuid.UUID) (bool, error) {
+	r.logger.InfoContext(ctx, "checking user existence", "user_id", identifier)
+
+	var res bool
+	_, err := r.db.NewRaw("SELECT EXISTS(SELECT 1 FROM users WHERE identifier = ? AND deleted = false);", identifier).Exec(ctx, res)
+	if err != nil {
+		r.logger.WarnContext(ctx, "failed to check user existence", "user_id", identifier, "error", err)
+		return false, err
+	}
+
+	return res, nil
+}

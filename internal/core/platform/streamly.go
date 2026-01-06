@@ -44,7 +44,10 @@ func NewStreamlyService(opts ...Option) *Streamly {
 	}
 
 	for _, opt := range opts {
-		opt(streamly)
+		err := opt(streamly)
+		if err != nil {
+			return nil
+		}
 	}
 
 	return streamly

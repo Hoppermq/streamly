@@ -227,3 +227,14 @@ func (uc *UseCase) Delete(ctx context.Context, id string) error {
 
 	return uc.userRepo.Delete(ctx, identifier)
 }
+
+func (uc *UseCase) CheckUserExist(ctx context.Context, id string) (bool, error) {
+	uc.logger.Info("checking user existence", "identifier", id)
+	identifier, err := uc.uuidParser(id)
+	if err != nil {
+		uc.logger.Warn("failed to parse user identifier", "identifier", id, "error", err.Error())
+		return false, err
+	}
+
+	return uc.userRepo.Exist(ctx, identifier)
+}

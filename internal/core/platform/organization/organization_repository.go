@@ -191,3 +191,17 @@ func (organizationRepo *Repository) Delete(
 
 	return nil
 }
+
+func (organizationRepo *Repository) Exist(ctx context.Context, identifier uuid.UUID) (bool, error) {
+	var res bool
+	err := organizationRepo.db.NewRaw(
+		"SELECT EXISTS(SELECT 1 FROM tenants WHERE identifier = ? AND deleted = false);",
+		identifier,
+	).Scan(ctx, &res)
+	if err != nil {
+		organizationRepo.logger.WarnContext(ctx, "failed to query tenants", "error", err)
+		return false, err
+	}
+
+	return res, nil
+}

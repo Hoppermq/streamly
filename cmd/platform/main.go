@@ -12,6 +12,7 @@ import (
 	"github.com/hoppermq/streamly/cmd/config"
 	"github.com/hoppermq/streamly/internal/core/auth"
 	"github.com/hoppermq/streamly/internal/core/platform"
+	"github.com/hoppermq/streamly/internal/core/platform/membership"
 	"github.com/hoppermq/streamly/internal/core/platform/organization"
 	"github.com/hoppermq/streamly/internal/core/platform/user"
 	"github.com/hoppermq/streamly/internal/http"
@@ -42,10 +43,6 @@ func main() {
 	}
 
 	logger.InfoContext(ctx, "starting platform service")
-	logger.InfoContext(ctx, "🔍 DEBUG: Zitadel config loaded",
-		"domain", platformConf.Platform.Zitadel.Domain,
-		"port", platformConf.Platform.Zitadel.Port,
-		"patpath", platformConf.Platform.Zitadel.PatPath)
 
 	sqldb := sql.OpenDB(
 		pgdriver.NewConnector(pgdriver.WithDSN(platformConf.DatabaseDSN())),
@@ -92,6 +89,11 @@ func main() {
 		os.Exit(84)
 	}
 
+	membershipRepo := membership.NewRepository(
+		membership.RepositoryWithLogger(logger),
+		membership.RepositoryWithDB(db),
+	)
+
 	zitadelClient, err := client.NewZitadelClient(
 		ctx,
 		client.NewZitadel(
@@ -111,18 +113,6 @@ func main() {
 	generator := uuid.New
 	uuidParser := uuid.Parse
 
-	organizationUC, err := organization.NewUseCase(
-		organization.UseCaseWithLogger(logger),
-		organization.UseCaseWithRepository(orgRepos),
-		organization.UseCaseWithGenerator(generator),
-		organization.UseCaseWithUUIDParser(uuidParser),
-	)
-
-	if err != nil {
-		logger.ErrorContext(ctx, "failed to create organization usecase", "error", err)
-		os.Exit(84)
-	}
-
 	userUC, err := user.NewUseCase(
 		user.UseCaseWithLogger(logger),
 		user.UseCaseWithUserRepository(userRepo),
@@ -134,6 +124,27 @@ func main() {
 
 	if err != nil {
 		logger.ErrorContext(ctx, "failed to create user usecase", "error", err)
+		os.Exit(84)
+	}
+
+	membershipUC := membership.NewUseCase(
+		membership.UseCaseWithLogger(logger),
+		membership.UseCaseWithRepository(membershipRepo),
+		membership.UseCaseWithUUIDParser(uuidParser),
+		membership.UseCaseWithGenerator(generator),
+	)
+
+	organizationUC, err := organization.NewUseCase(
+		organization.UseCaseWithLogger(logger),
+		organization.UseCaseWithRepository(orgRepos),
+		organization.UseCaseWithGenerator(generator),
+		organization.UseCaseWithUUIDParser(uuidParser),
+		organization.UseCaseWithMembershipUC(membershipUC),
+		organization.UseCaseWithUserUC(userUC),
+	)
+
+	if err != nil {
+		logger.ErrorContext(ctx, "failed to create organization usecase", "error", err)
 		os.Exit(84)
 	}
 

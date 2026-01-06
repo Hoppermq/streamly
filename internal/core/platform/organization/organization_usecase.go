@@ -8,8 +8,6 @@ import (
 	"github.com/hoppermq/streamly/internal/core/platform/membership"
 	"github.com/hoppermq/streamly/internal/core/platform/user"
 	"github.com/hoppermq/streamly/pkg/domain"
-	// should be from domain.
-	"github.com/uptrace/bun"
 )
 
 type UseCase struct {
@@ -18,11 +16,11 @@ type UseCase struct {
 	membershipUC *membership.UseCase
 	userUC       *user.UseCase
 
-	idb *bun.IDB
-
 	repository domain.OrganizationRepository
 	generator  domain.Generator
 	uuidParser domain.UUIDParser
+
+	uow domain.UnitOfWorkFactory
 }
 
 type UseCaseOption func(*UseCase) error
@@ -69,6 +67,13 @@ func UseCaseWithUserUC(userUC *user.UseCase) UseCaseOption {
 	}
 }
 
+func UseCaseWithUOW(uow domain.UnitOfWorkFactory) UseCaseOption {
+	return func(u *UseCase) error {
+		u.uow = uow
+		return nil
+	}
+}
+
 func NewUseCase(opts ...UseCaseOption) (*UseCase, error) {
 	uc := &UseCase{}
 	for _, opt := range opts {
@@ -95,22 +100,61 @@ func (uc *UseCase) FindAll(ctx context.Context, limit, offset int) ([]domain.Org
 }
 
 func (uc *UseCase) Create(ctx context.Context, newOrg domain.CreateOrganization, zitadelUserID string) error {
-	orgIdentifier := uc.generator()
+	uow, err := uc.uow.NewUnitOfWork(ctx)
+	if err != nil {
+		uc.logger.WarnContext(ctx, "failed to create unit of work", "error", err)
+		return err
+	}
 
+	defer func() {
+		if p := recover(); p != nil {
+			_ = uow.Rollback()
+			uc.logger.ErrorContext(ctx, "panic during organization creation", "panic", p)
+			// should be gracefully here.
+			panic(p)
+		}
+	}()
+
+	orgIdentifier := uc.generator()
 	org := &domain.Organization{
 		Identifier: orgIdentifier,
 		Name:       newOrg.Name,
 	}
 
-	if err := uc.repository.Create(ctx, org); err != nil {
-		uc.logger.Warn("failed to create organization", "error", err)
+	if err := uow.Organization().Create(ctx, org); err != nil {
+		uc.logger.WarnContext(ctx, "failed to create organization", "error", err)
+		_ = uow.Rollback()
 		return err
 	}
 
-	if err := uc.membershipUC.Generate(ctx, zitadelUserID, org.Identifier.String()); err != nil {
-		uc.logger.Warn("failed to add user", "error", err)
+	userIdentifier, err := uow.User().GetUserIDFromZitadelID(ctx, zitadelUserID)
+	if err != nil {
+		uc.logger.WarnContext(ctx, "failed to get user identifier", "error", err)
+		_ = uow.Rollback()
 		return err
 	}
+
+	m := &domain.Membership{
+		Identifier:     uc.generator(),
+		OrgIdentifier:  orgIdentifier,
+		UserIdentifier: userIdentifier,
+	}
+
+	if err := uow.Membership().Create(ctx, m); err != nil {
+		uc.logger.WarnContext(ctx, "failed to create membership", "error", err)
+		_ = uow.Rollback()
+		return err
+	}
+
+	if err := uow.Commit(); err != nil {
+		uc.logger.WarnContext(ctx, "failed to commit transaction", "error", err)
+		return err
+	}
+
+	uc.logger.InfoContext(ctx, "organization created successfully",
+		"org_id", orgIdentifier,
+		"user_id", zitadelUserID,
+	)
 
 	return nil
 }

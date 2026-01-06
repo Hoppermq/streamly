@@ -28,3 +28,19 @@ type Driver interface {
 	Query(query Query, args ...QueryArgs) (*sql.Rows, error)
 	QueryContext(ctx context.Context, query Query, args ...QueryArgs) (*sql.Rows, error)
 }
+
+type UnitOfWork interface {
+	Commit() error
+	Rollback() error
+
+	Organization() OrganizationRepository
+	User() UserRepository
+	Membership() MembershipRepository
+}
+
+type TxContext interface{}
+
+// UnitOfWorkFactory creates new UnitOfWork instances (transactions)
+type UnitOfWorkFactory interface {
+	NewUnitOfWork(ctx context.Context) (UnitOfWork, error)
+}

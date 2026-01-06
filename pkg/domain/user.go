@@ -22,12 +22,15 @@ type User struct {
 }
 
 type UserRepository interface {
+	WithTx(tx interface{}) UserRepository
+
 	FindOneByID(ctx context.Context, id uuid.UUID) (*User, error)
 	FindAll(ctx context.Context, limit, offset int) ([]User, error)
 	Create(ctx context.Context, user *User) error
 	Update(ctx context.Context, user *User) error
 	Delete(ctx context.Context, id uuid.UUID) error
 	Exist(ctx context.Context, identifier uuid.UUID) (bool, error)
+	GetUserIDFromZitadelID(ctx context.Context, zitadelID string) (uuid.UUID, error)
 }
 
 type CreateUser struct {

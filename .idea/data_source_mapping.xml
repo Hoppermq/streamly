@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DataSourcePerFileMappings">
+    <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/4aafcfd5-a433-4497-81c8-186a57df3432/console.sql" value="4aafcfd5-a433-4497-81c8-186a57df3432" />
+    <file url="file://$PROJECT_DIR$/cmd/ingestion/ingestion_test.go" value="4aafcfd5-a433-4497-81c8-186a57df3432" />
+    <file url="file://$PROJECT_DIR$/internal/core/ingestor/ingestor_repository.go" value="4e4d433f-3949-4bb7-b42f-2a09041bae59" />
+    <file url="file://$PROJECT_DIR$/scripts/sql/migrations/00001_init-db.up.sql" value="4aafcfd5-a433-4497-81c8-186a57df3432" />
+    <file url="file://$PROJECT_DIR$/scripts/sql/migrations/00002_add-deleted-org.up.sql" value="4aafcfd5-a433-4497-81c8-186a57df3432" />
+    <file url="file://$PROJECT_DIR$/scripts/sql/migrations/00003_add-user-membership-role.up.sql" value="4aafcfd5-a433-4497-81c8-186a57df3432" />
+  </component>
+</project>

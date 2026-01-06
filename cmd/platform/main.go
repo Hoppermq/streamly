@@ -94,6 +94,14 @@ func main() {
 		membership.RepositoryWithDB(db),
 	)
 
+	// Create UnitOfWork factory for transaction management
+	uowFactory := postgres.NewUnitOfWorkFactory(
+		postgres.FactoryWithDB(db),
+		postgres.FactoryWithOrgRepo(orgRepos),
+		postgres.FactoryWithMembershipRepo(membershipRepo),
+		postgres.FactoryWithUserRepo(userRepo),
+	)
+
 	zitadelClient, err := client.NewZitadelClient(
 		ctx,
 		client.NewZitadel(
@@ -141,6 +149,7 @@ func main() {
 		organization.UseCaseWithUUIDParser(uuidParser),
 		organization.UseCaseWithMembershipUC(membershipUC),
 		organization.UseCaseWithUserUC(userUC),
+		organization.UseCaseWithUOW(uowFactory),
 	)
 
 	if err != nil {

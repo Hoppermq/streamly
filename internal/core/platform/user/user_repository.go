@@ -12,7 +12,7 @@ import (
 
 type Repository struct {
 	logger *slog.Logger
-	db     *bun.DB
+	db     bun.IDB
 }
 
 type OptionRepository func(*Repository) error
@@ -24,7 +24,7 @@ func RepositoryWithLogger(logger *slog.Logger) OptionRepository {
 	}
 }
 
-func RepositoryWithDB(db *bun.DB) OptionRepository {
+func RepositoryWithDB(db bun.IDB) OptionRepository {
 	return func(r *Repository) error {
 		r.db = db
 		return nil
@@ -41,6 +41,19 @@ func NewRepository(opts ...OptionRepository) (*Repository, error) {
 	}
 
 	return r, nil
+}
+
+func (r *Repository) WithTx(tx interface{}) domain.UserRepository {
+	bunTx, ok := tx.(bun.IDB)
+	if !ok {
+		r.logger.Warn("Transaction does not implement github.com/uptrace/bun.DB")
+		return r
+	}
+
+	return &Repository{
+		logger: r.logger,
+		db:     bunTx,
+	}
 }
 
 func (r *Repository) FindOneByID(ctx context.Context, id uuid.UUID) (*domain.User, error) {
@@ -97,4 +110,15 @@ func (r *Repository) Exist(ctx context.Context, identifier uuid.UUID) (bool, err
 	}
 
 	return res, nil
+}
+
+func (r *Repository) GetUserIDFromZitadelID(ctx context.Context, zitadelID string) (uuid.UUID, error) {
+	var identifier uuid.UUID
+	_, err := r.db.NewRaw("SELECT identifier FROM users WHERE zitadel_user_id = ? AND deleted = false;", zitadelID).Exec(ctx, &identifier)
+	if err != nil {
+		r.logger.WarnContext(ctx, "failed to get user ID", "zitadel_user_id", zitadelID, "error", err)
+		return uuid.Nil, err
+	}
+
+	return identifier, nil
 }

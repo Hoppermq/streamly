@@ -153,6 +153,72 @@ func (_c *MockOrganizationRepository_Delete_Call) RunAndReturn(run func(ctx cont
 	return _c
 }
 
+// Exist provides a mock function for the type MockOrganizationRepository
+func (_mock *MockOrganizationRepository) Exist(ctx context.Context, identifier uuid.UUID) (bool, error) {
+	ret := _mock.Called(ctx, identifier)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Exist")
+	}
+
+	var r0 bool
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID) (bool, error)); ok {
+		return returnFunc(ctx, identifier)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID) bool); ok {
+		r0 = returnFunc(ctx, identifier)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
+		r1 = returnFunc(ctx, identifier)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockOrganizationRepository_Exist_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Exist'
+type MockOrganizationRepository_Exist_Call struct {
+	*mock.Call
+}
+
+// Exist is a helper method to define mock.On call
+//   - ctx context.Context
+//   - identifier uuid.UUID
+func (_e *MockOrganizationRepository_Expecter) Exist(ctx interface{}, identifier interface{}) *MockOrganizationRepository_Exist_Call {
+	return &MockOrganizationRepository_Exist_Call{Call: _e.mock.On("Exist", ctx, identifier)}
+}
+
+func (_c *MockOrganizationRepository_Exist_Call) Run(run func(ctx context.Context, identifier uuid.UUID)) *MockOrganizationRepository_Exist_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 uuid.UUID
+		if args[1] != nil {
+			arg1 = args[1].(uuid.UUID)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockOrganizationRepository_Exist_Call) Return(b bool, err error) *MockOrganizationRepository_Exist_Call {
+	_c.Call.Return(b, err)
+	return _c
+}
+
+func (_c *MockOrganizationRepository_Exist_Call) RunAndReturn(run func(ctx context.Context, identifier uuid.UUID) (bool, error)) *MockOrganizationRepository_Exist_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // FindAll provides a mock function for the type MockOrganizationRepository
 func (_mock *MockOrganizationRepository) FindAll(ctx context.Context, limit int, offset int) ([]domain.Organization, error) {
 	ret := _mock.Called(ctx, limit, offset)
@@ -348,6 +414,59 @@ func (_c *MockOrganizationRepository_Update_Call) Return(err error) *MockOrganiz
 }
 
 func (_c *MockOrganizationRepository_Update_Call) RunAndReturn(run func(ctx context.Context, org *domain.Organization) error) *MockOrganizationRepository_Update_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// WithTx provides a mock function for the type MockOrganizationRepository
+func (_mock *MockOrganizationRepository) WithTx(tx interface{}) domain.OrganizationRepository {
+	ret := _mock.Called(tx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for WithTx")
+	}
+
+	var r0 domain.OrganizationRepository
+	if returnFunc, ok := ret.Get(0).(func(interface{}) domain.OrganizationRepository); ok {
+		r0 = returnFunc(tx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(domain.OrganizationRepository)
+		}
+	}
+	return r0
+}
+
+// MockOrganizationRepository_WithTx_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'WithTx'
+type MockOrganizationRepository_WithTx_Call struct {
+	*mock.Call
+}
+
+// WithTx is a helper method to define mock.On call
+//   - tx interface{}
+func (_e *MockOrganizationRepository_Expecter) WithTx(tx interface{}) *MockOrganizationRepository_WithTx_Call {
+	return &MockOrganizationRepository_WithTx_Call{Call: _e.mock.On("WithTx", tx)}
+}
+
+func (_c *MockOrganizationRepository_WithTx_Call) Run(run func(tx interface{})) *MockOrganizationRepository_WithTx_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 interface{}
+		if args[0] != nil {
+			arg0 = args[0].(interface{})
+		}
+		run(
+			arg0,
+		)
+	})
+	return _c
+}
+
+func (_c *MockOrganizationRepository_WithTx_Call) Return(organizationRepository domain.OrganizationRepository) *MockOrganizationRepository_WithTx_Call {
+	_c.Call.Return(organizationRepository)
+	return _c
+}
+
+func (_c *MockOrganizationRepository_WithTx_Call) RunAndReturn(run func(tx interface{}) domain.OrganizationRepository) *MockOrganizationRepository_WithTx_Call {
 	_c.Call.Return(run)
 	return _c
 }

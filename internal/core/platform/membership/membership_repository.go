@@ -11,7 +11,7 @@ import (
 
 type Repository struct {
 	logger *slog.Logger
-	db     *bun.DB
+	db     bun.IDB
 }
 
 type RepositoryOption func(*Repository)
@@ -22,7 +22,7 @@ func RepositoryWithLogger(logger *slog.Logger) RepositoryOption {
 	}
 }
 
-func RepositoryWithDB(db *bun.DB) RepositoryOption {
+func RepositoryWithDB(db bun.IDB) RepositoryOption {
 	return func(r *Repository) {
 		r.db = db
 	}
@@ -36,6 +36,19 @@ func NewRepository(opts ...RepositoryOption) *Repository {
 	}
 
 	return r
+}
+
+func (r *Repository) WithTx(tx interface{}) domain.MembershipRepository {
+	bunTx, ok := tx.(bun.IDB)
+	if !ok {
+		r.logger.Warn("Transaction does not implement github.com/uptrace/bun.DB")
+		return r
+	}
+
+	return &Repository{
+		logger: r.logger,
+		db:     bunTx,
+	}
 }
 
 func (r *Repository) Create(ctx context.Context, membership *domain.Membership) error {

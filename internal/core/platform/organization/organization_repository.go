@@ -14,7 +14,7 @@ import (
 
 type Repository struct {
 	logger *slog.Logger
-	db     *bun.DB
+	db     bun.IDB
 }
 
 type OptionRepository func(*Repository) error
@@ -43,6 +43,19 @@ func NewRepository(opts ...OptionRepository) (*Repository, error) {
 	}
 
 	return org, nil
+}
+
+func (organizationRepo *Repository) WithTx(tx interface{}) domain.OrganizationRepository {
+	bunTx, ok := tx.(bun.IDB)
+	if !ok {
+		organizationRepo.logger.Warn("Transaction does not implement github.com/uptrace/bun.DB")
+		return organizationRepo
+	}
+
+	return &Repository{
+		logger: organizationRepo.logger,
+		db:     bunTx,
+	}
 }
 
 func (organizationRepo *Repository) FindOneByID(

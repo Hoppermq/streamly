@@ -8,10 +8,9 @@ import (
 )
 
 type MembershipRepository interface {
-	Create(
-		ctx context.Context,
-		membership *Membership,
-	) error
+	WithTx(tx interface{}) MembershipRepository
+
+	Create(ctx context.Context, membership *Membership) error
 }
 
 type Membership struct {

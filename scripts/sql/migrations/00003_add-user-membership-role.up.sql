@@ -8,16 +8,17 @@ CREATE TABLE IF NOT EXISTS tenant_roles
   permissions TEXT[],
   metadata    jsonb,
 
+  deleted bool DEFAULT FALSE,
+
   created_at  TIMESTAMP    NOT NULL DEFAULT now(),
-  updated_at  TIMESTAMP    NOT NULL DEFAULT now()
+  updated_at  TIMESTAMP    NOT NULL DEFAULT now(),
+  deleted_at TIMESTAMP DEFAULT NULL
 );
 
---bun:split
-
 ALTER TABLE IF EXISTS tenant_members
-  ADD COLUMN role_id VARCHAR,
+  ADD COLUMN role_id uuid,
   ADD CONSTRAINT fk_member_role
-    FOREIGN KEY (role_id) REFERENCES tenant_roles ON DELETE CASCADE;
+    FOREIGN KEY (role_id) REFERENCES tenant_roles (identifier) ON DELETE CASCADE;
 
 --bun:split
 

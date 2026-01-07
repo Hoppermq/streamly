@@ -16,6 +16,7 @@ type UnitOfWork struct {
 	orgRepo        domain.OrganizationRepository
 	userRepo       domain.UserRepository
 	membershipRepo domain.MembershipRepository
+	roleRepo       domain.RoleRepository
 }
 
 // UOWOptions defines functional options for UnitOfWork
@@ -36,6 +37,12 @@ func UowWithUser(user domain.UserRepository) UOWOptions {
 func UowWithMembership(membership domain.MembershipRepository) UOWOptions {
 	return func(u *UnitOfWork) {
 		u.membershipRepo = membership
+	}
+}
+
+func UowWithrole(role domain.RoleRepository) UOWOptions {
+	return func(u *UnitOfWork) {
+		u.roleRepo = role
 	}
 }
 
@@ -79,6 +86,8 @@ func (u *UnitOfWork) Membership() domain.MembershipRepository {
 	return u.membershipRepo.WithTx(u.tx)
 }
 
+func (u *UnitOfWork) Role() domain.RoleRepository { return u.roleRepo.WithTx(u.tx) }
+
 // UnitOfWorkFactory creates new UnitOfWork instances (one per request)
 type UnitOfWorkFactory struct {
 	db bun.IDB
@@ -86,6 +95,7 @@ type UnitOfWorkFactory struct {
 	orgRepoBase        domain.OrganizationRepository
 	membershipRepoBase domain.MembershipRepository
 	userRepoBase       domain.UserRepository
+	roleRepoBase       domain.RoleRepository
 }
 
 // UnitOfWorkFactoryOption defines functional options for UnitOfWorkFactory
@@ -115,6 +125,12 @@ func FactoryWithUserRepo(repo domain.UserRepository) UnitOfWorkFactoryOption {
 	}
 }
 
+func FactoryWithRoleRepo(repo domain.RoleRepository) UnitOfWorkFactoryOption {
+	return func(f *UnitOfWorkFactory) {
+		f.roleRepoBase = repo
+	}
+}
+
 // NewUnitOfWorkFactory creates a factory that produces UnitOfWork instances
 func NewUnitOfWorkFactory(options ...UnitOfWorkFactoryOption) domain.UnitOfWorkFactory {
 	factory := &UnitOfWorkFactory{}
@@ -134,5 +150,6 @@ func (f *UnitOfWorkFactory) NewUnitOfWork(ctx context.Context) (domain.UnitOfWor
 		UowWithOrg(f.orgRepoBase),
 		UowWithUser(f.userRepoBase),
 		UowWithMembership(f.membershipRepoBase),
+		UowWithrole(f.roleRepoBase),
 	)
 }

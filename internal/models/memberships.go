@@ -15,6 +15,7 @@ type Membership struct {
 
 	TenantID uuid.UUID `bun:"tenant_id,type:uuid,notnull"`
 	UserID   uuid.UUID `bun:"user_id,type:uuid,notnull"`
+	RoleID   uuid.UUID `bun:"role_id,type:uuid"`
 
 	JoinedAt time.Time `bun:"joined_at,type:timestamp"`
 

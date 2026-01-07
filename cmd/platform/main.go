@@ -14,6 +14,7 @@ import (
 	"github.com/hoppermq/streamly/internal/core/platform"
 	"github.com/hoppermq/streamly/internal/core/platform/membership"
 	"github.com/hoppermq/streamly/internal/core/platform/organization"
+	"github.com/hoppermq/streamly/internal/core/platform/role"
 	"github.com/hoppermq/streamly/internal/core/platform/user"
 	"github.com/hoppermq/streamly/internal/http"
 	"github.com/hoppermq/streamly/internal/http/routes"
@@ -94,12 +95,17 @@ func main() {
 		membership.RepositoryWithDB(db),
 	)
 
-	// Create UnitOfWork factory for transaction management
+	roleRepo := role.NewRepository(
+		role.RepositoryWithLogger(logger),
+		role.RepositoryWithDB(db),
+	)
+
 	uowFactory := postgres.NewUnitOfWorkFactory(
 		postgres.FactoryWithDB(db),
 		postgres.FactoryWithOrgRepo(orgRepos),
 		postgres.FactoryWithMembershipRepo(membershipRepo),
 		postgres.FactoryWithUserRepo(userRepo),
+		postgres.FactoryWithRoleRepo(roleRepo),
 	)
 
 	zitadelClient, err := client.NewZitadelClient(
@@ -142,6 +148,12 @@ func main() {
 		membership.UseCaseWithGenerator(generator),
 	)
 
+	roleUC := role.NewUseCase(
+		role.WithLogger(logger),
+		role.WithRoleRepository(nil),
+		role.WithGenerator(generator),
+	)
+
 	organizationUC, err := organization.NewUseCase(
 		organization.UseCaseWithLogger(logger),
 		organization.UseCaseWithRepository(orgRepos),
@@ -150,6 +162,7 @@ func main() {
 		organization.UseCaseWithMembershipUC(membershipUC),
 		organization.UseCaseWithUserUC(userUC),
 		organization.UseCaseWithUOW(uowFactory),
+		organization.UseCaseWithRoleUC(roleUC),
 	)
 
 	if err != nil {

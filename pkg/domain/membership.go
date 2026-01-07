@@ -10,7 +10,8 @@ import (
 type MembershipRepository interface {
 	WithTx(tx TxContext) MembershipRepository
 
-	Create(ctx context.Context, membership *Membership) error
+	Create(context.Context, *Membership) error
+	Update(context.Context, *Membership) error
 }
 
 type Membership struct {
@@ -18,6 +19,8 @@ type Membership struct {
 
 	OrgIdentifier  uuid.UUID
 	UserIdentifier uuid.UUID
+
+	RoleIdentifier uuid.UUID
 
 	JoinedAt time.Time
 

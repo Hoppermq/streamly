@@ -50,7 +50,7 @@ func (o *Organization) Create(c *gin.Context) {
 	}
 
 	// TODO: implement auth to extract jwt here.
-	zitadelUserID := "354116995202968329"
+	zitadelUserID := "354534345614060297"
 
 	if err := o.uc.Create(c, org, zitadelUserID); err != nil {
 		// TODO: should compare error from here.

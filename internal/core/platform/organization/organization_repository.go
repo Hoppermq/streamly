@@ -198,6 +198,7 @@ func (organizationRepo *Repository) Delete(
 	if res, err := res.RowsAffected(); res == 0 || err != nil {
 		if err != nil {
 			organizationRepo.logger.WarnContext(ctx, "failed to get rows affected", "error", err)
+			return err
 		}
 		return errors.New("failed to delete org")
 	}

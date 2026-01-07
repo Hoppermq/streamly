@@ -103,8 +103,7 @@ func (r *Repository) Exist(ctx context.Context, identifier uuid.UUID) (bool, err
 	r.logger.InfoContext(ctx, "checking user existence", "user_id", identifier)
 
 	var res bool
-	_, err := r.db.NewRaw("SELECT EXISTS(SELECT 1 FROM users WHERE identifier = ? AND deleted = false);", identifier).Exec(ctx, res)
-	if err != nil {
+	if err := r.db.NewRaw("SELECT EXISTS(SELECT 1 FROM users WHERE identifier = ? AND deleted = false);", identifier).Scan(ctx, res); err != nil {
 		r.logger.WarnContext(ctx, "failed to check user existence", "user_id", identifier, "error", err)
 		return false, err
 	}
@@ -113,9 +112,10 @@ func (r *Repository) Exist(ctx context.Context, identifier uuid.UUID) (bool, err
 }
 
 func (r *Repository) GetUserIDFromZitadelID(ctx context.Context, zitadelID string) (uuid.UUID, error) {
+	r.logger.InfoContext(ctx, "Finding user ID by Zitadel ID", "zitadel_user_id", zitadelID)
+
 	var identifier uuid.UUID
-	_, err := r.db.NewRaw("SELECT identifier FROM users WHERE zitadel_user_id = ? AND deleted = false;", zitadelID).Exec(ctx, &identifier)
-	if err != nil {
+	if err := r.db.NewRaw("SELECT identifier FROM users WHERE zitadel_user_id = ? AND deleted = false;", zitadelID).Scan(ctx, &identifier); err != nil {
 		r.logger.WarnContext(ctx, "failed to get user ID", "zitadel_user_id", zitadelID, "error", err)
 		return uuid.Nil, err
 	}

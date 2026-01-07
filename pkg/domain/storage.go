@@ -36,6 +36,7 @@ type UnitOfWork interface {
 	Organization() OrganizationRepository
 	User() UserRepository
 	Membership() MembershipRepository
+	Role() RoleRepository
 }
 
 type TxContext interface{}

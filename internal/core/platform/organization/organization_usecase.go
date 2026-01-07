@@ -6,6 +6,7 @@ import (
 	"log/slog"
 
 	"github.com/hoppermq/streamly/internal/core/platform/membership"
+	"github.com/hoppermq/streamly/internal/core/platform/role"
 	"github.com/hoppermq/streamly/internal/core/platform/user"
 	"github.com/hoppermq/streamly/pkg/domain"
 )
@@ -15,6 +16,7 @@ type UseCase struct {
 
 	membershipUC *membership.UseCase
 	userUC       *user.UseCase
+	roleUC       *role.UseCase
 
 	repository domain.OrganizationRepository
 	generator  domain.Generator
@@ -67,6 +69,13 @@ func UseCaseWithUserUC(userUC *user.UseCase) UseCaseOption {
 	}
 }
 
+func UseCaseWithRoleUC(roleUC *role.UseCase) UseCaseOption {
+	return func(u *UseCase) error {
+		u.roleUC = roleUC
+		return nil
+	}
+}
+
 func UseCaseWithUOW(uow domain.UnitOfWorkFactory) UseCaseOption {
 	return func(u *UseCase) error {
 		u.uow = uow
@@ -99,6 +108,8 @@ func (uc *UseCase) FindAll(ctx context.Context, limit, offset int) ([]domain.Org
 	return uc.repository.FindAll(ctx, limit, offset)
 }
 
+func (uc *UseCase) foo() {}
+
 func (uc *UseCase) Create(ctx context.Context, newOrg domain.CreateOrganization, zitadelUserID string) error {
 	uow, err := uc.uow.NewUnitOfWork(ctx)
 	if err != nil {
@@ -110,7 +121,6 @@ func (uc *UseCase) Create(ctx context.Context, newOrg domain.CreateOrganization,
 		if p := recover(); p != nil {
 			_ = uow.Rollback()
 			uc.logger.ErrorContext(ctx, "panic during organization creation", "panic", p)
-			// should be gracefully here.
 			panic(p)
 		}
 	}()
@@ -127,6 +137,18 @@ func (uc *UseCase) Create(ctx context.Context, newOrg domain.CreateOrganization,
 		return err
 	}
 
+	roles := uc.roleUC.GenerateDefault(ctx)
+	if len(roles) == 0 {
+		uc.logger.WarnContext(ctx, "failed to generate default roles")
+		_ = uow.Rollback()
+	}
+
+	if err := uow.Role().SaveAll(ctx, roles); err != nil {
+		uc.logger.WarnContext(ctx, "failed to save roles", "error", err)
+		_ = uow.Rollback()
+		return err
+	}
+
 	userIdentifier, err := uow.User().GetUserIDFromZitadelID(ctx, zitadelUserID)
 	if err != nil {
 		uc.logger.WarnContext(ctx, "failed to get user identifier", "error", err)
@@ -134,10 +156,13 @@ func (uc *UseCase) Create(ctx context.Context, newOrg domain.CreateOrganization,
 		return err
 	}
 
+	ownerRole := roles[2]
+
 	m := &domain.Membership{
 		Identifier:     uc.generator(),
 		OrgIdentifier:  orgIdentifier,
 		UserIdentifier: userIdentifier,
+		RoleIdentifier: ownerRole.Identifier,
 	}
 
 	if err := uow.Membership().Create(ctx, m); err != nil {

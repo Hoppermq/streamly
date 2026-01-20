@@ -6,11 +6,12 @@ resource "zitadel_project" "default" {
 }
 
 resource "zitadel_project_role" "default" {
-  project_id   = zitadel_project.default.id
   for_each = var.roles
 
+  org_id       = var.organization_id
+  project_id   = zitadel_project.default.id
   display_name = each.value.display_name
-  role_key = each.value.key
+  role_key     = each.value.key
 }
 
 resource "zitadel_machine_user" "default" {
@@ -31,4 +32,18 @@ resource "zitadel_machine_key" "default" {
   org_id  = var.organization_id
   user_id = each.value.id
   key_type = "KEY_TYPE_JSON"
+}
+
+# Look up root user by username (created by Zitadel init config)
+data "zitadel_human_users" "root" {
+  org_id           = var.organization_id
+  user_name        = "root@streamly.localhost"
+  user_name_method = "TEXT_QUERY_METHOD_EQUALS"
+}
+
+# Create PAT for the root user
+resource "zitadel_personal_access_token" "root" {
+  org_id          = var.organization_id
+  user_id         = data.zitadel_human_users.root.id
+  expiration_date = "2099-12-31T23:59:59Z"
 }

@@ -18,7 +18,8 @@ services:
       - bun_cache:/root/.bun
     environment:
       - NODE_ENV=development
-      - VITE_API_URL=http://localhost:8091
+      - VITE_API_URL=http://api.localhost:8080
+      - VITE_ZITADEL_ISSUER=http://auth.localhost:8080
       - VITE_APP_ENV=development
     depends_on:
       - ingestor-service
@@ -53,6 +54,11 @@ services:
       - PORT=8091
       - CONFIG_PATH=/app/conf/config.dev.toml
       - SERVICE_PATH=./cmd/ingestion
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.ingestor.rule=Host(`ingestor.localhost`)"
+      - "traefik.http.routers.ingestor.entrypoints=web"
+      - "traefik.http.services.ingestor.loadbalancer.server.port=8091"
     networks:
       - streamly-dev
     restart: unless-stopped
@@ -97,6 +103,11 @@ services:
       - PORT=8092
       - CONFIG_PATH=/app/conf/config.dev.toml
       - SERVICE_PATH=./cmd/query-api
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.query.rule=Host(`query.localhost`)"
+      - "traefik.http.routers.query.entrypoints=web"
+      - "traefik.http.services.query.loadbalancer.server.port=8092"
     networks:
       - streamly-dev
     restart: unless-stopped
@@ -169,6 +180,11 @@ services:
       - PORT=8094
       - CONFIG_PATH=/app/conf/config.dev.toml
       - SERVICE_PATH=./cmd/platform
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.platform.rule=Host(`api.localhost`)"
+      - "traefik.http.routers.platform.entrypoints=web"
+      - "traefik.http.services.platform.loadbalancer.server.port=8094"
     networks:
       - streamly-dev
     restart: unless-stopped
@@ -214,8 +230,8 @@ services:
     depends_on:
       postgres:
         condition: "service_healthy"
-    ports:
-      - "8080:8080"
+    expose:
+      - "8080"
     healthcheck:
       test: ["CMD", "/app/zitadel", "ready"]
       interval: 10s
@@ -225,6 +241,16 @@ services:
     networks:
       - zitadel
       - streamly-dev
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=streamly-dev"
+      - "traefik.http.routers.zitadel.rule=Host(`auth.localhost`)"
+      - "traefik.http.routers.zitadel.entrypoints=web"
+      - "traefik.http.services.zitadel.loadbalancer.server.port=8080"
+      - "traefik.http.services.zitadel.loadbalancer.server.scheme=h2c"
+      - "traefik.http.middlewares.zitadel-headers.headers.customrequestheaders.X-Forwarded-Proto=http"
+      - "traefik.http.middlewares.zitadel-headers.headers.customrequestheaders.X-Forwarded-Host=auth.localhost:8080"
+      - "traefik.http.routers.zitadel.middlewares=zitadel-headers"
     user: "0"
 
 # zitadel-login: Disabled for development - using built-in Zitadel login UI
@@ -271,15 +297,15 @@ services:
       - terraform_plugins:/root/.terraform.d/plugin-cache
     working_dir: /deployments
     environment:
-      - ZITADEL_URL=http://zitadel:8080
-      - ZITADEL_DOMAIN=zitadel
+      - ZITADEL_URL=http://auth.localhost:8080
+      - ZITADEL_DOMAIN=auth.localhost
       - ZITADEL_PORT=8080
       - ZITADEL_PAT_FILE=/machinekey/zitadel-admin.pat
       - GITHUB_TOKEN=${GITHUB_TOKEN:-}
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
-        apk add --no-cache bash curl jq git
+        apk add --no-cache bash wget jq git
         /deployments/scripts/bootstrap-zitadel.sh
     depends_on:
       zitadel:
@@ -400,6 +426,31 @@ services:
     networks:
       - streamly-dev
     restart: unless-stopped
+
+  traefik:
+    image: "traefik:v3.6.7"
+    container_name: "traefik"
+    security_opt:
+      - no-new-privileges:true
+    command:
+      - --configFile=/etc/traefik.toml
+    ports:
+      - "8080:8080"
+      - "8888:8888"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./traefik/traefik.dev.toml:/etc/traefik.toml:ro"
+    restart: unless-stopped
+    networks:
+      streamly-dev:
+        aliases:
+          - auth.localhost
+          - api.localhost
+          - ingestor.localhost
+          - query.localhost
+      zitadel:
+        aliases:
+          - auth.localhost
 
 configs:
   rabbitmq-plugins:

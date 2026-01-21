@@ -96,19 +96,19 @@ show_status() {
     echo -e "${BLUE}📊 Service Status:${NC}"
     docker-compose -f "$COMPOSE_FILE" -p "$PROJECT_NAME" ps
     echo
-    echo -e "${BLUE}🌐 Access URLs:${NC}"
+    echo -e "${BLUE}🌐 Access URLs (via Traefik):${NC}"
     echo -e "Frontend:       ${GREEN}http://localhost:3000${NC}"
-    echo -e "Platform:       ${GREEN}http://localhost:8094${NC}"
-    echo -e "Ingestor:       ${GREEN}http://localhost:8091${NC}"
-    echo -e "Query API:      ${GREEN}http://localhost:8092${NC}"
-    echo -e "Auth:           ${GREEN}http://localhost:8093${NC}"
+    echo -e "Platform API:   ${GREEN}http://api.localhost:8080${NC}"
+    echo -e "Ingestor API:   ${GREEN}http://ingestor.localhost:8080${NC}"
+    echo -e "Query API:      ${GREEN}http://query.localhost:8080${NC}"
     echo
     echo -e "${BLUE}🔐 Zitadel (Auth):${NC}"
-    echo -e "Console:        ${GREEN}http://localhost:8080/ui/console${NC}"
+    echo -e "Console:        ${GREEN}http://auth.localhost:8080/ui/console${NC}"
     echo -e "Credentials:    ${YELLOW}root@streamly.localhost / RootPassword123!${NC}"
-    echo -e "${YELLOW}Note: Using built-in Zitadel login UI (localhost issue fixed)${NC}"
+    echo -e "${GREEN}✅ No /etc/hosts setup required!${NC}"
     echo
     echo -e "${BLUE}🛠️  Admin Tools:${NC}"
+    echo -e "Traefik:        ${GREEN}http://localhost:8888/dashboard/${NC}"
     echo -e "Adminer (DB):   ${GREEN}http://localhost:8081${NC}"
     echo -e "ClickHouse UI:  ${GREEN}http://localhost:8124${NC}"
     echo -e "MailHog:        ${GREEN}http://localhost:8025${NC}"

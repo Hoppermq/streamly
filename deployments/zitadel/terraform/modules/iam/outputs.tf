@@ -32,7 +32,6 @@ output "root_admin_credentials" {
   description = "Root Admin human user account credentials (user_id and PAT)"
   sensitive   = true
   value = {
-    user_id = data.zitadel_human_users.root.id
-    pat     = zitadel_personal_access_token.root.token
+    user_id = data.zitadel_human_users.root.user_ids[0]
   }
 }

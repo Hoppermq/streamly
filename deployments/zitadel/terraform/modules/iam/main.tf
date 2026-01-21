@@ -37,13 +37,6 @@ resource "zitadel_machine_key" "default" {
 # Look up root user by username (created by Zitadel init config)
 data "zitadel_human_users" "root" {
   org_id           = var.organization_id
-  user_name        = "root@streamly.localhost"
+  user_name        = "root@streamly.auth.localhost"
   user_name_method = "TEXT_QUERY_METHOD_EQUALS"
-}
-
-# Create PAT for the root user
-resource "zitadel_personal_access_token" "root" {
-  org_id          = var.organization_id
-  user_id         = data.zitadel_human_users.root.id
-  expiration_date = "2099-12-31T23:59:59Z"
 }

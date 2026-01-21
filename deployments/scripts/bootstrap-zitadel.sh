@@ -151,12 +151,32 @@ while [ $RETRY -lt $MAX_RETRIES ]; do
 done
 terraform apply -auto-approve
 
-# Save credentials
+# Save service credentials
 terraform output -json service_credentials 2>/dev/null | jq -r '
   to_entries[] |
   "# \(.key) service\n\(.key | ascii_upcase)_CLIENT_ID=\(.value.client_id)\n\(.key | ascii_upcase)_CLIENT_SECRET=\(.value.client_secret)\n"
 ' > "${SCRIPT_DIR}/../.env.zitadel"
 
+# Save root admin credentials
+echo "🔑 Exporting root admin credentials..."
+ROOT_USER_ID=$(terraform output -json root_admin_credentials 2>/dev/null | jq -r '.user_id')
+## ROOT_USER_PAT=$(terraform output -json root_admin_credentials 2>/dev/null | jq -r '.pat')
+
+if [ -n "$ROOT_USER_ID" ] && [ "$ROOT_USER_ID" != "null" ]; then
+  echo -e "#Root User\nROOT_USER_ID=$ROOT_USER_ID\n" >>  "${SCRIPT_DIR}/../.env.zitadel"
+  echo "✅ Root user ID saved to zitadel/machinekey/root-user.id"
+else
+  echo "⚠️  Could not export root user ID"
+fi
+
+## if [ -n "$ROOT_USER_PAT" ] && [ "$ROOT_USER_PAT" != "null" ]; then
+##  echo "$ROOT_USER_PAT" > "${SCRIPT_DIR}/../zitadel/machinekey/root-user.pat"
+##  echo "✅ Root user PAT saved to zitadel/machinekey/root-user.pat"
+## else
+##  echo "⚠️  Could not export root user PAT"
+## fi
+
 echo "✅ Service accounts provisioned!"
-echo "📄 Credentials saved to .env.zitadel"
+echo "📄 Service credentials saved to .env.zitadel"
+echo "📄 Root admin credentials saved to zitadel/machinekey/"
 echo "🎉 Bootstrap complete! Terraform state saved."

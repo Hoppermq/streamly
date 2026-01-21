@@ -2,7 +2,7 @@ terraform {
   required_providers {
     zitadel = {
       source  = "zitadel/zitadel"
-      version = "2.3.0"
+      version = "2.7.0"
     }
   }
 }
@@ -25,9 +25,9 @@ module "iam" {
   }
 
   organization_id = var.organization_id
-  project_name = var.project_name
+  project_name    = var.project_name
 
-  roles = module.common.roles
+  roles    = module.common.roles
   services = module.common.service_definitions
 }
 

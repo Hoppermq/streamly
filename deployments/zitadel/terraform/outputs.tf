@@ -8,3 +8,9 @@ output "service_credentials" {
   sensitive   = true
   value       = module.iam.service_credentials
 }
+
+output "root_admin_credentials" {
+  description = "Root admin user credentials (user_id and PAT)"
+  sensitive   = true
+  value       = module.iam.root_admin_credentials
+}

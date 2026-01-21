@@ -2,7 +2,7 @@ Log:
   Level: 'info'
 
 ExternalSecure: false
-ExternalDomain: 'zitadel'
+ExternalDomain: 'auth.localhost'
 ExternalPort: 8080
 
 Database:

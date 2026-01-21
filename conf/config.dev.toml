@@ -109,7 +109,7 @@
 
   [platform.zitadel]
   port = 8080
-  domain = "zitadel"
+  domain = "auth.localhost"
   patpath = "/app/deployments/zitadel/machinekey/zitadel-admin.pat"
 
   [platform.storage]

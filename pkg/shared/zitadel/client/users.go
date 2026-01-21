@@ -23,6 +23,22 @@ func (z *Zitadel) GetUserByUserName(ctx context.Context, username string) (*doma
 }
 
 func (z *Zitadel) GetUserByID(ctx context.Context, userId string) (*domain.User, error) {
-	//TODO implement me
-	panic("implement me")
+	in := &management.GetUserByIDRequest{
+		Id: userId,
+	}
+
+	resp, err := z.api.ManagementService().GetUserByID(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+
+	u := &domain.User{
+		ZitadelID: resp.User.Id,
+		UserName:  resp.User.UserName,
+		FirstName: resp.User.GetHuman().Profile.FirstName,
+		LastName:  resp.User.GetHuman().Profile.LastName,
+		Role:      domain.OwnerRole,
+	}
+
+	return u, nil
 }

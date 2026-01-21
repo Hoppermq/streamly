@@ -15,7 +15,7 @@ type User struct {
 	FirstName    string
 	LastName     string
 	PrimaryEmail string
-	Role         string
+	Role         PlatformRole
 
 	CreatedAt time.Time
 	UpdatedAt time.Time

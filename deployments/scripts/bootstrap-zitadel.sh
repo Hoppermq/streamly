@@ -46,9 +46,9 @@ echo "✅ JWT profile file found at $JWT_FILE"
 
 # Fetch the organization ID of the authenticated service account
 echo "🔍 Fetching organization ID..."
-ORG_RESPONSE=$(curl -s "${ZITADEL_URL}/management/v1/orgs/me" \
-  -H "Authorization: Bearer ${PAT}" \
-  -H "Content-Type: application/json")
+ORG_RESPONSE=$(wget -q -O- --header="Authorization: Bearer ${PAT}" \
+  --header="Content-Type: application/json" \
+  "${ZITADEL_URL}/management/v1/orgs/me")
 
 if [ $? -ne 0 ]; then
   echo "❌ Failed to fetch organization ID"
@@ -74,10 +74,10 @@ PROJECT_NAME="${TF_VAR_project_name:-local}"
 
 # Check if resources already exist by querying the project
 echo "🔍 Checking if resources already exist in Zitadel..."
-PROJECT_CHECK=$(curl -s "${ZITADEL_URL}/management/v1/projects/_search" \
-  -H "Authorization: Bearer ${PAT}" \
-  -H "Content-Type: application/json" \
-  -d "{\"queries\":[{\"nameQuery\":{\"name\":\"$PROJECT_NAME\",\"method\":\"TEXT_QUERY_METHOD_EQUALS\"}}]}" | jq -r '.result[0].id // empty' 2>/dev/null)
+PROJECT_CHECK=$(wget -q -O- --header="Authorization: Bearer ${PAT}" \
+  --header="Content-Type: application/json" \
+  --post-data="{\"queries\":[{\"nameQuery\":{\"name\":\"$PROJECT_NAME\",\"method\":\"TEXT_QUERY_METHOD_EQUALS\"}}]}" \
+  "${ZITADEL_URL}/management/v1/projects/_search" | jq -r '.result[0].id // empty' 2>/dev/null)
 
 if [ -n "$PROJECT_CHECK" ]; then
   echo "✅ Bootstrap already completed - project '$PROJECT_NAME' exists (ID: $PROJECT_CHECK)"
@@ -98,8 +98,8 @@ else
   echo "🆕 No Terraform state found - first run"
 fi
 
-export TF_VAR_zitadel_domain="$ZITADEL_DOMAIN"
-export TF_VAR_zitadel_port="$ZITADEL_PORT"
+export TF_VAR_zitadel_domain="auth.localhost"
+export TF_VAR_zitadel_port="8080"
 export TF_VAR_zitadel_secure_mode="true"
 export TF_VAR_zitadel_jwt_profile_file="$JWT_FILE"
 export TF_VAR_organization_id="$ZITADEL_ORG_ID"

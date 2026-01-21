@@ -1,0 +1,18 @@
+[api]
+  dashboard = true
+  insecure = true
+
+[entryPoints]
+  [entryPoints.web]
+    address = ":8080"
+  [entryPoints.traefik]
+    address = ":8888"
+
+[providers]
+  [providers.docker]
+    endpoint = "unix:///var/run/docker.sock"
+    exposedByDefault = false
+    network = "streamly-dev"
+
+[log]
+  level = "DEBUG"

@@ -33,11 +33,12 @@ func (z *Zitadel) GetUserByID(ctx context.Context, userId string) (*domain.User,
 	}
 
 	u := &domain.User{
-		ZitadelID: resp.User.Id,
-		UserName:  resp.User.UserName,
-		FirstName: resp.User.GetHuman().Profile.FirstName,
-		LastName:  resp.User.GetHuman().Profile.LastName,
-		Role:      domain.OwnerRole,
+		ZitadelID:    resp.User.Id,
+		UserName:     resp.User.UserName,
+		FirstName:    resp.User.GetHuman().Profile.FirstName,
+		LastName:     resp.User.GetHuman().Profile.LastName,
+		PrimaryEmail: resp.User.GetHuman().Email.Email,
+		Role:         domain.OwnerRole,
 	}
 
 	return u, nil

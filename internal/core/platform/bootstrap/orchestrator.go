@@ -52,11 +52,25 @@ func NewOrchestrator(opts ...Options) Orchestrator {
 	return orc
 }
 
-// Run will execute all bootstrap methods at the startup before the application process.
 func (o *Orchestrator) Run(ctx context.Context) error {
-	o.logger.Info("starting orchestrator")
+	o.logger.Info("starting bootstrap orchestrator")
+
+	isFirst, err := o.isFirstInstance(ctx)
+	if err != nil {
+		o.logger.Error("failed to check if first instance", "error", err)
+		return err
+	}
+
+	if !isFirst {
+		o.logger.Info("first instance already bootstrapped, skipping")
+		return nil
+	}
+
+	o.logger.Info("first instance detected, creating default organization")
 	if err := o.setupDefaultOrg(ctx); err != nil {
 		return err
 	}
+
+	o.logger.Info("bootstrap completed successfully")
 	return nil
 }

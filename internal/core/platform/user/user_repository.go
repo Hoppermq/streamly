@@ -57,8 +57,52 @@ func (r *Repository) WithTx(tx domain.TxContext) domain.UserRepository {
 }
 
 func (r *Repository) FindOneByID(ctx context.Context, id uuid.UUID) (*domain.User, error) {
-	//TODO implement me
-	panic("implement me")
+	u := &models.User{}
+	err := r.db.NewSelect().
+		Model(u).
+		Where("identifier = ?", id).
+		Where("deleted = ?", false).
+		Scan(ctx, u)
+
+	if err != nil {
+		r.logger.Warn("failed to find user by identifier", "identifier", id, "err", err)
+	}
+
+	resp := &domain.User{
+		Identifier:   u.Identifier,
+		ZitadelID:    u.ZitadelID,
+		PrimaryEmail: u.PrimaryEmail,
+		FirstName:    u.FirstName,
+		LastName:     u.LastName,
+		Role:         domain.PlatformRole(u.Role),
+	}
+
+	return resp, nil
+}
+
+func (r *Repository) FindOneByEmail(ctx context.Context, email string) (*domain.User, error) {
+	u := &models.User{}
+
+	err := r.db.NewSelect().
+		Model(u).
+		Where("primary_email = ?", email).
+		Where("deleted = ?", false).
+		Scan(ctx, u)
+
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &domain.User{
+		Identifier:   u.Identifier,
+		ZitadelID:    u.ZitadelID,
+		PrimaryEmail: u.PrimaryEmail,
+		FirstName:    u.FirstName,
+		LastName:     u.LastName,
+		Role:         domain.PlatformRole(u.Role),
+	}
+
+	return resp, nil
 }
 
 func (r *Repository) FindAll(ctx context.Context, limit, offset int) ([]domain.User, error) {
@@ -75,7 +119,8 @@ func (r *Repository) Create(ctx context.Context, user *domain.User) error {
 		FirstName:    user.FirstName,
 		LastName:     user.LastName,
 		PrimaryEmail: user.PrimaryEmail,
-		Role:         user.Role,
+
+		Role: string(user.Role),
 	}
 
 	_, err := r.db.NewInsert().Model(u).Exec(ctx)

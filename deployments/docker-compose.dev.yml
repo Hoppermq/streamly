@@ -175,6 +175,8 @@ services:
       - ../:/app
       - go_mod_cache:/go/pkg/mod
       - go_build_cache:/root/.cache/go-build
+    env_file:
+      - .env.zitadel
     environment:
       - GO_ENV=development
       - PORT=8094

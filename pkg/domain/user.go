@@ -15,7 +15,7 @@ type User struct {
 	FirstName    string
 	LastName     string
 	PrimaryEmail string
-	Role         string
+	Role         PlatformRole
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -25,6 +25,7 @@ type UserRepository interface {
 	WithTx(tx TxContext) UserRepository
 
 	FindOneByID(ctx context.Context, id uuid.UUID) (*User, error)
+	FindOneByEmail(ctx context.Context, email string) (*User, error)
 	FindAll(ctx context.Context, limit, offset int) ([]User, error)
 	Create(ctx context.Context, user *User) error
 	Update(ctx context.Context, user *User) error

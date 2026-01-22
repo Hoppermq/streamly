@@ -89,6 +89,11 @@ func (uc *UseCase) FindOne(ctx context.Context, id string) (*domain.User, error)
 	return uc.userRepo.FindOneByID(ctx, identifier)
 }
 
+func (uc *UseCase) FindOneByPrimaryEmail(ctx context.Context, email string) (*domain.User, error) {
+	uc.logger.Info("finding user by email", "email", email)
+	return uc.userRepo.FindOneByEmail(ctx, email)
+}
+
 func (uc *UseCase) FindAll(ctx context.Context, limit, offset int) ([]domain.User, error) {
 	uc.logger.Info("finding users", "limit", limit, "offset", offset)
 	return uc.userRepo.FindAll(ctx, limit, offset)
@@ -113,7 +118,7 @@ func (uc *UseCase) Create(ctx context.Context, userInput *domain.CreateUser) err
 		LastName:     userInput.LastName,
 		PrimaryEmail: userInput.PrimaryEmail,
 
-		Role: userInput.Role,
+		Role: domain.PlatformRole(userInput.Role),
 	}
 
 	return uc.userRepo.Create(ctx, user)

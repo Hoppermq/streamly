@@ -12,6 +12,7 @@ import (
 	"github.com/hoppermq/streamly/cmd/config"
 	"github.com/hoppermq/streamly/internal/core/auth"
 	"github.com/hoppermq/streamly/internal/core/platform"
+	"github.com/hoppermq/streamly/internal/core/platform/bootstrap"
 	"github.com/hoppermq/streamly/internal/core/platform/membership"
 	"github.com/hoppermq/streamly/internal/core/platform/organization"
 	"github.com/hoppermq/streamly/internal/core/platform/user"
@@ -174,6 +175,18 @@ func main() {
 		platform.WithLogger(logger),
 		platform.WithHandler(httpServer),
 	)
+
+	bootstrapOrchestrator := bootstrap.NewOrchestrator(
+		bootstrap.BstWithLogger(logger),
+		bootstrap.BstWithZitadel(*zitadelClient),
+		bootstrap.BstWithOrgUC(organizationUC),
+		bootstrap.BstWithUserUC(userUC),
+	)
+
+	if err := bootstrapOrchestrator.Run(ctx); err != nil {
+		logger.ErrorContext(ctx, "failed to bootstrap orchestrator", "error", err)
+		os.Exit(84)
+	}
 
 	app := serviceloader.New(
 		serviceloader.WithLogger(logger),

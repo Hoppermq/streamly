@@ -58,7 +58,7 @@ func (g *GroupByClause) UnmarshalJSON(data []byte) error {
 		g.Type = "timeWindow"
 		var tw TimeWindow
 		if err := json.Unmarshal(data, &tw); err != nil {
-			return errors.SerializerInvalidSelectFunction(err)
+			return errors.SerializerInvalidTimeWindow(err)
 		}
 		g.TimeWindow = &tw
 		return nil

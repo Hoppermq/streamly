@@ -8,7 +8,7 @@ import (
 )
 
 func (z *Zitadel) GetUserByUserName(ctx context.Context, username string) (*domain.User, error) {
-	in := &user.ListUsersRequest{
+	inRequest := &user.ListUsersRequest{
 		Queries: []*user.SearchQuery{
 			{
 				Query: &user.SearchQuery_UserNameQuery{
@@ -20,7 +20,7 @@ func (z *Zitadel) GetUserByUserName(ctx context.Context, username string) (*doma
 		},
 	}
 
-	resp, err := z.api.UserServiceV2().ListUsers(ctx, in)
+	resp, err := z.api.UserServiceV2().ListUsers(ctx, inRequest)
 	if err != nil {
 		return nil, err
 	}

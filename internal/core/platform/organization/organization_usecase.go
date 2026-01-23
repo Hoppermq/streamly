@@ -2,12 +2,12 @@ package organization
 
 import (
 	"context"
-	"errors"
 	"log/slog"
 
 	"github.com/hoppermq/streamly/internal/core/platform/membership"
 	"github.com/hoppermq/streamly/internal/core/platform/user"
 	"github.com/hoppermq/streamly/pkg/domain"
+	"github.com/hoppermq/streamly/pkg/domain/errors"
 )
 
 type UseCase struct {
@@ -202,7 +202,7 @@ func (uc *UseCase) AddUser(ctx context.Context, orgID, userID string) error {
 	}
 
 	if !exist {
-		err := errors.New("organization does not exist")
+		err := errors.ErrOrganizationNotFound
 
 		uc.logger.Warn("failed to add user to organization", "error", err)
 		return err

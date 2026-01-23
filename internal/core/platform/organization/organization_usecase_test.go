@@ -2,18 +2,20 @@ package organization_test
 
 import (
 	"context"
-	"errors"
 	"log/slog"
 	"testing"
 
 	"github.com/google/uuid"
 	"github.com/hoppermq/streamly/internal/core/platform/organization"
 	"github.com/hoppermq/streamly/pkg/domain"
+	"github.com/hoppermq/streamly/pkg/domain/errors"
 	"github.com/hoppermq/streamly/pkg/domain/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
+
+// TODO: compare returned errors.
 
 func TestUseCaseCreate(t *testing.T) {
 	t.Parallel()
@@ -72,7 +74,7 @@ func TestUseCaseCreate(t *testing.T) {
 
 				orgRepo.EXPECT().
 					Create(mock.Anything, mock.Anything).
-					Return(errors.New("database connection failed")).
+					Return(errors.ErrDatabaseConnection).
 					Once()
 			},
 			assertErr: assert.Error,
@@ -177,7 +179,7 @@ func TestUseCaseFindOneByID(t *testing.T) {
 			setupMock: func(repo *mocks.MockOrganizationRepository) {
 				repo.EXPECT().
 					FindOneByID(mock.Anything, nonExistingOrgID).
-					Return(nil, errors.New("organization not found")).
+					Return(nil, errors.ErrOrganizationNotFound).
 					Once()
 			},
 			assertErr:   assert.Error,
@@ -189,7 +191,7 @@ func TestUseCaseFindOneByID(t *testing.T) {
 			setupMock: func(repo *mocks.MockOrganizationRepository) {
 				repo.EXPECT().
 					FindOneByID(mock.Anything, orgID).
-					Return(nil, errors.New("database connection failed")).
+					Return(nil, errors.ErrDatabaseConnection).
 					Once()
 			},
 			assertErr:   assert.Error,
@@ -285,7 +287,7 @@ func TestUseCaseFindAll(t *testing.T) {
 			setupMock: func(repo *mocks.MockOrganizationRepository) {
 				repo.EXPECT().
 					FindAll(mock.Anything, 10, 0).
-					Return(nil, errors.New("database connection failed")).
+					Return(nil, errors.ErrDatabaseConnection).
 					Once()
 			},
 			assertErr:   assert.Error,
@@ -369,7 +371,7 @@ func TestUseCaseUpdate(t *testing.T) {
 			setupMock: func(repo *mocks.MockOrganizationRepository, org *domain.Organization) {
 				repo.EXPECT().
 					FindOneByID(mock.Anything, nonExistingOrgID).
-					Return(nil, errors.New("organization not found")).
+					Return(nil, errors.ErrDatabaseConnection).
 					Once()
 			},
 			assertErr: assert.Error,
@@ -390,7 +392,7 @@ func TestUseCaseUpdate(t *testing.T) {
 					Once()
 				repo.EXPECT().
 					Update(mock.Anything, mock.Anything).
-					Return(errors.New("database connection failed")).
+					Return(errors.ErrDatabaseConnection).
 					Once()
 			},
 			assertErr: assert.Error,
@@ -464,7 +466,7 @@ func TestUseCaseDelete(t *testing.T) {
 			setupMock: func(repo *mocks.MockOrganizationRepository, org *domain.Organization) {
 				repo.EXPECT().
 					Delete(mock.Anything, nonExistingOrgID).
-					Return(errors.New("organization not found")).
+					Return(errors.ErrOrganizationNotFound).
 					Once()
 			},
 			assertErr: assert.Error,
@@ -479,7 +481,7 @@ func TestUseCaseDelete(t *testing.T) {
 			setupMock: func(repo *mocks.MockOrganizationRepository, org *domain.Organization) {
 				repo.EXPECT().
 					Delete(mock.Anything, org.Identifier).
-					Return(errors.New("database constraint violation")).
+					Return(errors.ErrDatabaseConstraint).
 					Once()
 			},
 			assertErr: assert.Error,

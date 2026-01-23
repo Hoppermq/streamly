@@ -2,12 +2,12 @@ package user
 
 import (
 	"context"
-	"errors"
 	"log/slog"
 	"time"
 
 	"github.com/hoppermq/streamly/internal/common"
 	"github.com/hoppermq/streamly/pkg/domain"
+	"github.com/hoppermq/streamly/pkg/domain/errors"
 )
 
 type UseCase struct {
@@ -102,8 +102,7 @@ func (uc *UseCase) FindAll(ctx context.Context, limit, offset int) ([]domain.Use
 func (uc *UseCase) Create(ctx context.Context, userInput *domain.CreateUser) error {
 	uc.logger.Info("creating new user")
 	if userInput == nil {
-		// will be static error.
-		err := errors.New("userInput cannot be nil")
+		err := errors.ErrNilUserInput
 		uc.logger.Warn("userInput is nil", "error", err)
 		return err
 	}

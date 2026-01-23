@@ -14,6 +14,9 @@ var (
 	ErrFailedToReadJSONSchema        = errors.New("failed to read json schema file")
 	ErrFailedToUnmarshalJSONSchema   = errors.New("failed to unmarshal json schema")
 	ErrFailedToAddJSONSchemaResource = errors.New("failed to add json schema reousrce")
+	ErrRootUserIDNotSet              = errors.New("ROOT_USER_ID environment variable not set")
+	ErrDatabaseConnection            = errors.New("failed to connect to database")
+	ErrDatabaseConstraint            = errors.New("database constraint violation")
 )
 
 func FailedToReadJSONSchema(err error) error {
@@ -30,7 +33,6 @@ func FailedToCompileJSONSchema(err error) error {
 
 func FailedToAddJsonSchemaResource(err error) error {
 	return fmt.Errorf("%w: %s", ErrFailedToAddJSONSchemaResource, err)
-
 }
 
 func FailedToReadFile(path string) error {
@@ -88,7 +90,7 @@ var (
 	ErrOrderByTranslationFailed = errors.New("failed to translate ORDER BY")
 	ErrSelectClauseEmpty        = errors.New("SELECT clause cannot be empty")
 	ErrSelectClauseType         = errors.New("unknown SELECT clause type")
-	ErrFromEmpty                = errors.New("FROM datasourse cannot be empty")
+	ErrFromEmpty                = errors.New("FROM datasource cannot be empty")
 	ErrInOperatorValue          = errors.New("IN operator requires array value for field: ")
 	ErrUnknownGroupBy           = errors.New("unknown GROUP BY clause type")
 )
@@ -106,3 +108,31 @@ var (
 	ErrNoFromSourceDefined   = errors.New("no FROM source defined")
 	ErrInOperator            = errors.New("IN operator requires []any value")
 )
+
+var (
+	ErrNilUserInput         = errors.New("user input cannot be nil")
+	ErrOrganizationNotFound = errors.New("organization not found")
+	ErrOrganizationDelete   = errors.New("failed to delete organization")
+	ErrOrganizationUpdate   = errors.New("failed to update organization")
+	ErrOrganizationCreate   = errors.New("failed to create organization")
+	ErrUserQuery            = errors.New("failed to query user")
+	ErrOrganizationQuery    = errors.New("failed to query organization")
+)
+
+func OrganizationDeleteFailed(err error) error {
+	return fmt.Errorf("%w: %s", ErrOrganizationDelete, err)
+}
+func OrganizationUpdateFailed(err error) error {
+	return fmt.Errorf("%w: %s", ErrOrganizationUpdate, err)
+}
+func OrganizationCreateFailed(err error) error {
+	return fmt.Errorf("%w: %s", ErrOrganizationCreate, err)
+}
+
+func RootUserQueryFailed(err error, userID string) error {
+	return fmt.Errorf("%w: %s. user: %s", ErrUserQuery, err, userID)
+}
+
+func OrganizationQueryFailed(err error, orgID string) error {
+	return fmt.Errorf("%w: %s. orgID: %s", ErrOrganizationQuery, err, orgID)
+}

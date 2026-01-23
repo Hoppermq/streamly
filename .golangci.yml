@@ -124,6 +124,11 @@ linters:
       lines: 80
       statements: 40
 
+    tagliatelle:
+      case:
+        rules:
+          json: snake
+
     govet:
       # settings per analyzer
       settings:
@@ -141,6 +146,7 @@ linters:
       #  - fieldalignment
       enable-all: false
       disable-all: false
+
 
     revive:
       # minimal confidence for issues, default is 0.8
@@ -220,6 +226,7 @@ linters:
       max-blank-identifiers: 2
 
     varnamelen: # https://github.com/blizzy78/varnamelen?tab=readme-ov-file#golangci-lint-integration
+      min-name-length: 1
       ignore-names:
         - err
       ignore-decls:

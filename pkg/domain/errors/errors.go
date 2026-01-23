@@ -6,11 +6,32 @@ import (
 )
 
 var (
-	ErrEngineErrorOrder         = errors.New("engine should be set before server")
-	ErrEmptyContent             = errors.New("content could not be empty")
-	ErrBatchSizeMaxSizeExceeded = errors.New("batch size exceeded")
-	ErrFailedToReadFile         = errors.New("failed to read file")
+	ErrEngineErrorOrder             = errors.New("engine should be set before server")
+	ErrEmptyContent                 = errors.New("content could not be empty")
+	ErrBatchSizeMaxSizeExceeded     = errors.New("batch size exceeded")
+	ErrFailedToReadFile             = errors.New("failed to read file")
+	ErrFailedToCompileJSONSchema    = errors.New("failed to compile json schema")
+	ErrFailedToReadJSONSchema       = errors.New("failed to read json schema file")
+	ErrFailedToUnmarshalJSONSchema  = errors.New("failed to unmarshal json schema")
+	ErrFailedToAddJSONSchemaReource = errors.New("failed to add json schema reousrce")
 )
+
+func FailedToReadJSONSchema(err error) error {
+	return fmt.Errorf("%w: %s", ErrFailedToReadJSONSchema, err)
+}
+
+func FailedToUnmarshalJSONSchema(err error) error {
+	return fmt.Errorf("%w: %s", ErrFailedToUnmarshalJSONSchema, err)
+}
+
+func FailedToCompileJSONSchema(err error) error {
+	return fmt.Errorf("%w: %s", ErrFailedToCompileJSONSchema, err)
+}
+
+func FailedToAddJsonSchemaResource(err error) error {
+	return fmt.Errorf("%w: %s", ErrFailedToAddJSONSchemaReource, err)
+
+}
 
 func FailedToReadFile(path string) error {
 	return fmt.Errorf("%w: %s", ErrFailedToReadFile, path)

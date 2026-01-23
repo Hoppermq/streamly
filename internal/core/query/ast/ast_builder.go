@@ -4,12 +4,11 @@ import (
 	"context"
 	"embed"
 	"encoding/json"
-	"errors"
-	"fmt"
 	"log/slog"
 
 	"github.com/hoppermq/streamly/internal/storage/clickhouse"
 	"github.com/hoppermq/streamly/pkg/domain"
+	"github.com/hoppermq/streamly/pkg/domain/errors"
 	"github.com/santhosh-tekuri/jsonschema/v6"
 )
 
@@ -56,27 +55,27 @@ func BuilderWithTranslator(translator *clickhouse.Translator) BuilderOption {
 func (tr *Builder) Run(ctx context.Context) error {
 	schemaContent, err := tr.schemaFS.ReadFile("query-ast.schema.json")
 	if err != nil {
-		return fmt.Errorf("failed to read schema file: %w", err)
+		return errors.FailedToReadJSONSchema(err)
 	}
 
 	var schDoc any
 	err = json.Unmarshal(schemaContent, &schDoc)
 	if err != nil {
-		return fmt.Errorf("failed to unmarshal schema: %w", err)
+		return errors.FailedToUnmarshalJSONSchema(err)
 	}
 
 	if err := tr.jschCompiler.AddResource("query-ast.schema.json", schDoc); err != nil {
-		return fmt.Errorf("failed to add schema resource: %w", err)
+		return errors.FailedToAddJsonSchemaResource(err)
 	}
 
 	schema, err := tr.jschCompiler.Compile("query-ast.schema.json")
 	if err != nil {
-		return fmt.Errorf("failed to compile schema: %w", err)
+		return errors.FailedToCompileJSONSchema(err)
 	}
 
 	if schema == nil {
 		tr.logger.Warn("schema is nil, skipping...")
-		return errors.New("failed to compile schema")
+		return errors.ErrFailedToCompileJSONSchema
 	}
 	tr.validator.RegisterSchema("query-ast.schema.json", schema)
 
@@ -98,17 +97,17 @@ func (tr *Builder) IsHealthy() bool {
 
 func (tr *Builder) Execute(data *domain.QueryAstRequest) (domain.Query, []domain.QueryArgs, error) { // should be a domain type here
 	if err := tr.validator.Execute(data); err != nil {
-		tr.logger.Warn("error while executing the validation")
+		tr.logger.Warn("error while executing the validation", "error", err)
 		return "", nil, err
 	}
 	query, err := tr.translator.Translate(data)
 	if err != nil {
-		tr.logger.Warn("error while translating data")
+		tr.logger.Warn("error while translating data", "error", err)
 		return "", nil, err
 	}
 	q, params, err := query.Build()
 	if err != nil {
-		tr.logger.Warn("error while building query")
+		tr.logger.Warn("error while building query", "error", err)
 		return "", nil, err
 	}
 

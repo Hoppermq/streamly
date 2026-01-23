@@ -293,6 +293,74 @@ func (_c *MockUserRepository_FindAll_Call) RunAndReturn(run func(ctx context.Con
 	return _c
 }
 
+// FindOneByEmail provides a mock function for the type MockUserRepository
+func (_mock *MockUserRepository) FindOneByEmail(ctx context.Context, email string) (*domain.User, error) {
+	ret := _mock.Called(ctx, email)
+
+	if len(ret) == 0 {
+		panic("no return value specified for FindOneByEmail")
+	}
+
+	var r0 *domain.User
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (*domain.User, error)); ok {
+		return returnFunc(ctx, email)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) *domain.User); ok {
+		r0 = returnFunc(ctx, email)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*domain.User)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = returnFunc(ctx, email)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockUserRepository_FindOneByEmail_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindOneByEmail'
+type MockUserRepository_FindOneByEmail_Call struct {
+	*mock.Call
+}
+
+// FindOneByEmail is a helper method to define mock.On call
+//   - ctx context.Context
+//   - email string
+func (_e *MockUserRepository_Expecter) FindOneByEmail(ctx interface{}, email interface{}) *MockUserRepository_FindOneByEmail_Call {
+	return &MockUserRepository_FindOneByEmail_Call{Call: _e.mock.On("FindOneByEmail", ctx, email)}
+}
+
+func (_c *MockUserRepository_FindOneByEmail_Call) Run(run func(ctx context.Context, email string)) *MockUserRepository_FindOneByEmail_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockUserRepository_FindOneByEmail_Call) Return(user *domain.User, err error) *MockUserRepository_FindOneByEmail_Call {
+	_c.Call.Return(user, err)
+	return _c
+}
+
+func (_c *MockUserRepository_FindOneByEmail_Call) RunAndReturn(run func(ctx context.Context, email string) (*domain.User, error)) *MockUserRepository_FindOneByEmail_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // FindOneByID provides a mock function for the type MockUserRepository
 func (_mock *MockUserRepository) FindOneByID(ctx context.Context, id uuid.UUID) (*domain.User, error) {
 	ret := _mock.Called(ctx, id)
@@ -487,7 +555,7 @@ func (_c *MockUserRepository_Update_Call) RunAndReturn(run func(ctx context.Cont
 }
 
 // WithTx provides a mock function for the type MockUserRepository
-func (_mock *MockUserRepository) WithTx(tx interface{}) domain.UserRepository {
+func (_mock *MockUserRepository) WithTx(tx domain.TxContext) domain.UserRepository {
 	ret := _mock.Called(tx)
 
 	if len(ret) == 0 {
@@ -495,7 +563,7 @@ func (_mock *MockUserRepository) WithTx(tx interface{}) domain.UserRepository {
 	}
 
 	var r0 domain.UserRepository
-	if returnFunc, ok := ret.Get(0).(func(interface{}) domain.UserRepository); ok {
+	if returnFunc, ok := ret.Get(0).(func(domain.TxContext) domain.UserRepository); ok {
 		r0 = returnFunc(tx)
 	} else {
 		if ret.Get(0) != nil {
@@ -511,16 +579,16 @@ type MockUserRepository_WithTx_Call struct {
 }
 
 // WithTx is a helper method to define mock.On call
-//   - tx interface{}
+//   - tx domain.TxContext
 func (_e *MockUserRepository_Expecter) WithTx(tx interface{}) *MockUserRepository_WithTx_Call {
 	return &MockUserRepository_WithTx_Call{Call: _e.mock.On("WithTx", tx)}
 }
 
-func (_c *MockUserRepository_WithTx_Call) Run(run func(tx interface{})) *MockUserRepository_WithTx_Call {
+func (_c *MockUserRepository_WithTx_Call) Run(run func(tx domain.TxContext)) *MockUserRepository_WithTx_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 interface{}
+		var arg0 domain.TxContext
 		if args[0] != nil {
-			arg0 = args[0].(interface{})
+			arg0 = args[0].(domain.TxContext)
 		}
 		run(
 			arg0,
@@ -534,7 +602,7 @@ func (_c *MockUserRepository_WithTx_Call) Return(userRepository domain.UserRepos
 	return _c
 }
 
-func (_c *MockUserRepository_WithTx_Call) RunAndReturn(run func(tx interface{}) domain.UserRepository) *MockUserRepository_WithTx_Call {
+func (_c *MockUserRepository_WithTx_Call) RunAndReturn(run func(tx domain.TxContext) domain.UserRepository) *MockUserRepository_WithTx_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -43,7 +43,6 @@ func (c *Client) Run(ctx context.Context) error {
 			c.logger.Warn("failed to commit clickhouse transaction", "error", err)
 			return
 		}
-
 	}()
 
 	return nil

@@ -67,5 +67,4 @@ func (r *Repository) Create(ctx context.Context, membership *domain.Membership) 
 
 	r.logger.InfoContext(ctx, "inserted membership", "org_id", membership.OrgIdentifier, "user_id", membership.UserIdentifier)
 	return nil
-
 }

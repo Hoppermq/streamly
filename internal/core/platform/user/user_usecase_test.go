@@ -2,7 +2,6 @@ package user_test
 
 import (
 	"context"
-	"io"
 	"log/slog"
 	"testing"
 
@@ -140,7 +139,7 @@ func TestUseCaseCreate(t *testing.T) {
 
 			client := mocks.NewMockClient(t)
 
-			logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+			logger := slog.New(slog.DiscardHandler)
 			ctx := context.Background()
 
 			uc, err := user.NewUseCase(
@@ -206,14 +205,13 @@ func TestUseCase_CreateFromEvent(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-
 			repo := mocks.NewMockUserRepository(t)
 			authRepo := mocks.NewMockAuthRepository(t)
 			client := mocks.NewMockClient(t)
 
 			tt.setupMock(repo, client)
 
-			logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+			logger := slog.New(slog.DiscardHandler)
 			ctx := context.Background()
 
 			uc, err := user.NewUseCase(

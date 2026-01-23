@@ -70,5 +70,5 @@ func (c *ClickHouseContainer) Close(ctx context.Context) error {
 	if c.Conn != nil {
 		c.Conn.Close()
 	}
-	return c.ClickHouseContainer.Terminate(ctx)
+	return c.Terminate(ctx)
 }

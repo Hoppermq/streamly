@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -68,7 +69,7 @@ func NewZitadelClient(ctx context.Context, z *zitadel.Zitadel, opts ...Options) 
 	}
 
 	if zita.pat == "" {
-		return nil, fmt.Errorf("PAT is required (use WithPAT or WithPATFromFile)")
+		return nil, errors.New("PAT is required (use WithPAT or WithPATFromFile)")
 	}
 
 	authOptions := client.PAT(zita.pat)

@@ -8,6 +8,6 @@ import (
 )
 
 func (z *Zitadel) GetOrganizationByID(ctx context.Context, organizationId uuid.UUID) (*domain.Organization, error) {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }

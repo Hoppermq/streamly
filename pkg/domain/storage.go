@@ -40,7 +40,7 @@ type UnitOfWork interface {
 
 type TxContext interface{}
 
-// UnitOfWorkFactory creates new UnitOfWork instances (transactions)
+// UnitOfWorkFactory creates new UnitOfWork instances (transactions).
 type UnitOfWorkFactory interface {
 	NewUnitOfWork(ctx context.Context) (UnitOfWork, error)
 }

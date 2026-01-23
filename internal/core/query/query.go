@@ -80,7 +80,6 @@ func (q *QueryService) Run(ctx context.Context) error {
 	q.logger.Info("stopping component", "name", serviceName, "service_id", serviceID)
 
 	return nil
-
 }
 
 func (q *QueryService) Stop(ctx context.Context) error {

@@ -23,19 +23,19 @@ type Event struct {
 
 // BatchIngestionRequest type represent the request resource for ingesting batch of events.
 type BatchIngestionRequest struct {
-	TenantID string               `json:"tenant_id" binding:"required"`
-	SourceID string               `json:"source_id" binding:"required"`
-	Topic    string               `json:"topic" binding:"required"`
-	Events   []EventIngestionData `json:"events" binding:"required,min=1,max=5000"`
+	TenantID string               `binding:"required"                json:"tenant_id"`
+	SourceID string               `binding:"required"                json:"source_id"`
+	Topic    string               `binding:"required"                json:"topic"`
+	Events   []EventIngestionData `binding:"required,min=1,max=5000" json:"events"`
 }
 
 // EventIngestionData type represent the ingested message content data.
 type EventIngestionData struct {
-	MessageID string            `json:"message_id" binding:"required"`
-	Content   json.RawMessage   `json:"content" binding:"required"`
+	MessageID string            `binding:"required" json:"message_id"`
+	Content   json.RawMessage   `binding:"required" json:"content"`
 	Headers   map[string]string `json:"headers"`
 	FrameType uint8             `json:"frame_type"`
-	EventType string            `json:"event_type" binding:"required"`
+	EventType string            `binding:"required" json:"event_type"`
 }
 
 // BatchIngestionResponse type represent the response returned after ingesting a batch of events.

@@ -3,6 +3,7 @@ package migration
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log/slog"
 
@@ -62,7 +63,7 @@ func (s *Service) RunMigrations(ctx context.Context) error {
 
 	s.logger.InfoContext(ctx, "creating migrate instance", "path", s.migrationPath)
 	m, err := migrate.NewWithDatabaseInstance(
-		fmt.Sprintf("file://%s", s.migrationPath),
+		"file://"+s.migrationPath,
 		"clickhouse",
 		driver,
 	)
@@ -73,7 +74,7 @@ func (s *Service) RunMigrations(ctx context.Context) error {
 
 	s.logger.InfoContext(ctx, "checking current migration version")
 	version, dirty, err := m.Version()
-	if err != nil && err != migrate.ErrNilVersion {
+	if err != nil && !errors.Is(err, migrate.ErrNilVersion) {
 		s.logger.ErrorContext(ctx, "failed to get version", "error", err)
 		return fmt.Errorf("failed to get current version: %w", err)
 	}
@@ -89,7 +90,7 @@ func (s *Service) RunMigrations(ctx context.Context) error {
 	}
 
 	s.logger.InfoContext(ctx, "running migrations")
-	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
 		return fmt.Errorf("failed to run migrations: %w", err)
 	}
 
@@ -110,7 +111,7 @@ func (s *Service) ensureMigrationTable(ctx context.Context) error {
 	checkQuery := "SELECT name FROM system.tables WHERE database = currentDatabase() AND name = 'schema_migrations'"
 	err := s.db.QueryRowContext(ctx, checkQuery).Scan(&tableName)
 
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		// Table doesn't exist, create it
 		s.logger.InfoContext(ctx, "creating schema_migrations table")
 		if err := s.createMigrationTable(ctx); err != nil {
@@ -196,4 +197,3 @@ func (s *Service) isTableCompatible(ctx context.Context) (bool, error) {
 
 	return true, nil
 }
-

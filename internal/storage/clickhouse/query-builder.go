@@ -1,6 +1,7 @@
 package clickhouse
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -143,11 +144,11 @@ func (qb *QueryBuilder) SetOffset(offset int) *QueryBuilder {
 
 func (qb *QueryBuilder) Build() (string, []any, error) {
 	if len(qb.components.SelectClauses) == 0 {
-		return "", nil, fmt.Errorf("no SELECT clauses defined")
+		return "", nil, errors.New("no SELECT clauses defined")
 	}
 
 	if qb.components.FromSource == "" {
-		return "", nil, fmt.Errorf("no FROM source defined")
+		return "", nil, errors.New("no FROM source defined")
 	}
 
 	var sql strings.Builder
@@ -178,7 +179,7 @@ func (qb *QueryBuilder) Build() (string, []any, error) {
 			if where.Operator == "IN" {
 				values, ok := where.Value.([]any)
 				if !ok {
-					return "", nil, fmt.Errorf("IN operator requires []any value")
+					return "", nil, errors.New("IN operator requires []any value")
 				}
 
 				placeholders := make([]string, len(values))

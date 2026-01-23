@@ -35,12 +35,12 @@ type UserRepository interface {
 }
 
 type CreateUser struct {
-	UserName     string `form:"user_name" json:"user_name" binding:"required"`
-	FirstName    string `form:"first_name" json:"first_name" binding:"required"`
-	LastName     string `form:"last_name" json:"last_name" binding:"required"`
-	PrimaryEmail string `form:"primary_email" json:"primary_email" binding:"required"`
-	Role         string `form:"role" json:"role"`
-	ZitadelID    string `form:"zitadel_id" json:"zitadel_id"`
+	UserName     string `binding:"required" form:"user_name"     json:"user_name"`
+	FirstName    string `binding:"required" form:"first_name"    json:"first_name"`
+	LastName     string `binding:"required" form:"last_name"     json:"last_name"`
+	PrimaryEmail string `binding:"required" form:"primary_email" json:"primary_email"`
+	Role         string `form:"role"        json:"role"`
+	ZitadelID    string `form:"zitadel_id"  json:"zitadel_id"`
 }
 
 type UpdateUser struct {

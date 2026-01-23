@@ -14,7 +14,7 @@ type Client interface {
 }
 
 type ZitadelOrganization struct {
-	OrganizationID string `json:"orgId" binding:"required"`
+	OrganizationID string `binding:"required" json:"orgId"`
 }
 
 type ZitadelProfile struct {
@@ -23,19 +23,19 @@ type ZitadelProfile struct {
 }
 
 type ZitadelEmail struct {
-	Email      string `json:"email" binding:"required,email"`
-	IsVerified bool   `json:"isVerified" binding:"required"`
+	Email      string `binding:"required,email" json:"email"`
+	IsVerified bool   `binding:"required"       json:"isVerified"`
 }
 
 type ZitadelEventUserCreatedRequest struct {
-	Email        ZitadelEmail        `json:"email" binding:"required"`
-	Organization ZitadelOrganization `json:"organization" binding:"required"`
-	Profile      ZitadelProfile      `json:"profile" binding:"required"`
-	UserName     string              `json:"userName" binding:"required"`
+	Email        ZitadelEmail        `binding:"required" json:"email"`
+	Organization ZitadelOrganization `binding:"required" json:"organization"`
+	Profile      ZitadelProfile      `binding:"required" json:"profile"`
+	UserName     string              `binding:"required" json:"userName"`
 }
 type ZitadelEventUserCreated struct {
-	InstanceID     string                         `json:"instanceId" binding:"required"`
-	OrganizationID string                         `json:"orgID" binding:"required"`
-	Request        ZitadelEventUserCreatedRequest `json:"request" binding:"required"`
-	UserID         string                         `json:"userID" binding:"required"`
+	InstanceID     string                         `binding:"required" json:"instanceId"`
+	OrganizationID string                         `binding:"required" json:"orgID"`
+	Request        ZitadelEventUserCreatedRequest `binding:"required" json:"request"`
+	UserID         string                         `binding:"required" json:"userID"`
 }

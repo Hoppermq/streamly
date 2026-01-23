@@ -26,10 +26,10 @@ type OrganizationRepository interface {
 }
 
 type CreateOrganization struct {
-	Name     string            `form:"name"      binding:"required"`
-	Metadata map[string]string `form:"metadata"     binding:"required"`
+	Name     string            `binding:"required" form:"name"`
+	Metadata map[string]string `binding:"required" form:"metadata"`
 }
 
 type UpdateOrganization struct {
-	Name string `form:"name" binding:"required"`
+	Name string `binding:"required" form:"name"`
 }

@@ -5,7 +5,6 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/hoppermq/streamly/cmd/config"
@@ -34,8 +33,8 @@ func WithHTTPServer(conf *config.IngestionConfig) Options {
 		h.server = &http.Server{
 			Addr:         ":" + strconv.Itoa(conf.Ingestor.HTTP.Port),
 			Handler:      h.engine,
-			ReadTimeout:  conf.Ingestor.HTTP.ReadTimeout * time.Millisecond,
-			WriteTimeout: conf.Ingestor.HTTP.WriteTimeout * time.Millisecond,
+			ReadTimeout:  conf.Ingestor.HTTP.ReadTimeout,
+			WriteTimeout: conf.Ingestor.HTTP.WriteTimeout,
 		}
 	}
 }
@@ -49,8 +48,8 @@ func WithQueryHTTPServer(conf *config.QueryConfig) Options {
 		h.server = &http.Server{
 			Addr:         ":" + strconv.Itoa(conf.Query.HTTP.Port),
 			Handler:      h.engine,
-			ReadTimeout:  conf.Query.HTTP.ReadTimeout * time.Millisecond,
-			WriteTimeout: conf.Query.HTTP.WriteTimeout * time.Millisecond,
+			ReadTimeout:  conf.Query.HTTP.ReadTimeout,
+			WriteTimeout: conf.Query.HTTP.WriteTimeout,
 		}
 	}
 }
@@ -63,8 +62,8 @@ func WithAuthHTTPServer(conf *config.AuthConfig) Options {
 		h.server = &http.Server{
 			Addr:         ":" + strconv.Itoa(conf.Auth.HTTP.Port),
 			Handler:      h.engine,
-			ReadTimeout:  conf.Auth.HTTP.ReadTimeout * time.Millisecond,
-			WriteTimeout: conf.Auth.HTTP.WriteTimeout * time.Millisecond,
+			ReadTimeout:  conf.Auth.HTTP.ReadTimeout,
+			WriteTimeout: conf.Auth.HTTP.WriteTimeout,
 		}
 	}
 }
@@ -77,8 +76,8 @@ func WithPlatformHTTPServer(conf *config.PlatformConfig) Options {
 		h.server = &http.Server{
 			Addr:         ":" + strconv.Itoa(conf.Platform.HTTP.Port),
 			Handler:      h.engine,
-			ReadTimeout:  conf.Platform.HTTP.ReadTimeout * time.Millisecond,
-			WriteTimeout: conf.Platform.HTTP.WriteTimeout * time.Millisecond,
+			ReadTimeout:  conf.Platform.HTTP.ReadTimeout,
+			WriteTimeout: conf.Platform.HTTP.WriteTimeout,
 		}
 	}
 }

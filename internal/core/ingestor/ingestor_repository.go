@@ -2,7 +2,6 @@ package ingestor
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -135,22 +134,22 @@ func (r *MockEventRepository) BatchInsert(ctx context.Context, events []*domain.
 
 func (r *MockEventRepository) validateEvent(event *domain.Event) error {
 	if event.TenantID == "" {
-		return fmt.Errorf("tenant_id is required")
+		return errors.ErrTenantIDRequired
 	}
 	if event.MessageID == "" {
-		return fmt.Errorf("message_id is required")
+		return errors.ErrMessageIDRequired
 	}
 	if event.SourceID == "" {
-		return fmt.Errorf("source_id is required")
+		return errors.ErrSourceIDRequired
 	}
 	if event.Topic == "" {
-		return fmt.Errorf("topic is required")
+		return errors.ErrTopicRequired
 	}
 	if event.EventType == "" {
-		return fmt.Errorf("event_type is required")
+		return errors.ErrEventTypeRequired
 	}
 	if len(event.ContentRaw) == 0 {
-		return fmt.Errorf("content cannot be empty")
+		return errors.ErrRawContentRequired
 	}
 	return nil
 }

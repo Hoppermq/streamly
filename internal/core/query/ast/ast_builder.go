@@ -4,6 +4,7 @@ import (
 	"context"
 	"embed"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 
@@ -75,7 +76,7 @@ func (tr *Builder) Run(ctx context.Context) error {
 
 	if schema == nil {
 		tr.logger.Warn("schema is nil, skipping...")
-		return fmt.Errorf("failed to compile schema")
+		return errors.New("failed to compile schema")
 	}
 	tr.validator.RegisterSchema("query-ast.schema.json", schema)
 

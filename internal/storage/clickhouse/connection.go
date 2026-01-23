@@ -10,7 +10,7 @@ import (
 	"github.com/hoppermq/streamly/pkg/domain"
 )
 
-// Driver adapts *sql.DB to domain.Driver interface
+// Driver adapts *sql.DB to domain.Driver interface.
 type Driver struct {
 	db *sql.DB
 }
@@ -94,7 +94,7 @@ func (d *Driver) QueryContext(ctx context.Context, query domain.Query, args ...d
 
 type DriverOption func(options *clickhouse.Options)
 
-// WithIngestionConfig TODO: extract since it's pure domain logic
+// WithIngestionConfig TODO: extract since it's pure domain logic.
 func WithIngestionConfig(clickhouseConfig *config.IngestionConfig) DriverOption {
 	return func(options *clickhouse.Options) {
 		options.Addr = []string{
@@ -107,7 +107,7 @@ func WithIngestionConfig(clickhouseConfig *config.IngestionConfig) DriverOption 
 	}
 }
 
-// WithQueryConfig TODO: extract since it's pure domain logic
+// WithQueryConfig TODO: extract since it's pure domain logic.
 func WithQueryConfig(clickhouseConfig *config.QueryConfig) DriverOption {
 	return func(options *clickhouse.Options) {
 		options.Addr = []string{

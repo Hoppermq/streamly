@@ -2,6 +2,7 @@ package bootstrap
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -41,7 +42,7 @@ func isNotFoundError(err error) bool {
 func (o *Orchestrator) setupDefaultOrg(ctx context.Context) error {
 	rootUserID := os.Getenv("ROOT_USER_ID")
 	if rootUserID == "" {
-		return fmt.Errorf("ROOT_USER_ID environment variable is not set")
+		return errors.New("ROOT_USER_ID environment variable is not set")
 	}
 
 	u, err := o.zitadel.GetUserByID(ctx, rootUserID)

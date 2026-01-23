@@ -3,7 +3,6 @@ package organization_test
 import (
 	"context"
 	"errors"
-	"io"
 	"log/slog"
 	"testing"
 
@@ -124,7 +123,7 @@ func TestUseCaseCreate(t *testing.T) {
 			uowFactory.EXPECT().NewUnitOfWork(mock.Anything).Return(uow, nil).Once()
 			tt.setupMock(uow, orgRepo, userRepo, memRepo)
 
-			logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+			logger := slog.New(slog.DiscardHandler)
 			ctx := context.Background()
 
 			uc, err := organization.NewUseCase(
@@ -205,7 +204,7 @@ func TestUseCaseFindOneByID(t *testing.T) {
 			repo := mocks.NewMockOrganizationRepository(t)
 			tt.setupMock(repo)
 
-			logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+			logger := slog.New(slog.DiscardHandler)
 			ctx := context.Background()
 
 			uc, err := organization.NewUseCase(
@@ -301,7 +300,7 @@ func TestUseCaseFindAll(t *testing.T) {
 			repo := mocks.NewMockOrganizationRepository(t)
 			tt.setupMock(repo)
 
-			logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+			logger := slog.New(slog.DiscardHandler)
 			ctx := context.Background()
 
 			uc, err := organization.NewUseCase(
@@ -405,7 +404,7 @@ func TestUseCaseUpdate(t *testing.T) {
 			repo := mocks.NewMockOrganizationRepository(t)
 			tt.setupMock(repo, tt.args.existingOrg)
 
-			logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+			logger := slog.New(slog.DiscardHandler)
 			ctx := context.Background()
 
 			uc, err := organization.NewUseCase(
@@ -494,7 +493,7 @@ func TestUseCaseDelete(t *testing.T) {
 			repo := mocks.NewMockOrganizationRepository(t)
 			tt.setupMock(repo, tt.args.existingOrg)
 
-			logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+			logger := slog.New(slog.DiscardHandler)
 			ctx := context.Background()
 
 			uc, err := organization.NewUseCase(

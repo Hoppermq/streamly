@@ -1,6 +1,7 @@
 package clickhouse
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 	"strings"
@@ -58,7 +59,7 @@ func (t *Translator) Translate(ast *domain.QueryAstRequest) (*QueryBuilder, erro
 
 func (t *Translator) translateSelect(selectClauses []domain.SelectClause, builder *QueryBuilder) error {
 	if len(selectClauses) == 0 {
-		return fmt.Errorf("SELECT clause cannot be empty")
+		return errors.New("SELECT clause cannot be empty")
 	}
 
 	for _, clause := range selectClauses {
@@ -72,7 +73,7 @@ func (t *Translator) translateSelect(selectClauses []domain.SelectClause, builde
 				clause.Function.Alias,
 			)
 		} else {
-			return fmt.Errorf("unknown SELECT clause type")
+			return errors.New("unknown SELECT clause type")
 		}
 	}
 
@@ -81,7 +82,7 @@ func (t *Translator) translateSelect(selectClauses []domain.SelectClause, builde
 
 func (t *Translator) translateFrom(datasource domain.Datasource, builder *QueryBuilder) error {
 	if datasource == "" {
-		return fmt.Errorf("FROM datasource cannot be empty")
+		return errors.New("FROM datasource cannot be empty")
 	}
 
 	builder.From(string(datasource))
@@ -122,7 +123,7 @@ func (t *Translator) translateGroupBy(groupByClauses []domain.GroupByClause, bui
 			}
 			builder.GroupByTimeWindow(gb.TimeWindow.Window, field)
 		} else {
-			return fmt.Errorf("unknown GROUP BY clause type")
+			return errors.New("unknown GROUP BY clause type")
 		}
 	}
 

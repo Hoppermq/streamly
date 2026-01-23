@@ -3,7 +3,6 @@ package ingestor
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log/slog"
 	"sync"
 	"time"
@@ -120,13 +119,14 @@ func (uc *EventIngestionUseCaseImpl) validateRequest(request *domain.BatchIngest
 
 func (uc *EventIngestionUseCaseImpl) validateEventData(event *domain.EventIngestionData, index int) error {
 	if event.MessageID == "" {
-		return fmt.Errorf("events[%d]: message_id is required", index)
+		return errors.EventMessageMissing(index)
 	}
 	if event.EventType == "" {
-		return fmt.Errorf("events[%d]: event_type is required", index)
+		return errors.EventTypeMissing(index)
 	}
+
 	if len(event.Content) == 0 {
-		return fmt.Errorf("events[%d]: content cannot be empty", index)
+		return errors.EventContentEmpty(index)
 	}
 
 	var jsonContent interface{}

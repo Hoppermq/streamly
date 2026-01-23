@@ -2,12 +2,11 @@ package client
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"log/slog"
 	"os"
 	"strings"
 
+	"github.com/hoppermq/streamly/pkg/domain/errors"
 	"github.com/zitadel/zitadel-go/v3/pkg/client"
 	"github.com/zitadel/zitadel-go/v3/pkg/zitadel"
 )
@@ -40,7 +39,7 @@ func WithPATFromFile(path string) Options {
 	return func(z *Zitadel) error {
 		data, err := os.ReadFile(path)
 		if err != nil {
-			return fmt.Errorf("failed to read PAT from %s: %w", path, err)
+			return errors.FailedToReadFile(path)
 		}
 		z.pat = strings.TrimSpace(string(data))
 		return nil
@@ -69,13 +68,13 @@ func NewZitadelClient(ctx context.Context, z *zitadel.Zitadel, opts ...Options) 
 	}
 
 	if zita.pat == "" {
-		return nil, errors.New("PAT is required (use WithPAT or WithPATFromFile)")
+		return nil, errors.ErrZitadelPATRequired
 	}
 
 	authOptions := client.PAT(zita.pat)
 	c, err := client.New(ctx, z, client.WithAuth(authOptions))
 	if err != nil {
-		return nil, fmt.Errorf("failed to create Zitadel client: %w", err)
+		return nil, errors.ErrZitadelClientCreation
 	}
 
 	zita.api = c

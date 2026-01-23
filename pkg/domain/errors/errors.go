@@ -58,3 +58,30 @@ func SerializerInvalidTimeWindow(err error) error {
 func SerializerInvalidSelectFunction(err error) error {
 	return fmt.Errorf("%w: %s", ErrSerializerInvalidSelect, err)
 }
+
+var (
+	ErrFromTranslationFailed    = errors.New("failed to translate FROM")
+	ErrSelectTranslationFailed  = errors.New("failed to translate SELECT")
+	ErrWhereTranslationFailed   = errors.New("failed to translate WHERE")
+	ErrGroupByTranslationFailed = errors.New("failed to translate GROUP BY")
+	ErrOrderByTranslationFailed = errors.New("failed to translate ORDER BY")
+	ErrSelectClauseEmpty        = errors.New("SELECT clause cannot be empty")
+	ErrSelectClauseType         = errors.New("unknown SELECT clause type")
+	ErrFromEmpty                = errors.New("FROM datasourse cannot be empty")
+	ErrInOperatorValue          = errors.New("IN operator requires array value for field: ")
+	ErrUnknownGroupBy           = errors.New("unknown GROUP BY clause type")
+)
+
+func TranslatorFailedToTranslate(kwError, err error) error {
+	return fmt.Errorf("%w: %s", kwError, err)
+}
+
+func TranslatorInOperatorInvalidValue(field string) error {
+	return fmt.Errorf("%w: %s", ErrInOperatorValue, field)
+}
+
+var (
+	ErrNoSelectClauseDefined = errors.New("no SELECT clause defined")
+	ErrNoFromSourceDefined   = errors.New("no FROM source defined")
+	ErrInOperator            = errors.New("IN operator requires []any value")
+)

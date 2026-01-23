@@ -1,9 +1,10 @@
 package clickhouse
 
 import (
-	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/hoppermq/streamly/pkg/domain/errors"
 )
 
 type SelectExpr struct {
@@ -144,11 +145,11 @@ func (qb *QueryBuilder) SetOffset(offset int) *QueryBuilder {
 
 func (qb *QueryBuilder) Build() (string, []any, error) {
 	if len(qb.components.SelectClauses) == 0 {
-		return "", nil, errors.New("no SELECT clauses defined")
+		return "", nil, errors.ErrNoSelectClauseDefined
 	}
 
 	if qb.components.FromSource == "" {
-		return "", nil, errors.New("no FROM source defined")
+		return "", nil, errors.ErrNoFromSourceDefined
 	}
 
 	var sql strings.Builder
@@ -179,7 +180,7 @@ func (qb *QueryBuilder) Build() (string, []any, error) {
 			if where.Operator == "IN" {
 				values, ok := where.Value.([]any)
 				if !ok {
-					return "", nil, errors.New("IN operator requires []any value")
+					return "", nil, errors.ErrInOperator
 				}
 
 				placeholders := make([]string, len(values))

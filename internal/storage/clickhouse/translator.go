@@ -1,12 +1,11 @@
 package clickhouse
 
 import (
-	"errors"
-	"fmt"
 	"log/slog"
 	"strings"
 
 	"github.com/hoppermq/streamly/pkg/domain"
+	"github.com/hoppermq/streamly/pkg/domain/errors"
 )
 
 type Translator struct {
@@ -27,23 +26,23 @@ func (t *Translator) Translate(ast *domain.QueryAstRequest) (*QueryBuilder, erro
 	builder := NewQueryBuilder()
 
 	if err := t.translateSelect(ast.Select, builder); err != nil {
-		return nil, fmt.Errorf("failed to translate SELECT: %w", err)
+		return nil, errors.TranslatorFailedToTranslate(errors.ErrSelectTranslationFailed, err)
 	}
 
 	if err := t.translateFrom(ast.From, builder); err != nil {
-		return nil, fmt.Errorf("failed to translate FROM: %w", err)
+		return nil, errors.TranslatorFailedToTranslate(errors.ErrFromTranslationFailed, err)
 	}
 
 	if err := t.translateWhere(ast.TimeRange, ast.Where, builder); err != nil {
-		return nil, fmt.Errorf("failed to translate WHERE: %w", err)
+		return nil, errors.TranslatorFailedToTranslate(errors.ErrWhereTranslationFailed, err)
 	}
 
 	if err := t.translateGroupBy(ast.GroupBy, builder); err != nil {
-		return nil, fmt.Errorf("failed to translate GROUP BY: %w", err)
+		return nil, errors.TranslatorFailedToTranslate(errors.ErrGroupByTranslationFailed, err)
 	}
 
 	if err := t.translateOrderBy(ast.OrderBy, builder); err != nil {
-		return nil, fmt.Errorf("failed to translate ORDER BY: %w", err)
+		return nil, errors.TranslatorFailedToTranslate(errors.ErrOrderByTranslationFailed, err)
 	}
 
 	if ast.Limit != nil {
@@ -59,7 +58,7 @@ func (t *Translator) Translate(ast *domain.QueryAstRequest) (*QueryBuilder, erro
 
 func (t *Translator) translateSelect(selectClauses []domain.SelectClause, builder *QueryBuilder) error {
 	if len(selectClauses) == 0 {
-		return errors.New("SELECT clause cannot be empty")
+		return errors.ErrSelectClauseEmpty
 	}
 
 	for _, clause := range selectClauses {
@@ -73,7 +72,7 @@ func (t *Translator) translateSelect(selectClauses []domain.SelectClause, builde
 				clause.Function.Alias,
 			)
 		} else {
-			return errors.New("unknown SELECT clause type")
+			return errors.ErrSelectClauseType
 		}
 	}
 
@@ -82,7 +81,7 @@ func (t *Translator) translateSelect(selectClauses []domain.SelectClause, builde
 
 func (t *Translator) translateFrom(datasource domain.Datasource, builder *QueryBuilder) error {
 	if datasource == "" {
-		return errors.New("FROM datasource cannot be empty")
+		return errors.ErrFromEmpty
 	}
 
 	builder.From(string(datasource))
@@ -101,7 +100,7 @@ func (t *Translator) translateWhere(timeRange domain.TimeRange, whereClauses []d
 		if where.Op == "IN" {
 			values, ok := where.Value.([]any)
 			if !ok {
-				return fmt.Errorf("IN operator requires array value for field %s", where.Field)
+				return errors.TranslatorInOperatorInvalidValue(where.Field)
 			}
 			builder.WhereIn(where.Field, values)
 		} else {
@@ -123,7 +122,7 @@ func (t *Translator) translateGroupBy(groupByClauses []domain.GroupByClause, bui
 			}
 			builder.GroupByTimeWindow(gb.TimeWindow.Window, field)
 		} else {
-			return errors.New("unknown GROUP BY clause type")
+			return errors.ErrUnknownGroupBy
 		}
 	}
 

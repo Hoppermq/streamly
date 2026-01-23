@@ -8,25 +8,22 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/hoppermq/streamly/cmd/config"
-	"github.com/hoppermq/streamly/pkg/domain"
 	"github.com/hoppermq/streamly/pkg/domain/errors"
 )
 
-// HTTPServer represent the HTTP server structure.
-type HTTPServer struct {
+// Server represent the HTTP server structure.
+type Server struct {
 	logger *slog.Logger
-
-	health domain.HealthStatus
 
 	engine *gin.Engine
 	server *http.Server
 }
 
-type Options func(*HTTPServer)
+type Options func(*Server)
 
 // WithHTTPServer set the http server config for ingestion service.
 func WithHTTPServer(conf *config.IngestionConfig) Options {
-	return func(h *HTTPServer) {
+	return func(h *Server) {
 		if h.engine == nil {
 			panic(errors.ErrEngineErrorOrder)
 		}
@@ -41,7 +38,7 @@ func WithHTTPServer(conf *config.IngestionConfig) Options {
 
 // WithQueryHTTPServer set the http server config for query service.
 func WithQueryHTTPServer(conf *config.QueryConfig) Options {
-	return func(h *HTTPServer) {
+	return func(h *Server) {
 		if h.engine == nil {
 			panic(errors.ErrEngineErrorOrder)
 		}
@@ -55,7 +52,7 @@ func WithQueryHTTPServer(conf *config.QueryConfig) Options {
 }
 
 func WithAuthHTTPServer(conf *config.AuthConfig) Options {
-	return func(h *HTTPServer) {
+	return func(h *Server) {
 		if h.engine == nil {
 			panic(errors.ErrEngineErrorOrder)
 		}
@@ -69,7 +66,7 @@ func WithAuthHTTPServer(conf *config.AuthConfig) Options {
 }
 
 func WithPlatformHTTPServer(conf *config.PlatformConfig) Options {
-	return func(h *HTTPServer) {
+	return func(h *Server) {
 		if h.engine == nil {
 			panic(errors.ErrEngineErrorOrder)
 		}
@@ -84,28 +81,28 @@ func WithPlatformHTTPServer(conf *config.PlatformConfig) Options {
 
 // WithEngine set the engine.
 func WithEngine(engine *gin.Engine) Options {
-	return func(h *HTTPServer) {
+	return func(h *Server) {
 		h.engine = engine
 	}
 }
 
 // WithLogger set the logger.
 func WithLogger(logger *slog.Logger) Options {
-	return func(h *HTTPServer) {
+	return func(h *Server) {
 		h.logger = logger
 	}
 }
 
 // WithRoutes register all routes to the engine.
 func WithRoutes(routerRegister func(engine *gin.Engine)) Options {
-	return func(h *HTTPServer) {
+	return func(h *Server) {
 		routerRegister(h.engine)
 	}
 }
 
 // NewHTTPServer create the http server.
-func NewHTTPServer(opts ...Options) *HTTPServer {
-	h := &HTTPServer{}
+func NewHTTPServer(opts ...Options) *Server {
+	h := &Server{}
 	for _, opt := range opts {
 		opt(h)
 	}
@@ -114,7 +111,7 @@ func NewHTTPServer(opts ...Options) *HTTPServer {
 }
 
 // Run will run the http server component.
-func (s *HTTPServer) Run(ctx context.Context) error {
+func (s *Server) Run(ctx context.Context) error {
 	s.logger.Info("starting http server", "addr", s.server.Addr)
 
 	go func() {
@@ -127,7 +124,7 @@ func (s *HTTPServer) Run(ctx context.Context) error {
 }
 
 // Shutdown stop gracefully the HTTPServer.
-func (s *HTTPServer) Shutdown(ctx context.Context) error {
+func (s *Server) Shutdown(ctx context.Context) error {
 	if err := s.server.Shutdown(ctx); err != nil {
 		s.logger.Warn("http server shutdown failed", "error", err)
 		return err
@@ -137,10 +134,10 @@ func (s *HTTPServer) Shutdown(ctx context.Context) error {
 }
 
 // IsHealthy return the health toolkit of the component.
-func (s *HTTPServer) IsHealthy() bool {
+func (s *Server) IsHealthy() bool {
 	return true
 }
 
-func (s *HTTPServer) Name() string {
+func (s *Server) Name() string {
 	return "http_handler"
 }

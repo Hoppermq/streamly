@@ -70,7 +70,13 @@ func (s *Service) RunMigrations(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to create migrate instance: %w", err)
 	}
-	defer m.Close()
+	defer func(m *migrate.Migrate) {
+		err, _ := m.Close()
+		if err != nil {
+			s.logger.ErrorContext(ctx, "failed to close migrate instance", "error", err)
+			return
+		}
+	}(m)
 
 	s.logger.InfoContext(ctx, "checking current migration version")
 	version, dirty, err := m.Version()
@@ -163,7 +169,14 @@ func (s *Service) isTableCompatible(ctx context.Context) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	defer rows.Close()
+
+	defer func(rows *sql.Rows) {
+		err := rows.Close()
+		if err != nil {
+			s.logger.ErrorContext(ctx, "failed to close rows", "error", err)
+			return
+		}
+	}(rows)
 
 	expectedColumns := map[string]bool{
 		"version":  false,

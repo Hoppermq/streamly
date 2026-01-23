@@ -68,7 +68,10 @@ func StartClickHouse(ctx context.Context) (*ClickHouseContainer, error) {
 
 func (c *ClickHouseContainer) Close(ctx context.Context) error {
 	if c.Conn != nil {
-		c.Conn.Close()
+		err := c.Conn.Close()
+		if err != nil {
+			return err
+		}
 	}
 	return c.Terminate(ctx)
 }

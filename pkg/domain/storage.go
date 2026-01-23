@@ -22,10 +22,9 @@ type Tx interface {
 }
 
 type Driver interface {
-	Begin() (Tx, error)
 	BeginTx(ctx context.Context, opts *sql.TxOptions) (Tx, error) // TXOption should be an interface.
 	Close() error
-	Query(query Query, args ...QueryArgs) (*sql.Rows, error)
+	Query(ctx context.Context, query Query, args ...QueryArgs) (*sql.Rows, error)
 	QueryContext(ctx context.Context, query Query, args ...QueryArgs) (*sql.Rows, error)
 }
 

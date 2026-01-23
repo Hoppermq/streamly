@@ -168,7 +168,7 @@ func main() {
 		http.WithLogger(logger),
 		http.WithRoutes(
 			routes.CreateRouteRegistrar(
-				routes.CreatePlatformRegistrar(logger, organizationUC),
+				routes.CreatePlatformRegistrar(logger, organizationUC, zitadelClient),
 				routes.CreateWebhookRegistrar(logger, userUC),
 			),
 		),

@@ -21,7 +21,7 @@ func ValidatorWithLogger(logger *slog.Logger) ValidatorOption {
 	}
 }
 
-// Execute will execute the ast validation
+// Execute will execute the ast validation.
 func (v *Validator) Execute(data *domain.QueryAstRequest) error {
 	jsonBytes, err := json.Marshal(data)
 	if err != nil {

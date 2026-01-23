@@ -106,7 +106,7 @@ func (r *Repository) FindOneByEmail(ctx context.Context, email string) (*domain.
 }
 
 func (r *Repository) FindAll(ctx context.Context, limit, offset int) ([]domain.User, error) {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
@@ -131,16 +131,15 @@ func (r *Repository) Create(ctx context.Context, user *domain.User) error {
 
 	r.logger.InfoContext(ctx, "user created successfully", "user_id", u.ID, "zitadel_id", u.ZitadelID)
 	return nil
-
 }
 
 func (r *Repository) Update(ctx context.Context, user *domain.User) error {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (r *Repository) Delete(ctx context.Context, id uuid.UUID) error {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 

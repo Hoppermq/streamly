@@ -46,12 +46,12 @@ func NewUser(opts ...UserOption) (*User, error) {
 func (u *User) FindOne(c *gin.Context) {
 	var userInput domain.CreateUser
 	if err := c.ShouldBind(&userInput); err != nil {
-		err = c.AbortWithError(http.StatusBadRequest, err)
+		_ = c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 
 	if err := u.uc.Create(c, &userInput); err != nil {
-		err = c.AbortWithError(http.StatusInternalServerError, err)
+		_ = c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 }

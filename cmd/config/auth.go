@@ -58,7 +58,7 @@ func LoadAuthConfig() (*AuthConfig, error) {
 	var authConfig AuthConfig
 	err := config.Load(&authConfig, config.WithFs(conf.FileFS))
 	if err != nil {
-		return nil, fmt.Errorf("load auth config: %v", err)
+		return nil, fmt.Errorf("load auth config: %w", err)
 	}
 
 	return &authConfig, nil

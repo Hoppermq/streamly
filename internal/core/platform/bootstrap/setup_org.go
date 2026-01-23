@@ -7,12 +7,19 @@ import (
 	"strings"
 
 	"github.com/hoppermq/streamly/pkg/domain"
+	"github.com/hoppermq/streamly/pkg/domain/errors"
 )
 
 func (o *Orchestrator) isFirstInstance(ctx context.Context) (bool, error) {
+	rootUserMail := os.Getenv("ROOT_USER_EMAIL")
+	if rootUserMail == "" {
+		o.logger.WarnContext(ctx, "ROOT_USER_EMAIL environment variable not set")
+	}
+
+	// will use env variable here
 	owner, err := o.userUC.FindOneByPrimaryEmail(ctx, "root@streamly.auth.localhost")
 	if err != nil && !isNotFoundError(err) {
-		return false, fmt.Errorf("failed to query root user: %w", err)
+		return false, errors.RootUserQueryFailed(err, "root@streamly.auth.localhost")
 	}
 
 	if owner != nil {
@@ -41,12 +48,12 @@ func isNotFoundError(err error) bool {
 func (o *Orchestrator) setupDefaultOrg(ctx context.Context) error {
 	rootUserID := os.Getenv("ROOT_USER_ID")
 	if rootUserID == "" {
-		return fmt.Errorf("ROOT_USER_ID environment variable is not set")
+		return errors.ErrRootUserIDNotSet
 	}
 
 	u, err := o.zitadel.GetUserByID(ctx, rootUserID)
 	if err != nil {
-		return fmt.Errorf("failed to get root user by ID %s: %w", rootUserID, err)
+		return errors.RootUserQueryFailed(err, rootUserID)
 	}
 
 	createUserCommand := domain.CreateUser{

@@ -2,13 +2,13 @@ package organization
 
 import (
 	"context"
-	"errors"
 	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/hoppermq/streamly/internal/models"
 	"github.com/hoppermq/streamly/pkg/domain"
+	"github.com/hoppermq/streamly/pkg/domain/errors"
 	"github.com/uptrace/bun"
 )
 
@@ -73,7 +73,7 @@ func (organizationRepo *Repository) FindOneByID(
 
 	organizationRepo.logger.Info("organization", "data", org)
 	if org.Identifier == uuid.Nil {
-		return nil, errors.New("organization not found") // TODO: return a custom error type for not found.
+		return nil, errors.ErrOrganizationNotFound
 	}
 
 	organizationRepo.logger.InfoContext(
@@ -130,7 +130,7 @@ func (organizationRepo *Repository) Create(
 	res, err := organizationRepo.db.NewInsert().Model(model).Exec(ctx)
 	if err != nil {
 		organizationRepo.logger.WarnContext(ctx, "failed to insert new org", "error", err)
-		return err
+		return errors.OrganizationCreateFailed(err)
 	}
 
 	organizationRepo.logger.InfoContext(ctx, "organization insertion successed", "organization", res)
@@ -165,7 +165,7 @@ func (organizationRepo *Repository) Update(
 		if err != nil {
 			organizationRepo.logger.WarnContext(ctx, "failed to get rows affected", "error", err)
 		}
-		return errors.New("failed to update org")
+		return errors.OrganizationUpdateFailed(err)
 	}
 
 	return nil
@@ -199,7 +199,7 @@ func (organizationRepo *Repository) Delete(
 		if err != nil {
 			organizationRepo.logger.WarnContext(ctx, "failed to get rows affected", "error", err)
 		}
-		return errors.New("failed to delete org")
+		return errors.OrganizationDeleteFailed(err)
 	}
 
 	return nil

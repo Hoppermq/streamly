@@ -9,7 +9,7 @@ import (
 	"github.com/uptrace/bun"
 )
 
-// UnitOfWork manages a transactional boundary across multiple repositories
+// UnitOfWork manages a transactional boundary across multiple repositories.
 type UnitOfWork struct {
 	tx bun.Tx
 
@@ -18,7 +18,7 @@ type UnitOfWork struct {
 	membershipRepo domain.MembershipRepository
 }
 
-// UOWOptions defines functional options for UnitOfWork
+// UOWOptions defines functional options for UnitOfWork.
 type UOWOptions func(*UnitOfWork)
 
 func UowWithOrg(org domain.OrganizationRepository) UOWOptions {
@@ -39,7 +39,7 @@ func UowWithMembership(membership domain.MembershipRepository) UOWOptions {
 	}
 }
 
-// NewUnitOfWork creates a new UnitOfWork instance with a transaction
+// NewUnitOfWork creates a new UnitOfWork instance with a transaction.
 func NewUnitOfWork(ctx context.Context, db bun.IDB, options ...UOWOptions) (*UnitOfWork, error) {
 	tx, err := db.BeginTx(ctx, &sql.TxOptions{
 		Isolation: sql.LevelReadCommitted,
@@ -79,7 +79,7 @@ func (u *UnitOfWork) Membership() domain.MembershipRepository {
 	return u.membershipRepo.WithTx(u.tx)
 }
 
-// UnitOfWorkFactory creates new UnitOfWork instances (one per request)
+// UnitOfWorkFactory creates new UnitOfWork instances (one per request).
 type UnitOfWorkFactory struct {
 	db bun.IDB
 
@@ -88,7 +88,7 @@ type UnitOfWorkFactory struct {
 	userRepoBase       domain.UserRepository
 }
 
-// UnitOfWorkFactoryOption defines functional options for UnitOfWorkFactory
+// UnitOfWorkFactoryOption defines functional options for UnitOfWorkFactory.
 type UnitOfWorkFactoryOption func(*UnitOfWorkFactory)
 
 func FactoryWithDB(db bun.IDB) UnitOfWorkFactoryOption {
@@ -115,7 +115,7 @@ func FactoryWithUserRepo(repo domain.UserRepository) UnitOfWorkFactoryOption {
 	}
 }
 
-// NewUnitOfWorkFactory creates a factory that produces UnitOfWork instances
+// NewUnitOfWorkFactory creates a factory that produces UnitOfWork instances.
 func NewUnitOfWorkFactory(options ...UnitOfWorkFactoryOption) domain.UnitOfWorkFactory {
 	factory := &UnitOfWorkFactory{}
 
@@ -126,7 +126,7 @@ func NewUnitOfWorkFactory(options ...UnitOfWorkFactoryOption) domain.UnitOfWorkF
 	return factory
 }
 
-// NewUnitOfWork creates a fresh transaction-scoped UnitOfWork
+// NewUnitOfWork creates a fresh transaction-scoped UnitOfWork.
 func (f *UnitOfWorkFactory) NewUnitOfWork(ctx context.Context) (domain.UnitOfWork, error) {
 	return NewUnitOfWork(
 		ctx,

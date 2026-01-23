@@ -3,7 +3,6 @@ package ingestor
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log/slog"
 	"sync"
 	"time"
@@ -93,16 +92,16 @@ func (uc *EventIngestionUseCaseImpl) IngestBatch(ctx context.Context, request *d
 
 func (uc *EventIngestionUseCaseImpl) validateRequest(request *domain.BatchIngestionRequest) error {
 	if request.TenantID == "" {
-		return fmt.Errorf("tenant_id is required")
+		return errors.ErrTenantIDRequired
 	}
 	if request.SourceID == "" {
-		return fmt.Errorf("source_id is required")
+		return errors.ErrSourceIDRequired
 	}
 	if request.Topic == "" {
-		return fmt.Errorf("topic is required")
+		return errors.ErrSourceIDRequired
 	}
 	if len(request.Events) == 0 {
-		return fmt.Errorf("events cannot be empty")
+		return errors.ErrEventEmpty
 	}
 	if len(request.Events) > 5000 {
 		uc.logger.Info("events too big", "events", len(request.Events))
@@ -120,13 +119,14 @@ func (uc *EventIngestionUseCaseImpl) validateRequest(request *domain.BatchIngest
 
 func (uc *EventIngestionUseCaseImpl) validateEventData(event *domain.EventIngestionData, index int) error {
 	if event.MessageID == "" {
-		return fmt.Errorf("events[%d]: message_id is required", index)
+		return errors.EventMessageMissing(index)
 	}
 	if event.EventType == "" {
-		return fmt.Errorf("events[%d]: event_type is required", index)
+		return errors.EventTypeMissing(index)
 	}
+
 	if len(event.Content) == 0 {
-		return fmt.Errorf("events[%d]: content cannot be empty", index)
+		return errors.EventContentEmpty(index)
 	}
 
 	var jsonContent interface{}

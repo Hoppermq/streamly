@@ -53,7 +53,10 @@ func StartPostgres(ctx context.Context) (*PostgresContainer, error) {
 
 func (c *PostgresContainer) Close(ctx context.Context) error {
 	if c.BunDB != nil {
-		c.BunDB.Close()
+		err := c.BunDB.Close()
+		if err != nil {
+			return err
+		}
 	}
 	return c.Terminate(ctx)
 }

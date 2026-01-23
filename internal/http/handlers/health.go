@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/hoppermq/streamly/pkg/domain/core"
+	domain "github.com/hoppermq/streamly/pkg/domain/core"
 )
 
 type HealthResponse struct {

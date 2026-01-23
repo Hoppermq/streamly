@@ -419,7 +419,7 @@ func (_c *MockOrganizationRepository_Update_Call) RunAndReturn(run func(ctx cont
 }
 
 // WithTx provides a mock function for the type MockOrganizationRepository
-func (_mock *MockOrganizationRepository) WithTx(tx interface{}) domain.OrganizationRepository {
+func (_mock *MockOrganizationRepository) WithTx(tx domain.TxContext) domain.OrganizationRepository {
 	ret := _mock.Called(tx)
 
 	if len(ret) == 0 {
@@ -427,7 +427,7 @@ func (_mock *MockOrganizationRepository) WithTx(tx interface{}) domain.Organizat
 	}
 
 	var r0 domain.OrganizationRepository
-	if returnFunc, ok := ret.Get(0).(func(interface{}) domain.OrganizationRepository); ok {
+	if returnFunc, ok := ret.Get(0).(func(domain.TxContext) domain.OrganizationRepository); ok {
 		r0 = returnFunc(tx)
 	} else {
 		if ret.Get(0) != nil {
@@ -443,16 +443,16 @@ type MockOrganizationRepository_WithTx_Call struct {
 }
 
 // WithTx is a helper method to define mock.On call
-//   - tx interface{}
+//   - tx domain.TxContext
 func (_e *MockOrganizationRepository_Expecter) WithTx(tx interface{}) *MockOrganizationRepository_WithTx_Call {
 	return &MockOrganizationRepository_WithTx_Call{Call: _e.mock.On("WithTx", tx)}
 }
 
-func (_c *MockOrganizationRepository_WithTx_Call) Run(run func(tx interface{})) *MockOrganizationRepository_WithTx_Call {
+func (_c *MockOrganizationRepository_WithTx_Call) Run(run func(tx domain.TxContext)) *MockOrganizationRepository_WithTx_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 interface{}
+		var arg0 domain.TxContext
 		if args[0] != nil {
-			arg0 = args[0].(interface{})
+			arg0 = args[0].(domain.TxContext)
 		}
 		run(
 			arg0,
@@ -466,7 +466,7 @@ func (_c *MockOrganizationRepository_WithTx_Call) Return(organizationRepository 
 	return _c
 }
 
-func (_c *MockOrganizationRepository_WithTx_Call) RunAndReturn(run func(tx interface{}) domain.OrganizationRepository) *MockOrganizationRepository_WithTx_Call {
+func (_c *MockOrganizationRepository_WithTx_Call) RunAndReturn(run func(tx domain.TxContext) domain.OrganizationRepository) *MockOrganizationRepository_WithTx_Call {
 	_c.Call.Return(run)
 	return _c
 }

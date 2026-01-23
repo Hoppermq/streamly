@@ -36,7 +36,6 @@ func RegisterPlatformRoutes(
 
 	userGroup := v1.Group("/users")
 	{
-
 		userGroup.GET("/", func(context *gin.Context) {})
 		userGroup.POST("/new", func(context *gin.Context) {})
 
@@ -44,7 +43,6 @@ func RegisterPlatformRoutes(
 		userGroup.PATCH("/:id", func(context *gin.Context) {})
 		userGroup.DELETE("/:id", func(context *gin.Context) {})
 	}
-
 }
 
 func CreatePlatformRegistrar(

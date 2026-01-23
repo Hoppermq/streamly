@@ -96,7 +96,7 @@ func (_c *MockMembershipRepository_Create_Call) RunAndReturn(run func(ctx contex
 }
 
 // WithTx provides a mock function for the type MockMembershipRepository
-func (_mock *MockMembershipRepository) WithTx(tx interface{}) domain.MembershipRepository {
+func (_mock *MockMembershipRepository) WithTx(tx domain.TxContext) domain.MembershipRepository {
 	ret := _mock.Called(tx)
 
 	if len(ret) == 0 {
@@ -104,7 +104,7 @@ func (_mock *MockMembershipRepository) WithTx(tx interface{}) domain.MembershipR
 	}
 
 	var r0 domain.MembershipRepository
-	if returnFunc, ok := ret.Get(0).(func(interface{}) domain.MembershipRepository); ok {
+	if returnFunc, ok := ret.Get(0).(func(domain.TxContext) domain.MembershipRepository); ok {
 		r0 = returnFunc(tx)
 	} else {
 		if ret.Get(0) != nil {
@@ -120,16 +120,16 @@ type MockMembershipRepository_WithTx_Call struct {
 }
 
 // WithTx is a helper method to define mock.On call
-//   - tx interface{}
+//   - tx domain.TxContext
 func (_e *MockMembershipRepository_Expecter) WithTx(tx interface{}) *MockMembershipRepository_WithTx_Call {
 	return &MockMembershipRepository_WithTx_Call{Call: _e.mock.On("WithTx", tx)}
 }
 
-func (_c *MockMembershipRepository_WithTx_Call) Run(run func(tx interface{})) *MockMembershipRepository_WithTx_Call {
+func (_c *MockMembershipRepository_WithTx_Call) Run(run func(tx domain.TxContext)) *MockMembershipRepository_WithTx_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 interface{}
+		var arg0 domain.TxContext
 		if args[0] != nil {
-			arg0 = args[0].(interface{})
+			arg0 = args[0].(domain.TxContext)
 		}
 		run(
 			arg0,
@@ -143,7 +143,7 @@ func (_c *MockMembershipRepository_WithTx_Call) Return(membershipRepository doma
 	return _c
 }
 
-func (_c *MockMembershipRepository_WithTx_Call) RunAndReturn(run func(tx interface{}) domain.MembershipRepository) *MockMembershipRepository_WithTx_Call {
+func (_c *MockMembershipRepository_WithTx_Call) RunAndReturn(run func(tx domain.TxContext) domain.MembershipRepository) *MockMembershipRepository_WithTx_Call {
 	_c.Call.Return(run)
 	return _c
 }

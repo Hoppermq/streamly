@@ -12,7 +12,6 @@ import (
 type Client struct {
 	dbClient *bun.DB
 	logger   *slog.Logger
-	migrator migrate.Migrations
 }
 
 type Option func(*Client) error
@@ -71,9 +70,5 @@ func (c *Client) Bootstrap(ctx context.Context) error {
 	}
 	c.logger.InfoContext(ctx, "migrator migration created", "id", grp.ID)
 
-	return nil
-}
-
-func (c *Client) migrateTenants(ctx context.Context) error {
 	return nil
 }

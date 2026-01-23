@@ -85,7 +85,7 @@ func (i *Ingestor) Run(ctx context.Context) error {
 	return nil
 }
 
-// Stop shutdown gracefully all
+// Stop shutdown gracefully all.
 func (i *Ingestor) Stop(ctx context.Context) error {
 	i.logger.Info("stopping component", "name", i.serviceName)
 

@@ -10,7 +10,7 @@ import (
 	"github.com/hoppermq/streamly/pkg/domain"
 )
 
-// Driver adapts *sql.DB to domain.Driver interface
+// Driver adapts *sql.DB to domain.Driver interface.
 type Driver struct {
 	db *sql.DB
 }
@@ -48,14 +48,6 @@ func (t *txAdapter) PrepareContext(ctx context.Context, query string) (domain.St
 	return &stmtAdapter{stmt: stmt}, nil
 }
 
-func (d *Driver) Begin() (domain.Tx, error) {
-	tx, err := d.db.Begin()
-	if err != nil {
-		return nil, err
-	}
-	return &txAdapter{tx: tx}, nil
-}
-
 func (d *Driver) BeginTx(ctx context.Context, opts *sql.TxOptions) (domain.Tx, error) {
 	tx, err := d.db.BeginTx(ctx, opts)
 	if err != nil {
@@ -73,13 +65,13 @@ func (d *Driver) DB() *sql.DB {
 	return d.db
 }
 
-func (d *Driver) Query(query domain.Query, args ...domain.QueryArgs) (*sql.Rows, error) {
+func (d *Driver) Query(ctx context.Context, query domain.Query, args ...domain.QueryArgs) (*sql.Rows, error) {
 	compliantArgs := make([]any, len(args))
 	for i, a := range args {
 		compliantArgs[i] = a
 	}
 	fmt.Println(compliantArgs)
-	return d.db.Query(string(query), compliantArgs...)
+	return d.db.QueryContext(ctx, string(query), compliantArgs...)
 }
 
 func (d *Driver) QueryContext(ctx context.Context, query domain.Query, args ...domain.QueryArgs) (*sql.Rows, error) {
@@ -94,7 +86,7 @@ func (d *Driver) QueryContext(ctx context.Context, query domain.Query, args ...d
 
 type DriverOption func(options *clickhouse.Options)
 
-// WithIngestionConfig TODO: extract since it's pure domain logic
+// WithIngestionConfig TODO: extract since it's pure domain logic.
 func WithIngestionConfig(clickhouseConfig *config.IngestionConfig) DriverOption {
 	return func(options *clickhouse.Options) {
 		options.Addr = []string{
@@ -107,7 +99,7 @@ func WithIngestionConfig(clickhouseConfig *config.IngestionConfig) DriverOption 
 	}
 }
 
-// WithQueryConfig TODO: extract since it's pure domain logic
+// WithQueryConfig TODO: extract since it's pure domain logic.
 func WithQueryConfig(clickhouseConfig *config.QueryConfig) DriverOption {
 	return func(options *clickhouse.Options) {
 		options.Addr = []string{

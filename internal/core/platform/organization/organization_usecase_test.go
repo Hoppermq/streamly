@@ -2,29 +2,31 @@ package organization_test
 
 import (
 	"context"
-	"errors"
-	"io"
 	"log/slog"
 	"testing"
 
 	"github.com/google/uuid"
 	"github.com/hoppermq/streamly/internal/core/platform/organization"
 	"github.com/hoppermq/streamly/pkg/domain"
+	"github.com/hoppermq/streamly/pkg/domain/errors"
 	"github.com/hoppermq/streamly/pkg/domain/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
+// TODO: compare returned errors.
+
 func TestUseCaseCreate(t *testing.T) {
 	t.Parallel()
 
 	fixedUUID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
+	userUUID := uuid.MustParse("223e4567-e89b-12d3-a456-426614174000")
 
 	tests := []struct {
 		name      string
 		input     domain.CreateOrganization
-		setupMock func(*mocks.MockOrganizationRepository)
+		setupMock func(*mocks.MockUnitOfWork, *mocks.MockOrganizationRepository, *mocks.MockUserRepository, *mocks.MockMembershipRepository)
 		assertErr assert.ErrorAssertionFunc
 	}{
 		{
@@ -33,10 +35,27 @@ func TestUseCaseCreate(t *testing.T) {
 				Name:     "Acme Corp",
 				Metadata: map[string]string{"industry": "tech"},
 			},
-			setupMock: func(repo *mocks.MockOrganizationRepository) {
-				repo.EXPECT().
+			setupMock: func(uow *mocks.MockUnitOfWork, orgRepo *mocks.MockOrganizationRepository, userRepo *mocks.MockUserRepository, memRepo *mocks.MockMembershipRepository) {
+				uow.EXPECT().Organization().Return(orgRepo).Times(1)
+				uow.EXPECT().User().Return(userRepo).Times(1)
+				uow.EXPECT().Membership().Return(memRepo).Times(1)
+				uow.EXPECT().Commit().Return(nil).Once()
+
+				orgRepo.EXPECT().
 					Create(mock.Anything, mock.MatchedBy(func(org *domain.Organization) bool {
 						return org.Name == "Acme Corp" && org.Identifier == fixedUUID
+					})).
+					Return(nil).
+					Once()
+
+				userRepo.EXPECT().
+					GetUserIDFromZitadelID(mock.Anything, "test-zitadel-user-id").
+					Return(userUUID, nil).
+					Once()
+
+				memRepo.EXPECT().
+					Create(mock.Anything, mock.MatchedBy(func(m *domain.Membership) bool {
+						return m.OrgIdentifier == fixedUUID && m.UserIdentifier == userUUID
 					})).
 					Return(nil).
 					Once()
@@ -49,10 +68,13 @@ func TestUseCaseCreate(t *testing.T) {
 				Name:     "Test Org",
 				Metadata: map[string]string{"key": "value"},
 			},
-			setupMock: func(repo *mocks.MockOrganizationRepository) {
-				repo.EXPECT().
+			setupMock: func(uow *mocks.MockUnitOfWork, orgRepo *mocks.MockOrganizationRepository, userRepo *mocks.MockUserRepository, memRepo *mocks.MockMembershipRepository) {
+				uow.EXPECT().Organization().Return(orgRepo).Times(1)
+				uow.EXPECT().Rollback().Return(nil).Once()
+
+				orgRepo.EXPECT().
 					Create(mock.Anything, mock.Anything).
-					Return(errors.New("database connection failed")).
+					Return(errors.ErrDatabaseConnection).
 					Once()
 			},
 			assertErr: assert.Error,
@@ -63,11 +85,26 @@ func TestUseCaseCreate(t *testing.T) {
 				Name:     "Minimal Org",
 				Metadata: map[string]string{},
 			},
-			setupMock: func(repo *mocks.MockOrganizationRepository) {
-				repo.EXPECT().
+			setupMock: func(uow *mocks.MockUnitOfWork, orgRepo *mocks.MockOrganizationRepository, userRepo *mocks.MockUserRepository, memRepo *mocks.MockMembershipRepository) {
+				uow.EXPECT().Organization().Return(orgRepo).Times(1)
+				uow.EXPECT().User().Return(userRepo).Times(1)
+				uow.EXPECT().Membership().Return(memRepo).Times(1)
+				uow.EXPECT().Commit().Return(nil).Once()
+
+				orgRepo.EXPECT().
 					Create(mock.Anything, mock.MatchedBy(func(org *domain.Organization) bool {
 						return org.Name == "Minimal Org" && org.Identifier == fixedUUID
 					})).
+					Return(nil).
+					Once()
+
+				userRepo.EXPECT().
+					GetUserIDFromZitadelID(mock.Anything, "test-zitadel-user-id").
+					Return(userUUID, nil).
+					Once()
+
+				memRepo.EXPECT().
+					Create(mock.Anything, mock.Anything).
 					Return(nil).
 					Once()
 			},
@@ -79,20 +116,28 @@ func TestUseCaseCreate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			repo := mocks.NewMockOrganizationRepository(t)
-			tt.setupMock(repo)
+			uow := mocks.NewMockUnitOfWork(t)
+			uowFactory := mocks.NewMockUnitOfWorkFactory(t)
+			orgRepo := mocks.NewMockOrganizationRepository(t)
+			userRepo := mocks.NewMockUserRepository(t)
+			memRepo := mocks.NewMockMembershipRepository(t)
 
-			logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+			uowFactory.EXPECT().NewUnitOfWork(mock.Anything).Return(uow, nil).Once()
+			tt.setupMock(uow, orgRepo, userRepo, memRepo)
+
+			logger := slog.New(slog.DiscardHandler)
 			ctx := context.Background()
 
 			uc, err := organization.NewUseCase(
 				organization.UseCaseWithGenerator(func() uuid.UUID { return fixedUUID }),
 				organization.UseCaseWithLogger(logger),
-				organization.UseCaseWithRepository(repo),
+				organization.UseCaseWithRepository(orgRepo),
+				organization.UseCaseWithUOW(uowFactory),
+				organization.UseCaseWithUUIDParser(uuid.Parse),
 			)
 			require.NoError(t, err)
 
-			err = uc.Create(ctx, tt.input)
+			err = uc.Create(ctx, tt.input, "test-zitadel-user-id")
 
 			tt.assertErr(t, err)
 		})
@@ -134,7 +179,7 @@ func TestUseCaseFindOneByID(t *testing.T) {
 			setupMock: func(repo *mocks.MockOrganizationRepository) {
 				repo.EXPECT().
 					FindOneByID(mock.Anything, nonExistingOrgID).
-					Return(nil, errors.New("organization not found")).
+					Return(nil, errors.ErrOrganizationNotFound).
 					Once()
 			},
 			assertErr:   assert.Error,
@@ -146,7 +191,7 @@ func TestUseCaseFindOneByID(t *testing.T) {
 			setupMock: func(repo *mocks.MockOrganizationRepository) {
 				repo.EXPECT().
 					FindOneByID(mock.Anything, orgID).
-					Return(nil, errors.New("database connection failed")).
+					Return(nil, errors.ErrDatabaseConnection).
 					Once()
 			},
 			assertErr:   assert.Error,
@@ -161,13 +206,14 @@ func TestUseCaseFindOneByID(t *testing.T) {
 			repo := mocks.NewMockOrganizationRepository(t)
 			tt.setupMock(repo)
 
-			logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+			logger := slog.New(slog.DiscardHandler)
 			ctx := context.Background()
 
 			uc, err := organization.NewUseCase(
 				organization.UseCaseWithGenerator(uuid.New),
 				organization.UseCaseWithLogger(logger),
 				organization.UseCaseWithRepository(repo),
+				organization.UseCaseWithUUIDParser(uuid.Parse),
 			)
 			require.NoError(t, err)
 
@@ -241,7 +287,7 @@ func TestUseCaseFindAll(t *testing.T) {
 			setupMock: func(repo *mocks.MockOrganizationRepository) {
 				repo.EXPECT().
 					FindAll(mock.Anything, 10, 0).
-					Return(nil, errors.New("database connection failed")).
+					Return(nil, errors.ErrDatabaseConnection).
 					Once()
 			},
 			assertErr:   assert.Error,
@@ -256,13 +302,14 @@ func TestUseCaseFindAll(t *testing.T) {
 			repo := mocks.NewMockOrganizationRepository(t)
 			tt.setupMock(repo)
 
-			logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+			logger := slog.New(slog.DiscardHandler)
 			ctx := context.Background()
 
 			uc, err := organization.NewUseCase(
 				organization.UseCaseWithGenerator(uuid.New),
 				organization.UseCaseWithLogger(logger),
 				organization.UseCaseWithRepository(repo),
+				organization.UseCaseWithUUIDParser(uuid.Parse),
 			)
 			require.NoError(t, err)
 
@@ -324,7 +371,7 @@ func TestUseCaseUpdate(t *testing.T) {
 			setupMock: func(repo *mocks.MockOrganizationRepository, org *domain.Organization) {
 				repo.EXPECT().
 					FindOneByID(mock.Anything, nonExistingOrgID).
-					Return(nil, errors.New("organization not found")).
+					Return(nil, errors.ErrDatabaseConnection).
 					Once()
 			},
 			assertErr: assert.Error,
@@ -345,7 +392,7 @@ func TestUseCaseUpdate(t *testing.T) {
 					Once()
 				repo.EXPECT().
 					Update(mock.Anything, mock.Anything).
-					Return(errors.New("database connection failed")).
+					Return(errors.ErrDatabaseConnection).
 					Once()
 			},
 			assertErr: assert.Error,
@@ -359,13 +406,14 @@ func TestUseCaseUpdate(t *testing.T) {
 			repo := mocks.NewMockOrganizationRepository(t)
 			tt.setupMock(repo, tt.args.existingOrg)
 
-			logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+			logger := slog.New(slog.DiscardHandler)
 			ctx := context.Background()
 
 			uc, err := organization.NewUseCase(
 				organization.UseCaseWithGenerator(uuid.New),
 				organization.UseCaseWithLogger(logger),
 				organization.UseCaseWithRepository(repo),
+				organization.UseCaseWithUUIDParser(uuid.Parse),
 			)
 			require.NoError(t, err)
 
@@ -418,7 +466,7 @@ func TestUseCaseDelete(t *testing.T) {
 			setupMock: func(repo *mocks.MockOrganizationRepository, org *domain.Organization) {
 				repo.EXPECT().
 					Delete(mock.Anything, nonExistingOrgID).
-					Return(errors.New("organization not found")).
+					Return(errors.ErrOrganizationNotFound).
 					Once()
 			},
 			assertErr: assert.Error,
@@ -433,7 +481,7 @@ func TestUseCaseDelete(t *testing.T) {
 			setupMock: func(repo *mocks.MockOrganizationRepository, org *domain.Organization) {
 				repo.EXPECT().
 					Delete(mock.Anything, org.Identifier).
-					Return(errors.New("database constraint violation")).
+					Return(errors.ErrDatabaseConstraint).
 					Once()
 			},
 			assertErr: assert.Error,
@@ -447,13 +495,14 @@ func TestUseCaseDelete(t *testing.T) {
 			repo := mocks.NewMockOrganizationRepository(t)
 			tt.setupMock(repo, tt.args.existingOrg)
 
-			logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+			logger := slog.New(slog.DiscardHandler)
 			ctx := context.Background()
 
 			uc, err := organization.NewUseCase(
 				organization.UseCaseWithGenerator(uuid.New),
 				organization.UseCaseWithLogger(logger),
 				organization.UseCaseWithRepository(repo),
+				organization.UseCaseWithUUIDParser(uuid.Parse),
 			)
 			require.NoError(t, err)
 

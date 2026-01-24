@@ -25,9 +25,10 @@ type PlatformConfig struct {
 		} `toml:"http"`
 
 		Zitadel struct {
-			Port    uint16 `toml:"port"`
-			Domain  string `toml:"domain"`
-			PatPath string `toml:"patpath"` // Path to PAT file (v0: file path, prod: empty if using env var)
+			Port              uint16 `toml:"port"`
+			Domain            string `toml:"domain"`
+			PatPath           string `toml:"patpath"`           // Path to PAT file (v0: file path, prod: empty if using env var)
+			ServiceAccountKey string `toml:"serviceaccountkey"` // Path to service account JSON keyfile for token introspection
 		} `toml:"zitadel"`
 
 		Storage struct {
@@ -73,4 +74,9 @@ func (c *PlatformConfig) DatabaseDSN() string {
 // ZitadelPATPath returns the PAT path (prefer env var, fallback to config).
 func (c *PlatformConfig) ZitadelPATPath() string {
 	return c.Platform.Zitadel.PatPath
+}
+
+// ZitadelServiceAccountKeyPath returns the service account keyfile path.
+func (c *PlatformConfig) ZitadelServiceAccountKeyPath() string {
+	return c.Platform.Zitadel.ServiceAccountKey
 }

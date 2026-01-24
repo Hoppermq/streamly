@@ -3,7 +3,14 @@ package domain
 import (
 	"context"
 	"database/sql"
+	"time"
 )
+
+type TokenCacheKey string
+type Cache[T any] interface {
+	Get(token string) (v T, ok bool)
+	Set(token string, value T, ttl time.Duration)
+}
 
 type Storage interface {
 	Save(ctx context.Context) error

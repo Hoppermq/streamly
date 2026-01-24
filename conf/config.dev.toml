@@ -111,6 +111,7 @@
   port = 8080
   domain = "auth.localhost"
   patpath = "/app/deployments/zitadel/machinekey/zitadel-admin.pat"
+  serviceaccountkey = "/app/deployments/zitadel/machinekey/zitadel-admin-sa.json"
 
   [platform.storage]
     [platform.storage.database]

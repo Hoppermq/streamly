@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
+	"math"
 	"sync"
 	"time"
 
@@ -45,7 +46,10 @@ func NewEventIngestionUseCase(opts ...UseCaseOption) domain.IngestionUseCase {
 	return useCase
 }
 
-func (uc *EventIngestionUseCaseImpl) IngestBatch(ctx context.Context, request *domain.BatchIngestionRequest) (*domain.BatchIngestionResponse, error) {
+func (uc *EventIngestionUseCaseImpl) IngestBatch(
+	ctx context.Context,
+	request *domain.BatchIngestionRequest,
+) (*domain.BatchIngestionResponse, error) {
 	uc.logger.Info("ingesting batch ingestion request", "request", request)
 	var resp *domain.BatchIngestionResponse
 	if err := uc.validateRequest(request); err != nil {
@@ -90,7 +94,9 @@ func (uc *EventIngestionUseCaseImpl) IngestBatch(ctx context.Context, request *d
 	return resp, nil
 }
 
-func (uc *EventIngestionUseCaseImpl) validateRequest(request *domain.BatchIngestionRequest) error {
+func (uc *EventIngestionUseCaseImpl) validateRequest(
+	request *domain.BatchIngestionRequest,
+) error {
 	if request.TenantID == "" {
 		return errors.ErrTenantIDRequired
 	}
@@ -117,7 +123,10 @@ func (uc *EventIngestionUseCaseImpl) validateRequest(request *domain.BatchIngest
 	return nil
 }
 
-func (uc *EventIngestionUseCaseImpl) validateEventData(event *domain.EventIngestionData, index int) error {
+func (uc *EventIngestionUseCaseImpl) validateEventData(
+	event *domain.EventIngestionData,
+	index int,
+) error {
 	if event.MessageID == "" {
 		return errors.EventMessageMissing(index)
 	}
@@ -137,10 +146,19 @@ func (uc *EventIngestionUseCaseImpl) validateEventData(event *domain.EventIngest
 	return nil
 }
 
-func (uc *EventIngestionUseCaseImpl) transformToEvents(request *domain.BatchIngestionRequest) ([]*domain.Event, error) {
+func (uc *EventIngestionUseCaseImpl) transformToEvents(
+	request *domain.BatchIngestionRequest,
+) ([]*domain.Event, error) {
+	if len(request.Events) == 0 {
+		return nil, errors.ErrEventEmpty
+	}
+
 	events := make([]*domain.Event, 0, len(request.Events))
 
 	for _, eventData := range request.Events {
+		if len(eventData.Content) > math.MaxUint32 {
+			return nil, errors.ErrEventSize
+		}
 		event := &domain.Event{
 			Timestamp:   time.Now(),
 			TenantID:    request.TenantID,

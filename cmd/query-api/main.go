@@ -12,6 +12,7 @@ import (
 	"github.com/hoppermq/streamly/internal/http"
 	"github.com/hoppermq/streamly/internal/http/routes"
 	"github.com/hoppermq/streamly/internal/storage/clickhouse"
+	"github.com/hoppermq/streamly/pkg/domain"
 	"github.com/hoppermq/streamly/schemas"
 	"github.com/santhosh-tekuri/jsonschema/v6"
 	"github.com/zixyos/glog"
@@ -24,7 +25,7 @@ func main() {
 		slog.New(
 			slog.NewJSONHandler(os.Stdout, nil),
 		).Error("failed to initialize logger", "error", err)
-		os.Exit(84)
+		os.Exit(domain.ExitStatus)
 	}
 
 	ctx := context.Background()

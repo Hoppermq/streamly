@@ -90,6 +90,7 @@ func (s *Service) RunMigrations(ctx context.Context) error {
 	// If migration is dirty, force it to clean state
 	if dirty {
 		s.logger.InfoContext(ctx, "migration is in dirty state, forcing clean", "version", version)
+		//nolint:gosec
 		if err := m.Force(int(version)); err != nil {
 			return fmt.Errorf("failed to force clean migration state: %w", err)
 		}
@@ -117,15 +118,16 @@ func (s *Service) ensureMigrationTable(ctx context.Context) error {
 	checkQuery := "SELECT name FROM system.tables WHERE database = currentDatabase() AND name = 'schema_migrations'"
 	err := s.db.QueryRowContext(ctx, checkQuery).Scan(&tableName)
 
-	if errors.Is(err, sql.ErrNoRows) {
+	switch {
+	case errors.Is(err, sql.ErrNoRows):
 		// Table doesn't exist, create it
 		s.logger.InfoContext(ctx, "creating schema_migrations table")
 		if err := s.createMigrationTable(ctx); err != nil {
 			return err
 		}
-	} else if err != nil {
+	case err != nil:
 		return fmt.Errorf("failed to check if schema_migrations table exists: %w", err)
-	} else {
+	default:
 		s.logger.InfoContext(ctx, "schema_migrations table already exists, checking schema compatibility")
 
 		// Check if it has the right schema
@@ -169,14 +171,11 @@ func (s *Service) isTableCompatible(ctx context.Context) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-
-	defer func(rows *sql.Rows) {
-		err := rows.Close()
-		if err != nil {
+	defer func() {
+		if err := rows.Close(); err != nil {
 			s.logger.ErrorContext(ctx, "failed to close rows", "error", err)
-			return
 		}
-	}(rows)
+	}()
 
 	expectedColumns := map[string]bool{
 		"version":  false,
@@ -186,7 +185,15 @@ func (s *Service) isTableCompatible(ctx context.Context) (bool, error) {
 
 	for rows.Next() {
 		var name, type_, defaultType, defaultExpression, comment, codecExpression, ttlExpression string
-		if err := rows.Scan(&name, &type_, &defaultType, &defaultExpression, &comment, &codecExpression, &ttlExpression); err != nil {
+		if err := rows.Scan(
+			&name,
+			&type_,
+			&defaultType,
+			&defaultExpression,
+			&comment,
+			&codecExpression,
+			&ttlExpression,
+		); err != nil {
 			return false, err
 		}
 

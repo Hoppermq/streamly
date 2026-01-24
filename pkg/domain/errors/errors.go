@@ -47,6 +47,7 @@ var (
 	ErrEventTypeRequired  = errors.New("event_type is required")
 	ErrRawContentRequired = errors.New("raw_content is required")
 	ErrEventEmpty         = errors.New("event cannot be empty")
+	ErrEventSize          = errors.New("event size cannot be greater than ~4GB")
 )
 
 func EventMessageMissing(eventID int) error {

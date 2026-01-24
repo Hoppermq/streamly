@@ -26,7 +26,12 @@ func TestUseCaseCreate(t *testing.T) {
 	tests := []struct {
 		name      string
 		input     domain.CreateOrganization
-		setupMock func(*mocks.MockUnitOfWork, *mocks.MockOrganizationRepository, *mocks.MockUserRepository, *mocks.MockMembershipRepository)
+		setupMock func(
+			*mocks.MockUnitOfWork,
+			*mocks.MockOrganizationRepository,
+			*mocks.MockUserRepository,
+			*mocks.MockMembershipRepository,
+		)
 		assertErr assert.ErrorAssertionFunc
 	}{
 		{
@@ -35,28 +40,44 @@ func TestUseCaseCreate(t *testing.T) {
 				Name:     "Acme Corp",
 				Metadata: map[string]string{"industry": "tech"},
 			},
-			setupMock: func(uow *mocks.MockUnitOfWork, orgRepo *mocks.MockOrganizationRepository, userRepo *mocks.MockUserRepository, memRepo *mocks.MockMembershipRepository) {
+			setupMock: func(
+				uow *mocks.MockUnitOfWork,
+				orgRepo *mocks.MockOrganizationRepository,
+				userRepo *mocks.MockUserRepository,
+				memRepo *mocks.MockMembershipRepository,
+			) {
 				uow.EXPECT().Organization().Return(orgRepo).Times(1)
 				uow.EXPECT().User().Return(userRepo).Times(1)
 				uow.EXPECT().Membership().Return(memRepo).Times(1)
 				uow.EXPECT().Commit().Return(nil).Once()
 
 				orgRepo.EXPECT().
-					Create(mock.Anything, mock.MatchedBy(func(org *domain.Organization) bool {
-						return org.Name == "Acme Corp" && org.Identifier == fixedUUID
-					})).
+					Create(
+						mock.Anything,
+						mock.MatchedBy(func(org *domain.Organization) bool {
+							return org.Name == "Acme Corp" &&
+								org.Identifier == fixedUUID
+						}),
+					).
 					Return(nil).
 					Once()
 
 				userRepo.EXPECT().
-					GetUserIDFromZitadelID(mock.Anything, "test-zitadel-user-id").
+					GetUserIDFromZitadelID(
+						mock.Anything,
+						"test-zitadel-user-id",
+					).
 					Return(userUUID, nil).
 					Once()
 
 				memRepo.EXPECT().
-					Create(mock.Anything, mock.MatchedBy(func(m *domain.Membership) bool {
-						return m.OrgIdentifier == fixedUUID && m.UserIdentifier == userUUID
-					})).
+					Create(
+						mock.Anything,
+						mock.MatchedBy(func(m *domain.Membership) bool {
+							return m.OrgIdentifier == fixedUUID &&
+								m.UserIdentifier == userUUID
+						}),
+					).
 					Return(nil).
 					Once()
 			},
@@ -68,7 +89,12 @@ func TestUseCaseCreate(t *testing.T) {
 				Name:     "Test Org",
 				Metadata: map[string]string{"key": "value"},
 			},
-			setupMock: func(uow *mocks.MockUnitOfWork, orgRepo *mocks.MockOrganizationRepository, userRepo *mocks.MockUserRepository, memRepo *mocks.MockMembershipRepository) {
+			setupMock: func(
+				uow *mocks.MockUnitOfWork,
+				orgRepo *mocks.MockOrganizationRepository,
+				userRepo *mocks.MockUserRepository,
+				memRepo *mocks.MockMembershipRepository,
+			) {
 				uow.EXPECT().Organization().Return(orgRepo).Times(1)
 				uow.EXPECT().Rollback().Return(nil).Once()
 
@@ -85,21 +111,33 @@ func TestUseCaseCreate(t *testing.T) {
 				Name:     "Minimal Org",
 				Metadata: map[string]string{},
 			},
-			setupMock: func(uow *mocks.MockUnitOfWork, orgRepo *mocks.MockOrganizationRepository, userRepo *mocks.MockUserRepository, memRepo *mocks.MockMembershipRepository) {
+			setupMock: func(
+				uow *mocks.MockUnitOfWork,
+				orgRepo *mocks.MockOrganizationRepository,
+				userRepo *mocks.MockUserRepository,
+				memRepo *mocks.MockMembershipRepository,
+			) {
 				uow.EXPECT().Organization().Return(orgRepo).Times(1)
 				uow.EXPECT().User().Return(userRepo).Times(1)
 				uow.EXPECT().Membership().Return(memRepo).Times(1)
 				uow.EXPECT().Commit().Return(nil).Once()
 
 				orgRepo.EXPECT().
-					Create(mock.Anything, mock.MatchedBy(func(org *domain.Organization) bool {
-						return org.Name == "Minimal Org" && org.Identifier == fixedUUID
-					})).
+					Create(
+						mock.Anything,
+						mock.MatchedBy(func(org *domain.Organization) bool {
+							return org.Name == "Minimal Org" &&
+								org.Identifier == fixedUUID
+						}),
+					).
 					Return(nil).
 					Once()
 
 				userRepo.EXPECT().
-					GetUserIDFromZitadelID(mock.Anything, "test-zitadel-user-id").
+					GetUserIDFromZitadelID(
+						mock.Anything,
+						"test-zitadel-user-id",
+					).
 					Return(userUUID, nil).
 					Once()
 
@@ -122,14 +160,21 @@ func TestUseCaseCreate(t *testing.T) {
 			userRepo := mocks.NewMockUserRepository(t)
 			memRepo := mocks.NewMockMembershipRepository(t)
 
-			uowFactory.EXPECT().NewUnitOfWork(mock.Anything).Return(uow, nil).Once()
+			uowFactory.
+				EXPECT().
+				NewUnitOfWork(mock.Anything).
+				Return(uow, nil).
+				Once()
+
 			tt.setupMock(uow, orgRepo, userRepo, memRepo)
 
 			logger := slog.New(slog.DiscardHandler)
 			ctx := context.Background()
 
 			uc, err := organization.NewUseCase(
-				organization.UseCaseWithGenerator(func() uuid.UUID { return fixedUUID }),
+				organization.UseCaseWithGenerator(
+					func() uuid.UUID { return fixedUUID },
+				),
 				organization.UseCaseWithLogger(logger),
 				organization.UseCaseWithRepository(orgRepo),
 				organization.UseCaseWithUOW(uowFactory),
@@ -229,8 +274,15 @@ func TestUseCaseFindAll(t *testing.T) {
 	t.Parallel()
 
 	expectedOrgs := []domain.Organization{
-		{Identifier: uuid.MustParse("123e4567-e89b-12d3-a456-426614174000"), Name: "Org 1"},
-		{Identifier: uuid.MustParse("223e4567-e89b-12d3-a456-426614174000"), Name: "Org 2"},
+		{
+			Identifier: uuid.MustParse(
+				"123e4567-e89b-12d3-a456-426614174000"),
+			Name: "Org 1",
+		},
+		{
+			Identifier: uuid.MustParse("223e4567-e89b-12d3-a456-426614174000"),
+			Name:       "Org 2",
+		},
 	}
 
 	tests := []struct {
@@ -346,15 +398,22 @@ func TestUseCaseUpdate(t *testing.T) {
 				},
 				updateInput: domain.UpdateOrganization{Name: "New Name"},
 			},
-			setupMock: func(repo *mocks.MockOrganizationRepository, existingOrg *domain.Organization) {
+			setupMock: func(
+				repo *mocks.MockOrganizationRepository,
+				existingOrg *domain.Organization,
+			) {
 				repo.EXPECT().
 					FindOneByID(mock.Anything, orgID).
 					Return(existingOrg, nil).
 					Once()
 				repo.EXPECT().
-					Update(mock.Anything, mock.MatchedBy(func(org *domain.Organization) bool {
-						return org.Identifier.String() == orgID.String() && org.Name == "New Name"
-					})).
+					Update(
+						mock.Anything,
+						mock.MatchedBy(func(org *domain.Organization) bool {
+							return org.Identifier.String() == orgID.String() &&
+								org.Name == "New Name"
+						}),
+					).
 					Return(nil).
 					Once()
 			},
@@ -368,7 +427,10 @@ func TestUseCaseUpdate(t *testing.T) {
 				},
 				updateInput: domain.UpdateOrganization{Name: "New Name"},
 			},
-			setupMock: func(repo *mocks.MockOrganizationRepository, org *domain.Organization) {
+			setupMock: func(
+				repo *mocks.MockOrganizationRepository,
+				org *domain.Organization,
+			) {
 				repo.EXPECT().
 					FindOneByID(mock.Anything, nonExistingOrgID).
 					Return(nil, errors.ErrDatabaseConnection).
@@ -385,7 +447,9 @@ func TestUseCaseUpdate(t *testing.T) {
 				},
 				updateInput: domain.UpdateOrganization{Name: "New Name"},
 			},
-			setupMock: func(repo *mocks.MockOrganizationRepository, org *domain.Organization) {
+			setupMock: func(
+				repo *mocks.MockOrganizationRepository,
+				org *domain.Organization) {
 				repo.EXPECT().
 					FindOneByID(mock.Anything, nonExistingOrgID).
 					Return(org, nil).

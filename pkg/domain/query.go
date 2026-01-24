@@ -23,7 +23,7 @@ type AggFct struct {
 }
 
 type TimeWindow struct {
-	Window string `json:"timeWindow"`
+	Window string `json:"time_window"`
 	Field  string `json:"field,omitempty"`
 }
 
@@ -56,8 +56,8 @@ type GroupByClause struct {
 	TimeWindow *TimeWindow
 }
 
-func (g *GroupByClause) IsField() bool      { return g.Type == "field" }
-func (g *GroupByClause) IsTimeWindow() bool { return g.Type == "timeWindow" }
+func (g *GroupByClause) IsField() bool      { return g.Type == FieldType }
+func (g *GroupByClause) IsTimeWindow() bool { return g.Type == TimeWindowType }
 
 type OrderByClause struct {
 	Field     string `json:"field"`
@@ -72,10 +72,10 @@ type TimeRange struct {
 type QueryAstRequest struct {
 	Select    []SelectClause  `json:"select"`
 	From      Datasource      `json:"from"`
-	TimeRange TimeRange       `json:"timeRange"`
+	TimeRange TimeRange       `json:"time_range"`
 	Where     []WhereClause   `json:"where,omitempty"`
-	GroupBy   []GroupByClause `json:"groupBy,omitempty"`
-	OrderBy   []OrderByClause `json:"orderBy,omitempty"`
+	GroupBy   []GroupByClause `json:"group_by,omitempty"`
+	OrderBy   []OrderByClause `json:"order_by,omitempty"`
 	Limit     *int            `json:"limit,omitempty"`
 	Offset    *int            `json:"offset,omitempty"`
 

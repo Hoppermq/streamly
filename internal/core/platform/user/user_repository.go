@@ -46,7 +46,9 @@ func NewRepository(opts ...OptionRepository) (*Repository, error) {
 func (r *Repository) WithTx(tx domain.TxContext) domain.UserRepository {
 	bunTx, ok := tx.(bun.IDB)
 	if !ok {
-		r.logger.Warn("Transaction does not implement github.com/uptrace/bun.DB")
+		r.logger.Warn(
+			"Transaction does not implement github.com/uptrace/bun.DB",
+		)
 		return r
 	}
 
@@ -56,7 +58,10 @@ func (r *Repository) WithTx(tx domain.TxContext) domain.UserRepository {
 	}
 }
 
-func (r *Repository) FindOneByID(ctx context.Context, id uuid.UUID) (*domain.User, error) {
+func (r *Repository) FindOneByID(
+	ctx context.Context,
+	id uuid.UUID,
+) (*domain.User, error) {
 	u := &models.User{}
 	err := r.db.NewSelect().
 		Model(u).
@@ -65,7 +70,13 @@ func (r *Repository) FindOneByID(ctx context.Context, id uuid.UUID) (*domain.Use
 		Scan(ctx, u)
 
 	if err != nil {
-		r.logger.Warn("failed to find user by identifier", "identifier", id, "err", err)
+		r.logger.Warn(
+			"failed to find user by identifier",
+			"identifier",
+			id,
+			"err",
+			err,
+		)
 	}
 
 	resp := &domain.User{
@@ -80,7 +91,10 @@ func (r *Repository) FindOneByID(ctx context.Context, id uuid.UUID) (*domain.Use
 	return resp, nil
 }
 
-func (r *Repository) FindOneByEmail(ctx context.Context, email string) (*domain.User, error) {
+func (r *Repository) FindOneByEmail(
+	ctx context.Context,
+	email string,
+) (*domain.User, error) {
 	u := &models.User{}
 
 	err := r.db.NewSelect().
@@ -105,7 +119,10 @@ func (r *Repository) FindOneByEmail(ctx context.Context, email string) (*domain.
 	return resp, nil
 }
 
-func (r *Repository) FindAll(ctx context.Context, limit, offset int) ([]domain.User, error) {
+func (r *Repository) FindAll(
+	ctx context.Context,
+	limit, offset int,
+) ([]domain.User, error) {
 	// TODO implement me
 	panic("implement me")
 }
@@ -129,7 +146,13 @@ func (r *Repository) Create(ctx context.Context, user *domain.User) error {
 		return err
 	}
 
-	r.logger.InfoContext(ctx, "user created successfully", "user_id", u.ID, "zitadel_id", u.ZitadelID)
+	r.logger.InfoContext(
+		ctx,
+		"user created successfully",
+		"user_id",
+		u.ID, "zitadel_id",
+		u.ZitadelID,
+	)
 	return nil
 }
 
@@ -143,24 +166,54 @@ func (r *Repository) Delete(ctx context.Context, id uuid.UUID) error {
 	panic("implement me")
 }
 
-func (r *Repository) Exist(ctx context.Context, identifier uuid.UUID) (bool, error) {
-	r.logger.InfoContext(ctx, "checking user existence", "user_id", identifier)
+func (r *Repository) Exist(
+	ctx context.Context,
+	identifier uuid.UUID,
+) (bool, error) {
+	r.logger.InfoContext(
+		ctx,
+		"checking user existence",
+		"user_id",
+		identifier,
+	)
 
 	var res bool
-	_, err := r.db.NewRaw("SELECT EXISTS(SELECT 1 FROM users WHERE identifier = ? AND deleted = false);", identifier).Exec(ctx, res)
+	_, err := r.db.NewRaw(
+		"SELECT EXISTS(SELECT 1 FROM users WHERE identifier = ? AND deleted = false);",
+		identifier,
+	).Exec(ctx, res)
 	if err != nil {
-		r.logger.WarnContext(ctx, "failed to check user existence", "user_id", identifier, "error", err)
+		r.logger.WarnContext(
+			ctx,
+			"failed to check user existence",
+			"user_id",
+			identifier, "error",
+			err,
+		)
 		return false, err
 	}
 
 	return res, nil
 }
 
-func (r *Repository) GetUserIDFromZitadelID(ctx context.Context, zitadelID string) (uuid.UUID, error) {
+func (r *Repository) GetUserIDFromZitadelID(
+	ctx context.Context,
+	zitadelID string,
+) (uuid.UUID, error) {
 	var identifier uuid.UUID
-	_, err := r.db.NewRaw("SELECT identifier FROM users WHERE zitadel_user_id = ? AND deleted = false;", zitadelID).Exec(ctx, &identifier)
+	_, err := r.db.NewRaw(
+		"SELECT identifier FROM users WHERE zitadel_user_id = ? AND deleted = false;",
+		zitadelID,
+	).Exec(ctx, &identifier)
 	if err != nil {
-		r.logger.WarnContext(ctx, "failed to get user ID", "zitadel_user_id", zitadelID, "error", err)
+		r.logger.WarnContext(
+			ctx,
+			"failed to get user ID",
+			"zitadel_user_id",
+			zitadelID,
+			"error",
+			err,
+		)
 		return uuid.Nil, err
 	}
 

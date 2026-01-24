@@ -6,6 +6,7 @@ import (
 )
 
 func TestSelectClause_UnmarshalJSON_Field(t *testing.T) {
+	t.Parallel()
 	jsonData := `"event_name"`
 
 	var sel SelectClause
@@ -23,6 +24,7 @@ func TestSelectClause_UnmarshalJSON_Field(t *testing.T) {
 }
 
 func TestSelectClause_UnmarshalJSON_Function(t *testing.T) {
+	t.Parallel()
 	jsonData := `{"function": "count", "args": ["*"], "alias": "total"}`
 
 	var sel SelectClause
@@ -48,13 +50,14 @@ func TestSelectClause_UnmarshalJSON_Function(t *testing.T) {
 }
 
 func TestQueryAstRequest_UnmarshalJSON_Mixed(t *testing.T) {
+	t.Parallel()
 	jsonData := `{
 		"select": [
 			"event_name",
 			{"function": "count", "args": ["*"], "alias": "total"}
 		],
 		"from": "events",
-		"timeRange": {
+		"time_range": {
 			"start": "now-1h",
 			"end": "now"
 		}
@@ -83,6 +86,7 @@ func TestQueryAstRequest_UnmarshalJSON_Mixed(t *testing.T) {
 }
 
 func TestGroupByClause_UnmarshalJSON_Field(t *testing.T) {
+	t.Parallel()
 	jsonData := `"event_name"`
 
 	var gb GroupByClause
@@ -100,7 +104,8 @@ func TestGroupByClause_UnmarshalJSON_Field(t *testing.T) {
 }
 
 func TestGroupByClause_UnmarshalJSON_TimeWindow(t *testing.T) {
-	jsonData := `{"timeWindow": "5m", "field": "timestamp"}`
+	t.Parallel()
+	jsonData := `{"time_window": "5m", "field": "timestamp"}`
 
 	var gb GroupByClause
 	if err := json.Unmarshal([]byte(jsonData), &gb); err != nil {

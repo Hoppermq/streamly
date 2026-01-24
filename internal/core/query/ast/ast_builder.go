@@ -40,7 +40,9 @@ func BuilderWithSchemaFS(schemaFS embed.FS) BuilderOption {
 	}
 }
 
-func BuilderWithJsonSchemaCompiler(jsonSchemaCompiler *jsonschema.Compiler) BuilderOption {
+func BuilderWithJsonSchemaCompiler(
+	jsonSchemaCompiler *jsonschema.Compiler,
+) BuilderOption {
 	return func(builder *Builder) {
 		builder.jschCompiler = jsonSchemaCompiler
 	}
@@ -64,7 +66,10 @@ func (tr *Builder) Run(ctx context.Context) error {
 		return errors.FailedToUnmarshalJSONSchema(err)
 	}
 
-	if err := tr.jschCompiler.AddResource("query-ast.schema.json", schDoc); err != nil {
+	if err := tr.jschCompiler.AddResource(
+		"query-ast.schema.json",
+		schDoc,
+	); err != nil {
 		return errors.FailedToAddJsonSchemaResource(err)
 	}
 
@@ -95,7 +100,9 @@ func (tr *Builder) IsHealthy() bool {
 	return true
 }
 
-func (tr *Builder) Execute(data *domain.QueryAstRequest) (domain.Query, []domain.QueryArgs, error) { // should be a domain type here
+func (tr *Builder) Execute(
+	data *domain.QueryAstRequest,
+) (domain.Query, []domain.QueryArgs, error) {
 	if err := tr.validator.Execute(data); err != nil {
 		tr.logger.Warn("error while executing the validation", "error", err)
 		return "", nil, err

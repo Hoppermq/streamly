@@ -41,7 +41,9 @@ func NewRepository(opts ...RepositoryOption) *Repository {
 func (r *Repository) WithTx(tx domain.TxContext) domain.MembershipRepository {
 	bunTx, ok := tx.(bun.IDB)
 	if !ok {
-		r.logger.Warn("Transaction does not implement github.com/uptrace/bun.DB")
+		r.logger.Warn(
+			"Transaction does not implement github.com/uptrace/bun.DB",
+		)
 		return r
 	}
 
@@ -51,8 +53,16 @@ func (r *Repository) WithTx(tx domain.TxContext) domain.MembershipRepository {
 	}
 }
 
-func (r *Repository) Create(ctx context.Context, membership *domain.Membership) error {
-	r.logger.InfoContext(ctx, "inserting new membership", "membership_identifier", membership.Identifier)
+func (r *Repository) Create(
+	ctx context.Context,
+	membership *domain.Membership,
+) error {
+	r.logger.InfoContext(
+		ctx,
+		"inserting new membership",
+		"membership_identifier",
+		membership.Identifier,
+	)
 	membershipModel := &models.Membership{
 		Identifier: membership.Identifier,
 		TenantID:   membership.OrgIdentifier,
@@ -61,10 +71,21 @@ func (r *Repository) Create(ctx context.Context, membership *domain.Membership) 
 
 	_, err := r.db.NewInsert().Model(membershipModel).Exec(ctx)
 	if err != nil {
-		r.logger.Warn("failed to insert membership", "error", err)
+		r.logger.Warn(
+			"failed to insert membership",
+			"error",
+			err,
+		)
 		return err
 	}
 
-	r.logger.InfoContext(ctx, "inserted membership", "org_id", membership.OrgIdentifier, "user_id", membership.UserIdentifier)
+	r.logger.InfoContext(
+		ctx,
+		"inserted membership",
+		"org_id",
+		membership.OrgIdentifier,
+		"user_id",
+		membership.UserIdentifier,
+	)
 	return nil
 }

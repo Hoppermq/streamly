@@ -2,7 +2,6 @@ package query
 
 import (
 	"context"
-	"database/sql"
 
 	"github.com/hoppermq/streamly/pkg/domain"
 )
@@ -19,11 +18,18 @@ func WithDriver(driver domain.Driver) RepositoryOption {
 	}
 }
 
-func (q *Repository) ExecuteQuery(ctx context.Context, query domain.Query, args ...domain.QueryArgs) (*domain.QueryResponse, error) {
+func (q *Repository) ExecuteQuery(
+	ctx context.Context,
+	query domain.Query,
+	args ...domain.QueryArgs,
+) (*domain.QueryResponse, error) {
 	rows, err := q.driver.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	cols, err := rows.Columns()
 	if err != nil {
@@ -48,17 +54,11 @@ func (q *Repository) ExecuteQuery(ctx context.Context, query domain.Query, args 
 			rowMap[col] = values[i]
 		}
 		data = append(data, rowMap)
-		if err := rows.Err(); err != nil {
-			return nil, err
-		}
 	}
 
-	defer func(rows *sql.Rows) {
-		err := rows.Close()
-		if err != nil {
-			return
-		}
-	}(rows)
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 
 	return &domain.QueryResponse{
 		RequestID: "meta-data-user-02",

@@ -2,6 +2,8 @@ package config
 
 import (
 	"fmt"
+	"net"
+	"strconv"
 	"time"
 
 	"github.com/hoppermq/streamly/conf"
@@ -53,12 +55,16 @@ func LoadPlatformConfig() (*PlatformConfig, error) {
 }
 
 func (c *PlatformConfig) DatabaseDSN() string {
+	hostPort := net.JoinHostPort(
+		c.Platform.Storage.Database.Host,
+		strconv.Itoa(c.Platform.Storage.Database.Port),
+	)
+
 	return fmt.Sprintf(
-		"postgres://%s:%s@%s:%d/%s?sslmode=disable",
+		"postgres://%s:%s@%s/%s?sslmode=disable",
 		c.Platform.Storage.Database.User,
 		c.Platform.Storage.Database.Password,
-		c.Platform.Storage.Database.Host,
-		c.Platform.Storage.Database.Port,
+		hostPort,
 		c.Platform.Storage.Database.Name,
 	)
 }

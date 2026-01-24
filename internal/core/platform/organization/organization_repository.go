@@ -66,8 +66,30 @@ func (organizationRepo *Repository) FindOneByID(
 
 	org := &models.Organization{}
 
-	if err := organizationRepo.db.NewSelect().Model(org).Where("identifier = ?", identifier).Where("deleted = ?", false).Scan(ctx); err != nil {
-		organizationRepo.logger.WarnContext(ctx, "failed to select org", "identifier", identifier, "error", err)
+	err := organizationRepo.
+		db.NewSelect().
+		Model(org).
+		Where(
+			"identifier = ?",
+			identifier,
+		).
+		Where(
+			"deleted = ?",
+			false,
+		).
+		Scan(ctx)
+
+	if err != nil {
+		organizationRepo.
+			logger.
+			WarnContext(
+				ctx,
+				"failed to select org",
+				"identifier",
+				identifier,
+				"error",
+				err,
+			)
 		return nil, err
 	}
 
@@ -100,7 +122,16 @@ func (organizationRepo *Repository) FindAll(
 	limit, offset int,
 ) ([]domain.Organization, error) {
 	var orgs []models.Organization
-	if err := organizationRepo.db.NewSelect().Model(&orgs).Where("deleted = ?", false).Limit(limit).Offset(offset).Scan(ctx); err != nil {
+	err := organizationRepo.
+		db.
+		NewSelect().
+		Model(&orgs).
+		Where("deleted = ?", false).
+		Limit(limit).
+		Offset(offset).
+		Scan(ctx)
+
+	if err != nil {
 		organizationRepo.logger.Warn("failed to query tenants", "error", err)
 		return nil, err
 	}

@@ -6,13 +6,14 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/zixyos/glog"
+	serviceloader "github.com/zixyos/goloader/service"
+
 	"github.com/hoppermq/streamly/cmd/config"
 	"github.com/hoppermq/streamly/internal/core/auth"
 	"github.com/hoppermq/streamly/internal/http"
 	"github.com/hoppermq/streamly/internal/http/routes"
 	"github.com/hoppermq/streamly/pkg/domain"
-	"github.com/zixyos/glog"
-	serviceloader "github.com/zixyos/goloader/service"
 )
 
 func main() {

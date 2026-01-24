@@ -6,9 +6,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/hoppermq/streamly/pkg/domain/errors"
 	"github.com/zitadel/zitadel-go/v3/pkg/client"
 	"github.com/zitadel/zitadel-go/v3/pkg/zitadel"
+
+	"github.com/hoppermq/streamly/pkg/domain/errors"
 )
 
 type Zitadel struct {
@@ -35,6 +36,8 @@ func WithPAT(pat string) Options {
 }
 
 // WithPATFromFile loads PAT from file path (for v0: local dev).
+//
+//nolint:gosec // TODO : use FS.
 func WithPATFromFile(path string) Options {
 	return func(z *Zitadel) error {
 		data, err := os.ReadFile(path)

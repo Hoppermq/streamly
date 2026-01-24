@@ -3,8 +3,9 @@ package client
 import (
 	"context"
 
-	"github.com/hoppermq/streamly/pkg/domain"
 	"github.com/zitadel/zitadel-go/v3/pkg/client/zitadel/user/v2"
+
+	"github.com/hoppermq/streamly/pkg/domain"
 )
 
 func (z *Zitadel) GetUserByUserName(ctx context.Context, username string) (*domain.User, error) {
@@ -27,7 +28,7 @@ func (z *Zitadel) GetUserByUserName(ctx context.Context, username string) (*doma
 
 	userList := resp.GetResult()
 	if len(userList) == 0 {
-		return nil, nil
+		return nil, ErrZitadelClientNotFound
 	}
 
 	zitadelUser := userList[0]

@@ -5,9 +5,10 @@ import (
 	"log/slog"
 
 	"github.com/google/uuid"
+	"github.com/uptrace/bun"
+
 	"github.com/hoppermq/streamly/internal/models"
 	"github.com/hoppermq/streamly/pkg/domain"
-	"github.com/uptrace/bun"
 )
 
 type Repository struct {

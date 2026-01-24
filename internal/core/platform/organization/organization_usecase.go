@@ -121,7 +121,7 @@ func (uc *UseCase) Create(ctx context.Context, newOrg domain.CreateOrganization,
 		Name:       newOrg.Name,
 	}
 
-	if err := uow.Organization().Create(ctx, org); err != nil {
+	if err = uow.Organization().Create(ctx, org); err != nil {
 		uc.logger.WarnContext(ctx, "failed to create organization", "error", err)
 		_ = uow.Rollback()
 		return err
@@ -140,7 +140,7 @@ func (uc *UseCase) Create(ctx context.Context, newOrg domain.CreateOrganization,
 		UserIdentifier: userIdentifier,
 	}
 
-	if err := uow.Membership().Create(ctx, m); err != nil {
+	if err = uow.Membership().Create(ctx, m); err != nil {
 		uc.logger.WarnContext(ctx, "failed to create membership", "error", err)
 		_ = uow.Rollback()
 		return err

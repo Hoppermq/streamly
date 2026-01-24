@@ -4,6 +4,7 @@ import (
 	"log/slog"
 
 	"github.com/gin-gonic/gin"
+
 	"github.com/hoppermq/streamly/internal/core/platform/organization"
 	handlers "github.com/hoppermq/streamly/internal/http/handlers/platform"
 )

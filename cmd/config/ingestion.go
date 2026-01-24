@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/hoppermq/streamly/conf"
 	"github.com/zixyos/goloader/config"
+
+	"github.com/hoppermq/streamly/conf"
 )
 
 type IngestionConfig struct {

@@ -4,9 +4,10 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/uptrace/bun"
+
 	"github.com/hoppermq/streamly/internal/models"
 	"github.com/hoppermq/streamly/pkg/domain"
-	"github.com/uptrace/bun"
 )
 
 type Repository struct {

@@ -81,7 +81,8 @@ func (t *Translator) translateSelect(
 		return errors.ErrSelectClauseEmpty
 	}
 
-	for _, clause := range selectClauses {
+	for i := range selectClauses {
+		clause := &selectClauses[i]
 		switch {
 		case clause.IsField():
 			builder.SelectFields(*clause.Field)
@@ -117,6 +118,10 @@ func (t *Translator) translateWhere(
 	whereClauses []domain.WhereClause,
 	builder *QueryBuilder,
 ) error {
+	if len(whereClauses) == 0 {
+		return errors.ErrWhereClauseEmpty
+	}
+
 	if timeRange.Start != "" {
 		builder.Where("timestamp", ">=", timeRange.Start)
 	}
@@ -124,7 +129,8 @@ func (t *Translator) translateWhere(
 		builder.Where("timestamp", "<=", timeRange.End)
 	}
 
-	for _, where := range whereClauses {
+	for i := range whereClauses {
+		where := &whereClauses[i]
 		if where.Op == "IN" {
 			values, ok := where.Value.([]any)
 			if !ok {
@@ -143,16 +149,20 @@ func (t *Translator) translateGroupBy(
 	groupByClauses []domain.GroupByClause,
 	builder *QueryBuilder,
 ) error {
-	for _, gb := range groupByClauses {
+	if len(groupByClauses) == 0 {
+		return errors.ErrGroupByClauseEmpty
+	}
+
+	for idx := range groupByClauses {
 		switch {
-		case gb.IsField():
-			builder.GroupBy(*gb.Field)
-		case gb.IsTimeWindow():
-			field := gb.TimeWindow.Field
+		case groupByClauses[idx].IsField():
+			builder.GroupBy(*groupByClauses[idx].Field)
+		case groupByClauses[idx].IsTimeWindow():
+			field := groupByClauses[idx].TimeWindow.Field
 			if field == "" {
 				field = "timestamp"
 			}
-			builder.GroupByTimeWindow(gb.TimeWindow.Window, field)
+			builder.GroupByTimeWindow(groupByClauses[idx].TimeWindow.Window, field)
 		default:
 			return errors.ErrUnknownGroupBy
 		}
@@ -165,15 +175,16 @@ func (t *Translator) translateOrderBy(
 	orderByClauses []domain.OrderByClause,
 	builder *QueryBuilder,
 ) error {
-	if orderByClauses == nil {
-		return nil
+	if len(orderByClauses) == 0 {
+		return errors.ErrOrderByClauseEmpty
 	}
-	for _, ob := range orderByClauses {
-		direction := ob.Direction
+
+	for i := range orderByClauses {
+		direction := orderByClauses[i].Direction
 		if direction == "" {
 			direction = "DESC"
 		}
-		builder.OrderBy(ob.Field, direction)
+		builder.OrderBy(orderByClauses[i].Field, direction)
 	}
 
 	return nil

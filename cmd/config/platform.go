@@ -6,8 +6,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/hoppermq/streamly/conf"
 	"github.com/zixyos/goloader/config"
+
+	"github.com/hoppermq/streamly/conf"
 )
 
 type PlatformConfig struct {

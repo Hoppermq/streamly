@@ -9,6 +9,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/uptrace/bun"
+	"github.com/uptrace/bun/dialect/pgdialect"
+	"github.com/uptrace/bun/driver/pgdriver"
+	"github.com/zixyos/glog"
+	serviceloader "github.com/zixyos/goloader/service"
+
 	"github.com/hoppermq/streamly/cmd/config"
 	"github.com/hoppermq/streamly/internal/core/auth"
 	"github.com/hoppermq/streamly/internal/core/platform"
@@ -21,13 +27,9 @@ import (
 	"github.com/hoppermq/streamly/internal/storage/postgres"
 	"github.com/hoppermq/streamly/pkg/domain"
 	"github.com/hoppermq/streamly/pkg/shared/zitadel/client"
-	"github.com/uptrace/bun"
-	"github.com/uptrace/bun/dialect/pgdialect"
-	"github.com/uptrace/bun/driver/pgdriver"
-	"github.com/zixyos/glog"
-	serviceloader "github.com/zixyos/goloader/service"
 )
 
+//nolint:funlen // ignoring main fun size.
 func main() {
 	logger, err := glog.NewDefault()
 	if err != nil {

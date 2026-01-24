@@ -6,10 +6,11 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/uptrace/bun"
+
 	"github.com/hoppermq/streamly/internal/models"
 	"github.com/hoppermq/streamly/pkg/domain"
 	"github.com/hoppermq/streamly/pkg/domain/errors"
-	"github.com/uptrace/bun"
 )
 
 type Repository struct {
@@ -137,12 +138,12 @@ func (organizationRepo *Repository) FindAll(
 	}
 
 	organizations := make([]domain.Organization, len(orgs))
-	for i, org := range orgs {
+	for i := range orgs {
 		organizations[i] = domain.Organization{
-			Identifier: org.Identifier,
-			Name:       org.Name,
-			CreatedAt:  org.CreatedAt,
-			UpdatedAt:  org.UpdatedAt,
+			Identifier: orgs[i].Identifier,
+			Name:       orgs[i].Name,
+			CreatedAt:  orgs[i].CreatedAt,
+			UpdatedAt:  orgs[i].UpdatedAt,
 		}
 	}
 

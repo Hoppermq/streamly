@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+
 	"github.com/hoppermq/streamly/internal/core/platform/user"
 	"github.com/hoppermq/streamly/pkg/domain"
 )

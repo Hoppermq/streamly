@@ -6,13 +6,14 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
+
 	"github.com/hoppermq/streamly/internal/core/platform/organization"
 	"github.com/hoppermq/streamly/pkg/domain"
 	"github.com/hoppermq/streamly/pkg/domain/errors"
 	"github.com/hoppermq/streamly/pkg/domain/mocks"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
 )
 
 // TODO: compare returned errors.

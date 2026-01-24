@@ -1,5 +1,6 @@
 package domain
 
 const (
-	ExitStatus = 84
+	ExitStatus        = 84
+	EventBatchMaxSize = 5000
 )

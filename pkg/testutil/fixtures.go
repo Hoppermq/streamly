@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+
 	"github.com/hoppermq/streamly/pkg/domain"
 )
 
@@ -18,6 +19,7 @@ func NewSampleOrganization(name string) domain.Organization {
 	}
 }
 
+//nolint:mnd,gosec // remove magic number linter on fixtures.
 func NewSampleEvent(tenantID, eventType string) *domain.Event {
 	content := map[string]interface{}{
 		"user_id": uuid.New().String(),

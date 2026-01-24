@@ -181,14 +181,14 @@ func (qb *QueryBuilder) validate() error {
 
 func (qb *QueryBuilder) buildSelect(sql *strings.Builder) {
 	sql.WriteString("SELECT ")
-	for i, sel := range qb.components.SelectClauses {
+	for i := range qb.components.SelectClauses {
 		if i > 0 {
 			sql.WriteString(", ")
 		}
-		sql.WriteString(sel.Expression)
-		if sel.Alias != "" {
+		sql.WriteString(qb.components.SelectClauses[i].Expression)
+		if qb.components.SelectClauses[i].Alias != "" {
 			sql.WriteString(" AS ")
-			sql.WriteString(sel.Alias)
+			sql.WriteString(qb.components.SelectClauses[i].Alias)
 		}
 	}
 }
@@ -206,12 +206,12 @@ func (qb *QueryBuilder) buildWhere(sql *strings.Builder) ([]any, error) {
 	var args []any
 	sql.WriteString(" WHERE ")
 
-	for i, where := range qb.components.WhereClauses {
+	for i := range qb.components.WhereClauses {
 		if i > 0 {
 			sql.WriteString(" AND ")
 		}
 
-		whereArgs, err := qb.buildWhereClause(sql, where)
+		whereArgs, err := qb.buildWhereClause(sql, qb.components.WhereClauses[i])
 		if err != nil {
 			return nil, err
 		}
@@ -244,7 +244,13 @@ func (qb *QueryBuilder) buildInClause(sql *strings.Builder, where WhereExpr) ([]
 		placeholders[j] = "?"
 	}
 
-	if _, err := fmt.Fprintf(sql, "%s IN (%s)", where.Field, strings.Join(placeholders, ", ")); err != nil {
+	_, err := fmt.Fprintf(
+		sql,
+		"%s IN (%s)",
+		where.Field,
+		strings.Join(placeholders, ", "),
+	)
+	if err != nil {
 		return nil, err
 	}
 
@@ -271,11 +277,17 @@ func (qb *QueryBuilder) buildOrderBy(sql *strings.Builder) {
 	}
 
 	sql.WriteString(" ORDER BY ")
-	for i, ob := range qb.components.OrderByClauses {
+	for i := range qb.components.OrderByClauses {
 		if i > 0 {
 			sql.WriteString(", ")
 		}
-		if _, err := fmt.Fprintf(sql, "%s %s", ob.Field, ob.Direction); err != nil {
+		_, err := fmt.Fprintf(
+			sql,
+			"%s %s",
+			qb.components.OrderByClauses[i].Field,
+			qb.components.OrderByClauses[i].Direction,
+		)
+		if err != nil {
 			return
 		}
 	}

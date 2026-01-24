@@ -6,10 +6,11 @@ import (
 	"encoding/json"
 	"log/slog"
 
+	"github.com/santhosh-tekuri/jsonschema/v6"
+
 	"github.com/hoppermq/streamly/internal/storage/clickhouse"
 	"github.com/hoppermq/streamly/pkg/domain"
 	"github.com/hoppermq/streamly/pkg/domain/errors"
-	"github.com/santhosh-tekuri/jsonschema/v6"
 )
 
 type Builder struct {
@@ -66,7 +67,7 @@ func (tr *Builder) Run(ctx context.Context) error {
 		return errors.FailedToUnmarshalJSONSchema(err)
 	}
 
-	if err := tr.jschCompiler.AddResource(
+	if err = tr.jschCompiler.AddResource(
 		"query-ast.schema.json",
 		schDoc,
 	); err != nil {

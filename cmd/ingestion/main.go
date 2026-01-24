@@ -7,6 +7,9 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/zixyos/glog"
+	serviceloader "github.com/zixyos/goloader/service"
+
 	"github.com/hoppermq/streamly/cmd/config"
 	"github.com/hoppermq/streamly/internal/core/ingestor"
 	"github.com/hoppermq/streamly/internal/core/migration"
@@ -14,10 +17,9 @@ import (
 	"github.com/hoppermq/streamly/internal/http/routes"
 	"github.com/hoppermq/streamly/internal/storage/clickhouse"
 	"github.com/hoppermq/streamly/pkg/domain"
-	"github.com/zixyos/glog"
-	serviceloader "github.com/zixyos/goloader/service"
 )
 
+//nolint:funlen // ignoring main len.
 func main() {
 	logger, err := glog.NewDefault()
 	if err != nil {
@@ -55,7 +57,7 @@ func main() {
 		migration.WithMigrationPath("./clickhouse/sql"),
 	)
 
-	if err := migrationService.RunMigrations(ctx); err != nil {
+	if err = migrationService.RunMigrations(ctx); err != nil {
 		logger.Error("failed to run migrations", "error", err)
 		panic(err)
 	}

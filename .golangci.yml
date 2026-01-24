@@ -120,6 +120,9 @@ linters:
       # default is false: such cases aren't reported by default.
       check-blank: false
 
+    mnd:
+      ignored-files: 'internal/tests/.*'
+
     funlen:
       lines: 80
       statements: 40
@@ -297,6 +300,14 @@ formatters:
     - goimports
 
   settings:
+    gci:
+      # Sections order: standard, default (third-party), prefix (local)
+      sections:
+        - standard
+        - default
+        - prefix(github.com/hoppermq/)
+      skip-generated: true
+
     gofmt:
       # simplify code: gofmt with `-s` option, true by default
       simplify: true

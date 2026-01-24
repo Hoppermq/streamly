@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+
 	"github.com/hoppermq/streamly/pkg/domain"
 	"github.com/hoppermq/streamly/pkg/domain/errors"
 )
@@ -109,13 +110,13 @@ func (uc *EventIngestionUseCaseImpl) validateRequest(
 	if len(request.Events) == 0 {
 		return errors.ErrEventEmpty
 	}
-	if len(request.Events) > 5000 {
+	if len(request.Events) > domain.EventBatchMaxSize {
 		uc.logger.Info("events too big", "events", len(request.Events))
 		return errors.ErrBatchSizeMaxSizeExceeded
 	}
 
-	for i, event := range request.Events {
-		if err := uc.validateEventData(&event, i); err != nil {
+	for i := range request.Events {
+		if err := uc.validateEventData(&request.Events[i], i); err != nil {
 			return err
 		}
 	}
@@ -146,6 +147,7 @@ func (uc *EventIngestionUseCaseImpl) validateEventData(
 	return nil
 }
 
+//nolint:gosec // false positive here ?
 func (uc *EventIngestionUseCaseImpl) transformToEvents(
 	request *domain.BatchIngestionRequest,
 ) ([]*domain.Event, error) {
@@ -155,10 +157,12 @@ func (uc *EventIngestionUseCaseImpl) transformToEvents(
 
 	events := make([]*domain.Event, 0, len(request.Events))
 
-	for _, eventData := range request.Events {
+	for i := range request.Events {
+		eventData := &request.Events[i]
 		if len(eventData.Content) > math.MaxUint32 {
 			return nil, errors.ErrEventSize
 		}
+
 		event := &domain.Event{
 			Timestamp:   time.Now(),
 			TenantID:    request.TenantID,

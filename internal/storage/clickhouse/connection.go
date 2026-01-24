@@ -5,6 +5,7 @@ import (
 	"database/sql"
 
 	"github.com/ClickHouse/clickhouse-go/v2"
+
 	"github.com/hoppermq/streamly/cmd/config"
 	"github.com/hoppermq/streamly/pkg/domain"
 )

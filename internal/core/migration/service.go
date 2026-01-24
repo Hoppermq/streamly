@@ -71,7 +71,7 @@ func (s *Service) RunMigrations(ctx context.Context) error {
 		return fmt.Errorf("failed to create migrate instance: %w", err)
 	}
 	defer func(m *migrate.Migrate) {
-		err, _ := m.Close()
+		err, _ = m.Close()
 		if err != nil {
 			s.logger.ErrorContext(ctx, "failed to close migrate instance", "error", err)
 			return
@@ -91,13 +91,13 @@ func (s *Service) RunMigrations(ctx context.Context) error {
 	if dirty {
 		s.logger.InfoContext(ctx, "migration is in dirty state, forcing clean", "version", version)
 		//nolint:gosec
-		if err := m.Force(int(version)); err != nil {
+		if err = m.Force(int(version)); err != nil {
 			return fmt.Errorf("failed to force clean migration state: %w", err)
 		}
 	}
 
 	s.logger.InfoContext(ctx, "running migrations")
-	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
+	if err = m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
 		return fmt.Errorf("failed to run migrations: %w", err)
 	}
 
@@ -122,7 +122,7 @@ func (s *Service) ensureMigrationTable(ctx context.Context) error {
 	case errors.Is(err, sql.ErrNoRows):
 		// Table doesn't exist, create it
 		s.logger.InfoContext(ctx, "creating schema_migrations table")
-		if err := s.createMigrationTable(ctx); err != nil {
+		if err = s.createMigrationTable(ctx); err != nil {
 			return err
 		}
 	case err != nil:

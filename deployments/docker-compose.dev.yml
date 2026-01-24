@@ -409,7 +409,7 @@ services:
     restart: unless-stopped
 
   adminer:
-    image: adminer:4.8.1
+    image: adminer:4.17.1
     ports:
       - "8081:8080"
     environment:

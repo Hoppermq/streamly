@@ -20,19 +20,19 @@ var (
 )
 
 func FailedToReadJSONSchema(err error) error {
-	return fmt.Errorf("%w: %s", ErrFailedToReadJSONSchema, err)
+	return fmt.Errorf("%w: %w", ErrFailedToReadJSONSchema, err)
 }
 
 func FailedToUnmarshalJSONSchema(err error) error {
-	return fmt.Errorf("%w: %s", ErrFailedToUnmarshalJSONSchema, err)
+	return fmt.Errorf("%w: %w", ErrFailedToUnmarshalJSONSchema, err)
 }
 
 func FailedToCompileJSONSchema(err error) error {
-	return fmt.Errorf("%w: %s", ErrFailedToCompileJSONSchema, err)
+	return fmt.Errorf("%w: %w", ErrFailedToCompileJSONSchema, err)
 }
 
 func FailedToAddJsonSchemaResource(err error) error {
-	return fmt.Errorf("%w: %s", ErrFailedToAddJSONSchemaResource, err)
+	return fmt.Errorf("%w: %w", ErrFailedToAddJSONSchemaResource, err)
 }
 
 func FailedToReadFile(path string) error {
@@ -47,6 +47,7 @@ var (
 	ErrEventTypeRequired  = errors.New("event_type is required")
 	ErrRawContentRequired = errors.New("raw_content is required")
 	ErrEventEmpty         = errors.New("event cannot be empty")
+	ErrEventSize          = errors.New("event size cannot be greater than ~4GB")
 )
 
 func EventMessageMissing(eventID int) error {
@@ -75,11 +76,11 @@ var (
 )
 
 func SerializerInvalidTimeWindow(err error) error {
-	return fmt.Errorf("%w: %s", ErrSerializerInvalidTimeWindow, err)
+	return fmt.Errorf("%w: %w", ErrSerializerInvalidTimeWindow, err)
 }
 
 func SerializerInvalidSelectFunction(err error) error {
-	return fmt.Errorf("%w: %s", ErrSerializerInvalidSelect, err)
+	return fmt.Errorf("%w: %w", ErrSerializerInvalidSelect, err)
 }
 
 var (
@@ -88,15 +89,18 @@ var (
 	ErrWhereTranslationFailed   = errors.New("failed to translate WHERE")
 	ErrGroupByTranslationFailed = errors.New("failed to translate GROUP BY")
 	ErrOrderByTranslationFailed = errors.New("failed to translate ORDER BY")
+	ErrGroupByClauseEmpty       = errors.New("GROUP BY clause cannot be empty")
 	ErrSelectClauseEmpty        = errors.New("SELECT clause cannot be empty")
 	ErrSelectClauseType         = errors.New("unknown SELECT clause type")
+	ErrOrderByClauseEmpty       = errors.New("ORDER BY clause cannot be empty")
+	ErrWhereClauseEmpty         = errors.New("WHERE clause cannot be empty")
 	ErrFromEmpty                = errors.New("FROM datasource cannot be empty")
 	ErrInOperatorValue          = errors.New("IN operator requires array value for field: ")
 	ErrUnknownGroupBy           = errors.New("unknown GROUP BY clause type")
 )
 
 func TranslatorFailedToTranslate(kwError, err error) error {
-	return fmt.Errorf("%w: %s", kwError, err)
+	return fmt.Errorf("%w: %w", kwError, err)
 }
 
 func TranslatorInOperatorInvalidValue(field string) error {
@@ -120,19 +124,19 @@ var (
 )
 
 func OrganizationDeleteFailed(err error) error {
-	return fmt.Errorf("%w: %s", ErrOrganizationDelete, err)
+	return fmt.Errorf("%w: %w", ErrOrganizationDelete, err)
 }
 func OrganizationUpdateFailed(err error) error {
-	return fmt.Errorf("%w: %s", ErrOrganizationUpdate, err)
+	return fmt.Errorf("%w: %w", ErrOrganizationUpdate, err)
 }
 func OrganizationCreateFailed(err error) error {
-	return fmt.Errorf("%w: %s", ErrOrganizationCreate, err)
+	return fmt.Errorf("%w: %w", ErrOrganizationCreate, err)
 }
 
 func RootUserQueryFailed(err error, userID string) error {
-	return fmt.Errorf("%w: %s. user: %s", ErrUserQuery, err, userID)
+	return fmt.Errorf("%w: %w. user: %s", ErrUserQuery, err, userID)
 }
 
 func OrganizationQueryFailed(err error, orgID string) error {
-	return fmt.Errorf("%w: %s. orgID: %s", ErrOrganizationQuery, err, orgID)
+	return fmt.Errorf("%w: %w. orgID: %s", ErrOrganizationQuery, err, orgID)
 }

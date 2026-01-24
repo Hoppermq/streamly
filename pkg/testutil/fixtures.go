@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+
 	"github.com/hoppermq/streamly/pkg/domain"
 )
 
@@ -18,15 +19,19 @@ func NewSampleOrganization(name string) domain.Organization {
 	}
 }
 
-func NewSampleEvent(tenantID, eventType string) domain.Event {
+//nolint:mnd,gosec // remove magic number linter on fixtures.
+func NewSampleEvent(tenantID, eventType string) *domain.Event {
 	content := map[string]interface{}{
 		"user_id": uuid.New().String(),
 		"action":  "test_action",
 		"value":   42,
 	}
-	contentJSON, _ := json.Marshal(content)
+	contentJSON, err := json.Marshal(content)
+	if err != nil {
+		return nil
+	}
 
-	return domain.Event{
+	return &domain.Event{
 		Timestamp:   time.Now(),
 		TenantID:    tenantID,
 		MessageID:   uuid.New().String(),
@@ -43,8 +48,8 @@ func NewSampleEvent(tenantID, eventType string) domain.Event {
 	}
 }
 
-func NewBatchEvents(tenantID string, count int, eventType string) []domain.Event {
-	events := make([]domain.Event, count)
+func NewBatchEvents(tenantID string, count int, eventType string) []*domain.Event {
+	events := make([]*domain.Event, count)
 	for i := 0; i < count; i++ {
 		events[i] = NewSampleEvent(tenantID, eventType)
 	}
@@ -59,7 +64,10 @@ func NewBatchIngestionRequest(tenantID string, count int) *domain.BatchIngestion
 			"user_id": uuid.New().String(),
 			"action":  fmt.Sprintf("action_%d", i),
 		}
-		contentJSON, _ := json.Marshal(content)
+		contentJSON, err := json.Marshal(content)
+		if err != nil {
+			return nil
+		}
 
 		events[i] = domain.EventIngestionData{
 			MessageID: uuid.New().String(),

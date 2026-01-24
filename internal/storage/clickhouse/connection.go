@@ -3,9 +3,9 @@ package clickhouse
 import (
 	"context"
 	"database/sql"
-	"fmt"
 
 	"github.com/ClickHouse/clickhouse-go/v2"
+
 	"github.com/hoppermq/streamly/cmd/config"
 	"github.com/hoppermq/streamly/pkg/domain"
 )
@@ -70,7 +70,6 @@ func (d *Driver) Query(ctx context.Context, query domain.Query, args ...domain.Q
 	for i, a := range args {
 		compliantArgs[i] = a
 	}
-	fmt.Println(compliantArgs)
 	return d.db.QueryContext(ctx, string(query), compliantArgs...)
 }
 
@@ -80,7 +79,6 @@ func (d *Driver) QueryContext(ctx context.Context, query domain.Query, args ...d
 		compliantArgs[i] = a
 	}
 
-	fmt.Println(compliantArgs)
 	return d.db.QueryContext(ctx, string(query), compliantArgs...)
 }
 

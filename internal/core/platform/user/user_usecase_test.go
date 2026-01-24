@@ -6,13 +6,14 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/hoppermq/streamly/internal/core/platform/user"
-	"github.com/hoppermq/streamly/pkg/domain"
-	"github.com/hoppermq/streamly/pkg/domain/mocks"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
+	"github.com/hoppermq/streamly/internal/core/platform/user"
+	"github.com/hoppermq/streamly/pkg/domain"
+	"github.com/hoppermq/streamly/pkg/domain/mocks"
 )
 
 func TestUseCaseCreate(t *testing.T) {
@@ -205,6 +206,8 @@ func TestUseCase_CreateFromEvent(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			repo := mocks.NewMockUserRepository(t)
 			authRepo := mocks.NewMockAuthRepository(t)
 			client := mocks.NewMockClient(t)

@@ -3,6 +3,7 @@ package testcontainers
 import (
 	"context"
 	"fmt"
+	"net"
 	"time"
 
 	"github.com/testcontainers/testcontainers-go"
@@ -37,7 +38,7 @@ func StartRedis(ctx context.Context) (*RedisContainer, error) {
 		return nil, fmt.Errorf("failed to get redis port: %w", err)
 	}
 
-	connStr := fmt.Sprintf("redis://%s:%s", host, port.Port())
+	connStr := net.JoinHostPort(host, port.Port())
 
 	return &RedisContainer{
 		RedisContainer:   redisContainer,

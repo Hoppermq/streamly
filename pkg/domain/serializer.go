@@ -14,12 +14,12 @@ func (s *SelectClause) UnmarshalJSON(data []byte) error {
 
 	switch v := raw.(type) {
 	case string:
-		s.Type = "field"
+		s.Type = FieldType
 		s.Field = &v
 		return nil
 
 	case map[string]any:
-		s.Type = "function"
+		s.Type = FunctionType
 		var fn AggFct
 		if err := json.Unmarshal(data, &fn); err != nil {
 			return errors.SerializerInvalidSelectFunction(err)
@@ -33,10 +33,10 @@ func (s *SelectClause) UnmarshalJSON(data []byte) error {
 }
 
 func (s *SelectClause) MarshalJSON() ([]byte, error) {
-	if s.Type == "field" && s.Field != nil {
+	if s.Type == FieldType && s.Field != nil {
 		return json.Marshal(*s.Field)
 	}
-	if s.Type == "function" && s.Function != nil {
+	if s.Type == FunctionType && s.Function != nil {
 		return json.Marshal(s.Function)
 	}
 	return nil, errors.ErrSerializerInvalidSelectClause
@@ -50,12 +50,12 @@ func (g *GroupByClause) UnmarshalJSON(data []byte) error {
 
 	switch v := raw.(type) {
 	case string:
-		g.Type = "field"
+		g.Type = FieldType
 		g.Field = &v
 		return nil
 
 	case map[string]any:
-		g.Type = "timeWindow"
+		g.Type = TimeWindowType
 		var tw TimeWindow
 		if err := json.Unmarshal(data, &tw); err != nil {
 			return errors.SerializerInvalidTimeWindow(err)
@@ -69,10 +69,10 @@ func (g *GroupByClause) UnmarshalJSON(data []byte) error {
 }
 
 func (g *GroupByClause) MarshalJSON() ([]byte, error) {
-	if g.Type == "field" && g.Field != nil {
+	if g.Type == FieldType && g.Field != nil {
 		return json.Marshal(*g.Field)
 	}
-	if g.Type == "timeWindow" && g.TimeWindow != nil {
+	if g.Type == TimeWindowType && g.TimeWindow != nil {
 		return json.Marshal(g.TimeWindow)
 	}
 	return nil, errors.ErrSerializerInvalidGroupByClause

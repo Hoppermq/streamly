@@ -6,10 +6,11 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/uptrace/bun"
+
 	"github.com/hoppermq/streamly/internal/models"
 	"github.com/hoppermq/streamly/pkg/domain"
 	"github.com/hoppermq/streamly/pkg/domain/errors"
-	"github.com/uptrace/bun"
 )
 
 type Repository struct {
@@ -66,8 +67,30 @@ func (organizationRepo *Repository) FindOneByID(
 
 	org := &models.Organization{}
 
-	if err := organizationRepo.db.NewSelect().Model(org).Where("identifier = ?", identifier).Where("deleted = ?", false).Scan(ctx); err != nil {
-		organizationRepo.logger.WarnContext(ctx, "failed to select org", "identifier", identifier, "error", err)
+	err := organizationRepo.
+		db.NewSelect().
+		Model(org).
+		Where(
+			"identifier = ?",
+			identifier,
+		).
+		Where(
+			"deleted = ?",
+			false,
+		).
+		Scan(ctx)
+
+	if err != nil {
+		organizationRepo.
+			logger.
+			WarnContext(
+				ctx,
+				"failed to select org",
+				"identifier",
+				identifier,
+				"error",
+				err,
+			)
 		return nil, err
 	}
 
@@ -100,18 +123,27 @@ func (organizationRepo *Repository) FindAll(
 	limit, offset int,
 ) ([]domain.Organization, error) {
 	var orgs []models.Organization
-	if err := organizationRepo.db.NewSelect().Model(&orgs).Where("deleted = ?", false).Limit(limit).Offset(offset).Scan(ctx); err != nil {
+	err := organizationRepo.
+		db.
+		NewSelect().
+		Model(&orgs).
+		Where("deleted = ?", false).
+		Limit(limit).
+		Offset(offset).
+		Scan(ctx)
+
+	if err != nil {
 		organizationRepo.logger.Warn("failed to query tenants", "error", err)
 		return nil, err
 	}
 
 	organizations := make([]domain.Organization, len(orgs))
-	for i, org := range orgs {
+	for i := range orgs {
 		organizations[i] = domain.Organization{
-			Identifier: org.Identifier,
-			Name:       org.Name,
-			CreatedAt:  org.CreatedAt,
-			UpdatedAt:  org.UpdatedAt,
+			Identifier: orgs[i].Identifier,
+			Name:       orgs[i].Name,
+			CreatedAt:  orgs[i].CreatedAt,
+			UpdatedAt:  orgs[i].UpdatedAt,
 		}
 	}
 

@@ -3,8 +3,10 @@ package handlers
 import (
 	"log/slog"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
+
 	"github.com/hoppermq/streamly/internal/core/platform/organization"
 	"github.com/hoppermq/streamly/pkg/domain"
 )
@@ -99,7 +101,27 @@ func (o *Organization) FindOneByID(c *gin.Context) {
 }
 
 func (o *Organization) FindAll(c *gin.Context) {
-	orgs, err := o.uc.FindAll(c, 100, 0)
+	limit := c.Query("limit")
+	if limit == "" {
+		limit = "100"
+	}
+
+	offset := c.Query("offset")
+	if offset == "" {
+		offset = "0"
+	}
+
+	limitInt, err := strconv.Atoi(limit)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+
+	offsetInt, err := strconv.Atoi(offset)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+
+	orgs, err := o.uc.FindAll(c, limitInt, offsetInt)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

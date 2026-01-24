@@ -22,27 +22,44 @@ func TranslatorWithLogger(logger *slog.Logger) TranslatorOption {
 	}
 }
 
-func (t *Translator) Translate(ast *domain.QueryAstRequest) (*QueryBuilder, error) {
+func (t *Translator) Translate(
+	ast *domain.QueryAstRequest,
+) (*QueryBuilder, error) {
 	builder := NewQueryBuilder()
 
 	if err := t.translateSelect(ast.Select, builder); err != nil {
-		return nil, errors.TranslatorFailedToTranslate(errors.ErrSelectTranslationFailed, err)
+		return nil, errors.TranslatorFailedToTranslate(
+			errors.ErrSelectTranslationFailed,
+			err,
+		)
 	}
 
 	if err := t.translateFrom(ast.From, builder); err != nil {
-		return nil, errors.TranslatorFailedToTranslate(errors.ErrFromTranslationFailed, err)
+		return nil, errors.TranslatorFailedToTranslate(
+			errors.ErrFromTranslationFailed,
+			err,
+		)
 	}
 
 	if err := t.translateWhere(ast.TimeRange, ast.Where, builder); err != nil {
-		return nil, errors.TranslatorFailedToTranslate(errors.ErrWhereTranslationFailed, err)
+		return nil, errors.TranslatorFailedToTranslate(
+			errors.ErrWhereTranslationFailed,
+			err,
+		)
 	}
 
 	if err := t.translateGroupBy(ast.GroupBy, builder); err != nil {
-		return nil, errors.TranslatorFailedToTranslate(errors.ErrGroupByTranslationFailed, err)
+		return nil, errors.TranslatorFailedToTranslate(
+			errors.ErrGroupByTranslationFailed,
+			err,
+		)
 	}
 
 	if err := t.translateOrderBy(ast.OrderBy, builder); err != nil {
-		return nil, errors.TranslatorFailedToTranslate(errors.ErrOrderByTranslationFailed, err)
+		return nil, errors.TranslatorFailedToTranslate(
+			errors.ErrOrderByTranslationFailed,
+			err,
+		)
 	}
 
 	if ast.Limit != nil {
@@ -56,22 +73,27 @@ func (t *Translator) Translate(ast *domain.QueryAstRequest) (*QueryBuilder, erro
 	return builder, nil
 }
 
-func (t *Translator) translateSelect(selectClauses []domain.SelectClause, builder *QueryBuilder) error {
+func (t *Translator) translateSelect(
+	selectClauses []domain.SelectClause,
+	builder *QueryBuilder,
+) error {
 	if len(selectClauses) == 0 {
 		return errors.ErrSelectClauseEmpty
 	}
 
-	for _, clause := range selectClauses {
-		if clause.IsField() {
+	for i := range selectClauses {
+		clause := &selectClauses[i]
+		switch {
+		case clause.IsField():
 			builder.SelectFields(*clause.Field)
-		} else if clause.IsFunction() {
+		case clause.IsFunction():
 			fnArgs := strings.Join(clause.Function.Args, ", ")
 			builder.SelectFunc(
 				clause.Function.Function,
 				fnArgs,
 				clause.Function.Alias,
 			)
-		} else {
+		default:
 			return errors.ErrSelectClauseType
 		}
 	}
@@ -79,7 +101,10 @@ func (t *Translator) translateSelect(selectClauses []domain.SelectClause, builde
 	return nil
 }
 
-func (t *Translator) translateFrom(datasource domain.Datasource, builder *QueryBuilder) error {
+func (t *Translator) translateFrom(
+	datasource domain.Datasource,
+	builder *QueryBuilder,
+) error {
 	if datasource == "" {
 		return errors.ErrFromEmpty
 	}
@@ -88,7 +113,15 @@ func (t *Translator) translateFrom(datasource domain.Datasource, builder *QueryB
 	return nil
 }
 
-func (t *Translator) translateWhere(timeRange domain.TimeRange, whereClauses []domain.WhereClause, builder *QueryBuilder) error {
+func (t *Translator) translateWhere(
+	timeRange domain.TimeRange,
+	whereClauses []domain.WhereClause,
+	builder *QueryBuilder,
+) error {
+	if len(whereClauses) == 0 {
+		return errors.ErrWhereClauseEmpty
+	}
+
 	if timeRange.Start != "" {
 		builder.Where("timestamp", ">=", timeRange.Start)
 	}
@@ -96,7 +129,8 @@ func (t *Translator) translateWhere(timeRange domain.TimeRange, whereClauses []d
 		builder.Where("timestamp", "<=", timeRange.End)
 	}
 
-	for _, where := range whereClauses {
+	for i := range whereClauses {
+		where := &whereClauses[i]
 		if where.Op == "IN" {
 			values, ok := where.Value.([]any)
 			if !ok {
@@ -111,17 +145,25 @@ func (t *Translator) translateWhere(timeRange domain.TimeRange, whereClauses []d
 	return nil
 }
 
-func (t *Translator) translateGroupBy(groupByClauses []domain.GroupByClause, builder *QueryBuilder) error {
-	for _, gb := range groupByClauses {
-		if gb.IsField() {
-			builder.GroupBy(*gb.Field)
-		} else if gb.IsTimeWindow() {
-			field := gb.TimeWindow.Field
+func (t *Translator) translateGroupBy(
+	groupByClauses []domain.GroupByClause,
+	builder *QueryBuilder,
+) error {
+	if len(groupByClauses) == 0 {
+		return errors.ErrGroupByClauseEmpty
+	}
+
+	for idx := range groupByClauses {
+		switch {
+		case groupByClauses[idx].IsField():
+			builder.GroupBy(*groupByClauses[idx].Field)
+		case groupByClauses[idx].IsTimeWindow():
+			field := groupByClauses[idx].TimeWindow.Field
 			if field == "" {
 				field = "timestamp"
 			}
-			builder.GroupByTimeWindow(gb.TimeWindow.Window, field)
-		} else {
+			builder.GroupByTimeWindow(groupByClauses[idx].TimeWindow.Window, field)
+		default:
 			return errors.ErrUnknownGroupBy
 		}
 	}
@@ -129,13 +171,20 @@ func (t *Translator) translateGroupBy(groupByClauses []domain.GroupByClause, bui
 	return nil
 }
 
-func (t *Translator) translateOrderBy(orderByClauses []domain.OrderByClause, builder *QueryBuilder) error {
-	for _, ob := range orderByClauses {
-		direction := ob.Direction
+func (t *Translator) translateOrderBy(
+	orderByClauses []domain.OrderByClause,
+	builder *QueryBuilder,
+) error {
+	if len(orderByClauses) == 0 {
+		return errors.ErrOrderByClauseEmpty
+	}
+
+	for i := range orderByClauses {
+		direction := orderByClauses[i].Direction
 		if direction == "" {
 			direction = "DESC"
 		}
-		builder.OrderBy(ob.Field, direction)
+		builder.OrderBy(orderByClauses[i].Field, direction)
 	}
 
 	return nil

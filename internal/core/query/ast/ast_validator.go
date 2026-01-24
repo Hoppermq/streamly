@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"log/slog"
 
-	"github.com/hoppermq/streamly/pkg/domain"
 	"github.com/santhosh-tekuri/jsonschema/v6"
+
+	"github.com/hoppermq/streamly/pkg/domain"
 )
 
 type Validator struct {
@@ -50,7 +51,7 @@ func (v *Validator) RegisterSchema(key string, schema *jsonschema.Schema) {
 
 func NewValidator(opts ...ValidatorOption) *Validator {
 	v := &Validator{
-		schemas: make(map[string]*jsonschema.Schema, 5),
+		schemas: make(map[string]*jsonschema.Schema),
 	}
 
 	for _, opt := range opts {

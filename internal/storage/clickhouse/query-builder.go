@@ -144,77 +144,157 @@ func (qb *QueryBuilder) SetOffset(offset int) *QueryBuilder {
 }
 
 func (qb *QueryBuilder) Build() (string, []any, error) {
-	if len(qb.components.SelectClauses) == 0 {
-		return "", nil, errors.ErrNoSelectClauseDefined
-	}
-
-	if qb.components.FromSource == "" {
-		return "", nil, errors.ErrNoFromSourceDefined
+	if err := qb.validate(); err != nil {
+		return "", nil, err
 	}
 
 	var sql strings.Builder
 	var args []any
 
+	qb.buildSelect(&sql)
+	qb.buildFrom(&sql)
+
+	whereArgs, err := qb.buildWhere(&sql)
+	if err != nil {
+		return "", nil, err
+	}
+	args = append(args, whereArgs...)
+
+	qb.buildGroupBy(&sql)
+	qb.buildOrderBy(&sql)
+
+	limitOffsetArgs := qb.buildLimitOffset(&sql)
+	args = append(args, limitOffsetArgs...)
+
+	return sql.String(), args, nil
+}
+
+func (qb *QueryBuilder) validate() error {
+	if len(qb.components.SelectClauses) == 0 {
+		return errors.ErrNoSelectClauseDefined
+	}
+	if qb.components.FromSource == "" {
+		return errors.ErrNoFromSourceDefined
+	}
+	return nil
+}
+
+func (qb *QueryBuilder) buildSelect(sql *strings.Builder) {
 	sql.WriteString("SELECT ")
-	for i, sel := range qb.components.SelectClauses {
+	for i := range qb.components.SelectClauses {
 		if i > 0 {
 			sql.WriteString(", ")
 		}
-		sql.WriteString(sel.Expression)
-		if sel.Alias != "" {
+		sql.WriteString(qb.components.SelectClauses[i].Expression)
+		if qb.components.SelectClauses[i].Alias != "" {
 			sql.WriteString(" AS ")
-			sql.WriteString(sel.Alias)
+			sql.WriteString(qb.components.SelectClauses[i].Alias)
 		}
 	}
+}
 
+func (qb *QueryBuilder) buildFrom(sql *strings.Builder) {
 	sql.WriteString(" FROM ")
 	sql.WriteString(qb.components.FromSource)
+}
 
-	if len(qb.components.WhereClauses) > 0 {
-		sql.WriteString(" WHERE ")
-		for i, where := range qb.components.WhereClauses {
-			if i > 0 {
-				sql.WriteString(" AND ")
-			}
-
-			if where.Operator == "IN" {
-				values, ok := where.Value.([]any)
-				if !ok {
-					return "", nil, errors.ErrInOperator
-				}
-
-				placeholders := make([]string, len(values))
-				for j := range placeholders {
-					placeholders[j] = "?"
-					args = append(args, values[j])
-				}
-				sql.WriteString(fmt.Sprintf("%s IN (%s)", where.Field, strings.Join(placeholders, ", ")))
-			} else {
-				sql.WriteString(fmt.Sprintf("%s %s ?", where.Field, where.Operator))
-				args = append(args, where.Value)
-			}
-		}
+func (qb *QueryBuilder) buildWhere(sql *strings.Builder) ([]any, error) {
+	if len(qb.components.WhereClauses) == 0 {
+		return nil, nil
 	}
 
-	if len(qb.components.GroupByClauses) > 0 {
-		sql.WriteString(" GROUP BY ")
-		for i, gb := range qb.components.GroupByClauses {
-			if i > 0 {
-				sql.WriteString(", ")
-			}
-			sql.WriteString(gb.Expression)
+	var args []any
+	sql.WriteString(" WHERE ")
+
+	for i := range qb.components.WhereClauses {
+		if i > 0 {
+			sql.WriteString(" AND ")
 		}
+
+		whereArgs, err := qb.buildWhereClause(sql, qb.components.WhereClauses[i])
+		if err != nil {
+			return nil, err
+		}
+		args = append(args, whereArgs...)
 	}
 
-	if len(qb.components.OrderByClauses) > 0 {
-		sql.WriteString(" ORDER BY ")
-		for i, ob := range qb.components.OrderByClauses {
-			if i > 0 {
-				sql.WriteString(", ")
-			}
-			sql.WriteString(fmt.Sprintf("%s %s", ob.Field, ob.Direction))
+	return args, nil
+}
+
+func (qb *QueryBuilder) buildWhereClause(sql *strings.Builder, where WhereExpr) ([]any, error) {
+	if where.Operator == "IN" {
+		return qb.buildInClause(sql, where)
+	}
+
+	if _, err := fmt.Fprintf(sql, "%s %s ?", where.Field, where.Operator); err != nil {
+		return nil, err
+	}
+
+	return []any{where.Value}, nil
+}
+
+func (qb *QueryBuilder) buildInClause(sql *strings.Builder, where WhereExpr) ([]any, error) {
+	values, ok := where.Value.([]any)
+	if !ok {
+		return nil, errors.ErrInOperator
+	}
+
+	placeholders := make([]string, len(values))
+	for j := range placeholders {
+		placeholders[j] = "?"
+	}
+
+	_, err := fmt.Fprintf(
+		sql,
+		"%s IN (%s)",
+		where.Field,
+		strings.Join(placeholders, ", "),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return values, nil
+}
+
+func (qb *QueryBuilder) buildGroupBy(sql *strings.Builder) {
+	if len(qb.components.GroupByClauses) == 0 {
+		return
+	}
+
+	sql.WriteString(" GROUP BY ")
+	for i, gb := range qb.components.GroupByClauses {
+		if i > 0 {
+			sql.WriteString(", ")
+		}
+		sql.WriteString(gb.Expression)
+	}
+}
+
+func (qb *QueryBuilder) buildOrderBy(sql *strings.Builder) {
+	if len(qb.components.OrderByClauses) == 0 {
+		return
+	}
+
+	sql.WriteString(" ORDER BY ")
+	for i := range qb.components.OrderByClauses {
+		if i > 0 {
+			sql.WriteString(", ")
+		}
+		_, err := fmt.Fprintf(
+			sql,
+			"%s %s",
+			qb.components.OrderByClauses[i].Field,
+			qb.components.OrderByClauses[i].Direction,
+		)
+		if err != nil {
+			return
 		}
 	}
+}
+
+func (qb *QueryBuilder) buildLimitOffset(sql *strings.Builder) []any {
+	var args []any
 
 	if qb.components.Limit != nil {
 		sql.WriteString(" LIMIT ?")
@@ -226,7 +306,7 @@ func (qb *QueryBuilder) Build() (string, []any, error) {
 		args = append(args, *qb.components.Offset)
 	}
 
-	return sql.String(), args, nil
+	return args
 }
 
 func NewQueryBuilder() *QueryBuilder {

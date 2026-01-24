@@ -123,6 +123,7 @@ func (uc *UseCase) Create(ctx context.Context, userInput *domain.CreateUser) err
 	return uc.userRepo.Create(ctx, user)
 }
 
+//nolint:mnd // remove mnd before decision.
 func (uc *UseCase) CreateFromEvent(ctx context.Context, event *domain.ZitadelEventUserCreated) error {
 	uc.logger.Info("creating new user from event")
 

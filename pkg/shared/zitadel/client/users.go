@@ -3,8 +3,9 @@ package client
 import (
 	"context"
 
-	"github.com/hoppermq/streamly/pkg/domain"
 	"github.com/zitadel/zitadel-go/v3/pkg/client/zitadel/user/v2"
+
+	"github.com/hoppermq/streamly/pkg/domain"
 )
 
 func (z *Zitadel) GetUserByUserName(ctx context.Context, username string) (*domain.User, error) {
@@ -27,13 +28,13 @@ func (z *Zitadel) GetUserByUserName(ctx context.Context, username string) (*doma
 
 	userList := resp.GetResult()
 	if len(userList) == 0 {
-		return nil, nil
+		return nil, ErrZitadelClientNotFound
 	}
 
 	zitadelUser := userList[0]
 	u := &domain.User{
-		ZitadelID: zitadelUser.UserId,
-		UserName:  zitadelUser.Username,
+		ZitadelID: zitadelUser.GetUserId(),
+		UserName:  zitadelUser.GetUsername(),
 	}
 
 	return u, nil
@@ -48,11 +49,11 @@ func (z *Zitadel) GetUserByID(ctx context.Context, userId string) (*domain.User,
 	}
 
 	u := &domain.User{
-		ZitadelID:    resp.GetUser().UserId,
-		UserName:     resp.GetUser().Username,
-		FirstName:    resp.GetUser().GetHuman().GetProfile().GivenName,
-		LastName:     resp.GetUser().GetHuman().GetProfile().FamilyName,
-		PrimaryEmail: resp.GetUser().GetHuman().GetEmail().Email,
+		ZitadelID:    resp.GetUser().GetUserId(),
+		UserName:     resp.GetUser().GetUsername(),
+		FirstName:    resp.GetUser().GetHuman().GetProfile().GetGivenName(),
+		LastName:     resp.GetUser().GetHuman().GetProfile().GetFamilyName(),
+		PrimaryEmail: resp.GetUser().GetHuman().GetEmail().GetEmail(),
 		Role:         domain.OwnerRole,
 	}
 

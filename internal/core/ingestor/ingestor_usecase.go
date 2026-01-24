@@ -4,10 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
+	"math"
 	"sync"
 	"time"
 
 	"github.com/google/uuid"
+
 	"github.com/hoppermq/streamly/pkg/domain"
 	"github.com/hoppermq/streamly/pkg/domain/errors"
 )
@@ -45,7 +47,10 @@ func NewEventIngestionUseCase(opts ...UseCaseOption) domain.IngestionUseCase {
 	return useCase
 }
 
-func (uc *EventIngestionUseCaseImpl) IngestBatch(ctx context.Context, request *domain.BatchIngestionRequest) (*domain.BatchIngestionResponse, error) {
+func (uc *EventIngestionUseCaseImpl) IngestBatch(
+	ctx context.Context,
+	request *domain.BatchIngestionRequest,
+) (*domain.BatchIngestionResponse, error) {
 	uc.logger.Info("ingesting batch ingestion request", "request", request)
 	var resp *domain.BatchIngestionResponse
 	if err := uc.validateRequest(request); err != nil {
@@ -90,7 +95,9 @@ func (uc *EventIngestionUseCaseImpl) IngestBatch(ctx context.Context, request *d
 	return resp, nil
 }
 
-func (uc *EventIngestionUseCaseImpl) validateRequest(request *domain.BatchIngestionRequest) error {
+func (uc *EventIngestionUseCaseImpl) validateRequest(
+	request *domain.BatchIngestionRequest,
+) error {
 	if request.TenantID == "" {
 		return errors.ErrTenantIDRequired
 	}
@@ -103,13 +110,13 @@ func (uc *EventIngestionUseCaseImpl) validateRequest(request *domain.BatchIngest
 	if len(request.Events) == 0 {
 		return errors.ErrEventEmpty
 	}
-	if len(request.Events) > 5000 {
+	if len(request.Events) > domain.EventBatchMaxSize {
 		uc.logger.Info("events too big", "events", len(request.Events))
 		return errors.ErrBatchSizeMaxSizeExceeded
 	}
 
-	for i, event := range request.Events {
-		if err := uc.validateEventData(&event, i); err != nil {
+	for i := range request.Events {
+		if err := uc.validateEventData(&request.Events[i], i); err != nil {
 			return err
 		}
 	}
@@ -117,7 +124,10 @@ func (uc *EventIngestionUseCaseImpl) validateRequest(request *domain.BatchIngest
 	return nil
 }
 
-func (uc *EventIngestionUseCaseImpl) validateEventData(event *domain.EventIngestionData, index int) error {
+func (uc *EventIngestionUseCaseImpl) validateEventData(
+	event *domain.EventIngestionData,
+	index int,
+) error {
 	if event.MessageID == "" {
 		return errors.EventMessageMissing(index)
 	}
@@ -137,10 +147,22 @@ func (uc *EventIngestionUseCaseImpl) validateEventData(event *domain.EventIngest
 	return nil
 }
 
-func (uc *EventIngestionUseCaseImpl) transformToEvents(request *domain.BatchIngestionRequest) ([]*domain.Event, error) {
+//nolint:gosec // false positive here ?
+func (uc *EventIngestionUseCaseImpl) transformToEvents(
+	request *domain.BatchIngestionRequest,
+) ([]*domain.Event, error) {
+	if len(request.Events) == 0 {
+		return nil, errors.ErrEventEmpty
+	}
+
 	events := make([]*domain.Event, 0, len(request.Events))
 
-	for _, eventData := range request.Events {
+	for i := range request.Events {
+		eventData := &request.Events[i]
+		if len(eventData.Content) > math.MaxUint32 {
+			return nil, errors.ErrEventSize
+		}
+
 		event := &domain.Event{
 			Timestamp:   time.Now(),
 			TenantID:    request.TenantID,

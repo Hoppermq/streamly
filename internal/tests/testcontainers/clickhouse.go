@@ -3,6 +3,7 @@ package testcontainers
 import (
 	"context"
 	"fmt"
+	"net"
 	"time"
 
 	clickhouseDriver "github.com/ClickHouse/clickhouse-go/v2"
@@ -45,7 +46,7 @@ func StartClickHouse(ctx context.Context) (*ClickHouseContainer, error) {
 		return nil, fmt.Errorf("failed to get clickhouse port: %w", err)
 	}
 
-	connStr := fmt.Sprintf("clickhouse://%s:%s", host, port.Port())
+	connStr := net.JoinHostPort("clickhouse://"+host, port.Port())
 
 	conn, err := clickhouseDriver.Open(&clickhouseDriver.Options{
 		Addr: []string{fmt.Sprintf("%s:%s", host, port.Port())},

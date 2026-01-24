@@ -4,9 +4,10 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/hoppermq/streamly/scripts/sql/migrations"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/migrate"
+
+	"github.com/hoppermq/streamly/scripts/sql/migrations"
 )
 
 type Client struct {

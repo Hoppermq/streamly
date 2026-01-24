@@ -4,9 +4,10 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/hoppermq/streamly/pkg/domain"
 	"github.com/pkg/errors"
 	"github.com/uptrace/bun"
+
+	"github.com/hoppermq/streamly/pkg/domain"
 )
 
 // UnitOfWork manages a transactional boundary across multiple repositories.

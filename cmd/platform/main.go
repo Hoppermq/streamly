@@ -9,6 +9,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/uptrace/bun"
+	"github.com/uptrace/bun/dialect/pgdialect"
+	"github.com/uptrace/bun/driver/pgdriver"
+	"github.com/zixyos/glog"
+	serviceloader "github.com/zixyos/goloader/service"
+
 	"github.com/hoppermq/streamly/cmd/config"
 	"github.com/hoppermq/streamly/internal/core/auth"
 	"github.com/hoppermq/streamly/internal/core/platform"
@@ -19,28 +25,25 @@ import (
 	"github.com/hoppermq/streamly/internal/http"
 	"github.com/hoppermq/streamly/internal/http/routes"
 	"github.com/hoppermq/streamly/internal/storage/postgres"
+	"github.com/hoppermq/streamly/pkg/domain"
 	"github.com/hoppermq/streamly/pkg/shared/zitadel/client"
-	"github.com/uptrace/bun"
-	"github.com/uptrace/bun/dialect/pgdialect"
-	"github.com/uptrace/bun/driver/pgdriver"
-	"github.com/zixyos/glog"
-	serviceloader "github.com/zixyos/goloader/service"
 )
 
+//nolint:funlen // ignoring main fun size.
 func main() {
 	logger, err := glog.NewDefault()
 	if err != nil {
 		slog.New(
 			slog.NewJSONHandler(os.Stdout, nil),
 		)
-		os.Exit(84)
+		os.Exit(domain.ExitStatus)
 	}
 
 	ctx := context.Background()
 	platformConf, err := config.LoadPlatformConfig()
 	if err != nil {
 		logger.Warn("failed to load platform config", "error", err)
-		os.Exit(84)
+		os.Exit(domain.ExitStatus)
 	}
 
 	logger.InfoContext(ctx, "starting platform service")
@@ -58,7 +61,7 @@ func main() {
 
 	if err = d.Bootstrap(ctx); err != nil {
 		logger.ErrorContext(ctx, "failed to bootstrap database", "error", err)
-		os.Exit(84)
+		os.Exit(domain.ExitStatus)
 	}
 
 	orgRepos, err := organization.NewRepository(
@@ -68,7 +71,7 @@ func main() {
 
 	if err != nil {
 		logger.ErrorContext(ctx, "failed to create organization repository", "error", err)
-		os.Exit(84)
+		os.Exit(domain.ExitStatus)
 	}
 
 	userRepo, err := user.NewRepository(
@@ -77,7 +80,7 @@ func main() {
 	)
 	if err != nil {
 		logger.ErrorContext(ctx, "failed to create user repository", "error", err)
-		os.Exit(84)
+		os.Exit(domain.ExitStatus)
 	}
 
 	authRepo, err := auth.NewRepository(
@@ -87,7 +90,7 @@ func main() {
 
 	if err != nil {
 		logger.ErrorContext(ctx, "failed to create auth repository", "error", err)
-		os.Exit(84)
+		os.Exit(domain.ExitStatus)
 	}
 
 	membershipRepo := membership.NewRepository(
@@ -116,7 +119,7 @@ func main() {
 
 	if err != nil {
 		logger.ErrorContext(ctx, "failed to create zitadel client", "error", err)
-		os.Exit(84)
+		os.Exit(domain.ExitStatus)
 	}
 
 	generator := uuid.New
@@ -133,7 +136,7 @@ func main() {
 
 	if err != nil {
 		logger.ErrorContext(ctx, "failed to create user usecase", "error", err)
-		os.Exit(84)
+		os.Exit(domain.ExitStatus)
 	}
 
 	membershipUC := membership.NewUseCase(
@@ -155,7 +158,7 @@ func main() {
 
 	if err != nil {
 		logger.ErrorContext(ctx, "failed to create organization usecase", "error", err)
-		os.Exit(84)
+		os.Exit(domain.ExitStatus)
 	}
 
 	engine := gin.New()
@@ -185,7 +188,7 @@ func main() {
 
 	if err := bootstrapOrchestrator.Run(ctx); err != nil {
 		logger.ErrorContext(ctx, "failed to bootstrap orchestrator", "error", err)
-		os.Exit(84)
+		os.Exit(domain.ExitStatus)
 	}
 
 	app := serviceloader.New(

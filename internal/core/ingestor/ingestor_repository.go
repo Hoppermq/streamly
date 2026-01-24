@@ -2,8 +2,6 @@ package ingestor
 
 import (
 	"context"
-	"log"
-	"time"
 
 	"github.com/hoppermq/streamly/internal/storage/clickhouse"
 	"github.com/hoppermq/streamly/pkg/domain"
@@ -41,7 +39,7 @@ func (e EventRepository) BatchInsert(ctx context.Context, events []*domain.Event
 	committed := false
 	defer func(tx domain.Tx) {
 		if !committed {
-			if err := tx.Rollback(); err != nil {
+			if err = tx.Rollback(); err != nil {
 				return
 			}
 		}
@@ -97,67 +95,4 @@ func NewEventRepository(opts ...RepositoryOption) *EventRepository {
 	}
 
 	return r
-}
-
-type MockEventRepository struct {
-	events      []domain.Event
-	failureRate float64
-}
-
-func NewMockEventRepository() *MockEventRepository {
-	return &MockEventRepository{
-		events:      make([]domain.Event, 0),
-		failureRate: 0.0,
-	}
-}
-
-func (r *MockEventRepository) BatchInsert(ctx context.Context, events []*domain.Event) error {
-	log.Printf("MockEventRepository: Simulating batch insert of %d events", len(events))
-
-	for _, event := range events {
-		if err := r.validateEvent(event); err != nil {
-			return errors.ErrEventCouldNotBeValidated
-		}
-	}
-
-	time.Sleep(50 * time.Millisecond)
-
-	for _, event := range events {
-		r.events = append(r.events, *event)
-	}
-
-	log.Printf("MockEventRepository: Successfully inserted %d events. Total stored: %d",
-		len(events), len(r.events))
-
-	return nil
-}
-
-func (r *MockEventRepository) validateEvent(event *domain.Event) error {
-	if event.TenantID == "" {
-		return errors.ErrTenantIDRequired
-	}
-	if event.MessageID == "" {
-		return errors.ErrMessageIDRequired
-	}
-	if event.SourceID == "" {
-		return errors.ErrSourceIDRequired
-	}
-	if event.Topic == "" {
-		return errors.ErrTopicRequired
-	}
-	if event.EventType == "" {
-		return errors.ErrEventTypeRequired
-	}
-	if len(event.ContentRaw) == 0 {
-		return errors.ErrRawContentRequired
-	}
-	return nil
-}
-
-func (r *MockEventRepository) GetStoredEvents() []domain.Event {
-	return r.events
-}
-
-func (r *MockEventRepository) Clear() {
-	r.events = make([]domain.Event, 0)
 }

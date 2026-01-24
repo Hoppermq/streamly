@@ -27,8 +27,16 @@ type TimeWindow struct {
 	Field  string `json:"field,omitempty"`
 }
 
+type Clause string
+
+const (
+	FieldType      Clause = "field"
+	FunctionType   Clause = "function"
+	TimeWindowType Clause = "time_window"
+)
+
 type SelectClause struct {
-	Type     string
+	Type     Clause
 	Field    *string
 	Function *AggFct
 }
@@ -43,7 +51,7 @@ type WhereClause struct {
 }
 
 type GroupByClause struct {
-	Type       string
+	Type       Clause
 	Field      *string
 	TimeWindow *TimeWindow
 }

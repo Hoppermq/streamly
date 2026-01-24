@@ -53,7 +53,6 @@ func LoadPlatformConfig() (*PlatformConfig, error) {
 }
 
 func (c *PlatformConfig) DatabaseDSN() string {
-	fmt.Println(c.Platform.Storage.Database)
 	return fmt.Sprintf(
 		"postgres://%s:%s@%s:%d/%s?sslmode=disable",
 		c.Platform.Storage.Database.User,

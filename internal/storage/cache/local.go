@@ -29,11 +29,13 @@ func (l *LocalStorage[T, K]) Get(key string) (T, bool) {
 
 	item, ok := l.items[K(key)]
 	if !ok {
-		return item.value, false
+		var zero T
+		return zero, false
 	}
 
 	if item.expires.Before(time.Now()) {
-		return item.value, false
+		var zero T
+		return zero, false
 	}
 
 	return item.value, true

@@ -19,16 +19,20 @@ import (
 
 const defaultMaxTime = 5 * time.Minute
 
+type tokenVerifier interface {
+	CheckAuthorization(ctx context.Context, token string) (*oauth.IntrospectionContext, error)
+}
 type Zitadel struct {
 	logger *slog.Logger
 	api    *client.Client
 	pat    string
 
-	verifier    *oauth.IntrospectionVerificationWithCache[*middles.Claims]
-	cache       domain.Cache[*middles.Claims]
-	cacheTTL    time.Duration
-	keyfilePath string
-	issuer      string
+	verifier     *oauth.IntrospectionVerificationWithCache[*middles.Claims]
+	authVerifier tokenVerifier
+	cache        domain.Cache[*middles.Claims]
+	cacheTTL     time.Duration
+	keyfilePath  string
+	issuer       string
 }
 
 type Options func(*Zitadel) error
@@ -98,6 +102,7 @@ func WithIssuer(issuer string) Options {
 	}
 }
 
+// NewZitadelClient create a new instance of the zitadel api client.
 func NewZitadelClient(ctx context.Context, z *zitadel.Zitadel, opts ...Options) (*Zitadel, error) {
 	zita := &Zitadel{}
 
@@ -120,19 +125,26 @@ func NewZitadelClient(ctx context.Context, z *zitadel.Zitadel, opts ...Options) 
 
 	zita.api = c
 
-	if zita.keyfilePath != "" && zita.issuer != "" {
-		resourceServer, err := rs.NewResourceServerFromKeyFile(ctx, zita.issuer, zita.keyfilePath)
-		if err != nil {
-			return nil, errors.ZitadelResourceServerCreationFailed(err)
-		}
-
-		ttl := zita.cacheTTL
-		if ttl == 0 {
-			ttl = defaultMaxTime
-		}
-
-		zita.verifier = oauth.NewIntrospectionVerificationWithCache(resourceServer, zita.cache, ttl)
+	resourceServer, err := rs.NewResourceServerFromKeyFile(ctx, zita.issuer, zita.keyfilePath)
+	if err != nil {
+		return nil, errors.ZitadelResourceServerCreationFailed(err)
 	}
+
+	ttl := zita.cacheTTL
+	if ttl == 0 {
+		ttl = defaultMaxTime
+	}
+
+	zita.verifier = oauth.NewIntrospectionVerificationWithCache(resourceServer, zita.cache, ttl)
+
+	// TODO : bootstrap need to create the platform sa.
+	v2 := oauth.DefaultJWTAuthorization("356531635715399939")
+	verifier, err := v2(ctx, z)
+	if err != nil {
+		return nil, err
+	}
+
+	zita.authVerifier = verifier
 
 	if zita.logger != nil {
 		zita.logger.InfoContext(ctx, "Zitadel client initialized successfully")

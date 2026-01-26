@@ -11,7 +11,7 @@ import (
 
 type Orchestrator struct {
 	logger  *slog.Logger
-	zitadel client.Zitadel
+	zitadel *client.Zitadel
 	userUC  *user.UseCase
 	orgUC   *organization.UseCase
 }
@@ -24,7 +24,7 @@ func BstWithLogger(logger *slog.Logger) Options {
 	}
 }
 
-func BstWithZitadel(zitadel client.Zitadel) Options {
+func BstWithZitadel(zitadel *client.Zitadel) Options {
 	return func(o *Orchestrator) {
 		o.zitadel = zitadel
 	}

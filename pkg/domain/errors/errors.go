@@ -63,9 +63,16 @@ func EventContentEmpty(eventID int) error {
 }
 
 var (
-	ErrZitadelClientCreation = errors.New("failed to create Zitadel client")
-	ErrZitadelPATRequired    = errors.New("pat token is required (use WithPAT or WithPATFromFile)")
+	ErrZitadelClientCreation         = errors.New("failed to create Zitadel client")
+	ErrZitadelPATRequired            = errors.New("pat token is required (use WithPAT or WithPATFromFile)")
+	ErrZitadelResourceServerCreation = errors.New("failed to create Zitadel resource server")
+	ErrZitadelVerifierNotInitialized = errors.New("zitadel verifier not initialized - keyfile and issuer required")
+	ErrZitadelInvalidRefreshToken    = errors.New("invalid refresh token")
 )
+
+func ZitadelResourceServerCreationFailed(err error) error {
+	return fmt.Errorf("%w: %w", ErrZitadelResourceServerCreation, err)
+}
 
 var (
 	ErrSerializerInvalidTimeWindow    = errors.New("invalid time window")

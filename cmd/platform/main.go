@@ -4,8 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"log/slog"
+	"net"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -15,6 +17,7 @@ import (
 	"github.com/zixyos/glog"
 	serviceloader "github.com/zixyos/goloader/service"
 
+	"github.com/hoppermq/middles"
 	"github.com/hoppermq/streamly/cmd/config"
 	"github.com/hoppermq/streamly/internal/core/auth"
 	"github.com/hoppermq/streamly/internal/core/platform"
@@ -24,6 +27,7 @@ import (
 	"github.com/hoppermq/streamly/internal/core/platform/user"
 	"github.com/hoppermq/streamly/internal/http"
 	"github.com/hoppermq/streamly/internal/http/routes"
+	"github.com/hoppermq/streamly/internal/storage/cache"
 	"github.com/hoppermq/streamly/internal/storage/postgres"
 	"github.com/hoppermq/streamly/pkg/domain"
 	"github.com/hoppermq/streamly/pkg/shared/zitadel/client"
@@ -106,6 +110,7 @@ func main() {
 		postgres.FactoryWithUserRepo(userRepo),
 	)
 
+	tokenCache := cache.NewLocalStorage[*middles.Claims, domain.TokenCacheKey]()
 	zitadelClient, err := client.NewZitadelClient(
 		ctx,
 		client.NewZitadel(
@@ -115,6 +120,15 @@ func main() {
 		),
 		client.WithLogger(logger),
 		client.WithPATFromFile(platformConf.ZitadelPATPath()),
+		client.WithIssuer(
+			"http://"+net.JoinHostPort(
+				platformConf.Platform.Zitadel.Domain,
+				strconv.Itoa(int(platformConf.Platform.Zitadel.Port)),
+			),
+		),
+		client.WithServiceAccountKeyFile(platformConf.ZitadelServiceAccountKeyPath()),
+		//nolint:mnd // TODO : import from config.
+		client.WithTokenCache[*middles.Claims](tokenCache, time.Minute*5),
 	)
 
 	if err != nil {
@@ -168,7 +182,7 @@ func main() {
 		http.WithLogger(logger),
 		http.WithRoutes(
 			routes.CreateRouteRegistrar(
-				routes.CreatePlatformRegistrar(logger, organizationUC),
+				routes.CreatePlatformRegistrar(logger, organizationUC, zitadelClient),
 				routes.CreateWebhookRegistrar(logger, userUC),
 			),
 		),
@@ -181,7 +195,7 @@ func main() {
 
 	bootstrapOrchestrator := bootstrap.NewOrchestrator(
 		bootstrap.BstWithLogger(logger),
-		bootstrap.BstWithZitadel(*zitadelClient),
+		bootstrap.BstWithZitadel(zitadelClient),
 		bootstrap.BstWithOrgUC(organizationUC),
 		bootstrap.BstWithUserUC(userUC),
 	)

@@ -6,12 +6,10 @@
   "packageRules": [
     {
       "matchUpdateTypes": ["minor", "patch", "bump", "pin", "digest"],
-      "automerge": true,
-      "automergeType": "branch"
+      "automerge": true
     }, {
       "matchDepTypes": ["devDependencies"],
-      "automerge": true,
-      "automergeType": "branch"
+      "automerge": true
     },
     {
       "matchDatasources": ["go", "golang-version"],

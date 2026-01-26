@@ -31,6 +31,27 @@ locals {
       scopes = ["openid", "streamly:events:read", "streamly:events:write"],
       roles = ["technical"]
     }
+    platform = {
+      scopes = ["openid", "streamly:events:read", "streamly:events:write"],
+      roles = ["technical"]
+    }
+  }
+
+  applications = {
+    web-oidc = {
+      type = "OIDC_APP_TYPE_WEB"
+      name = "web-oidc"
+      response_types = [
+        "OIDC_RESPONSE_TYPE_CODE"
+      ]
+      grant_types = [
+        "OIDC_GRANT_TYPE_AUTHORIZATION_CODE",
+        "OIDC_GRANT_TYPE_REFRESH_TOKEN"
+      ]
+      auth_method_type = "OIDC_AUTH_METHOD_TYPE_BASIC"
+      access_token_type = "OIDC_TOKEN_TYPE_JWT"
+      version = "OIDC_VERSION_1_0"
+    }
   }
 
   # Derive service definitions for IAM module (machine user creation)

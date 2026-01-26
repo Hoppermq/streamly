@@ -255,7 +255,7 @@ services:
       - "traefik.http.routers.zitadel.middlewares=zitadel-headers"
     user: "0"
 
-# zitadel-login: Disabled for development - using built-in Zitadel login UI
+  # zitadel-login: Disabled for development - using built-in Zitadel login UI
   # To enable, uncomment and set ZITADEL_DEFAULTINSTANCE_FEATURES_LOGINV2_REQUIRED=true
   # zitadel-login:
   #   restart: unless-stopped
@@ -350,7 +350,7 @@ services:
       retries: 3
 
   postgres:
-    image: postgres:18.1-alpine
+    image: postgres:17.7-alpine
     ports:
       - "5432:5432"
     volumes:

@@ -15,6 +15,7 @@ var (
 	ErrFailedToUnmarshalJSONSchema   = errors.New("failed to unmarshal json schema")
 	ErrFailedToAddJSONSchemaResource = errors.New("failed to add json schema reousrce")
 	ErrRootUserIDNotSet              = errors.New("ROOT_USER_ID environment variable not set")
+	ErrRootEmailNotSet               = errors.New("ROOT_EMAIL environment variable not set")
 	ErrDatabaseConnection            = errors.New("failed to connect to database")
 	ErrDatabaseConstraint            = errors.New("database constraint violation")
 )

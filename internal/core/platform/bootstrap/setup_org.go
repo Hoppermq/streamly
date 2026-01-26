@@ -14,12 +14,13 @@ func (o *Orchestrator) isFirstInstance(ctx context.Context) (bool, error) {
 	rootUserMail := os.Getenv("ROOT_USER_EMAIL")
 	if rootUserMail == "" {
 		o.logger.WarnContext(ctx, "ROOT_USER_EMAIL environment variable not set")
+		return false, errors.ErrRootEmailNotSet
 	}
 
 	// will use env variable here
-	owner, err := o.userUC.FindOneByPrimaryEmail(ctx, "root@streamly.auth.localhost")
+	owner, err := o.userUC.FindOneByPrimaryEmail(ctx, rootUserMail)
 	if err != nil && !isNotFoundError(err) {
-		return false, errors.RootUserQueryFailed(err, "root@streamly.auth.localhost")
+		return false, errors.RootUserQueryFailed(err, rootUserMail)
 	}
 
 	if owner != nil {

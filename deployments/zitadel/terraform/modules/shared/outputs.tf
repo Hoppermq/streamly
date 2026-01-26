@@ -13,3 +13,7 @@ output "service_definitions" {
 output "service_role_mappings" {
   value = local.service_role_mappings
 }
+
+output "applications" {
+  value = local.applications
+}

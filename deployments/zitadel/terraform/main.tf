@@ -8,9 +8,9 @@ terraform {
 }
 
 provider "zitadel" {
-  domain = var.zitadel_domain
-  insecure = var.zitadel_secure_mode
-  port = var.zitadel_port
+  domain           = var.zitadel_domain
+  insecure         = var.zitadel_secure_mode
+  port             = var.zitadel_port
   jwt_profile_json = file(var.zitadel_jwt_profile_file)
 }
 
@@ -38,7 +38,20 @@ module "service-accounts" {
   }
   depends_on = [module.iam]
 
-  project_id = module.iam.project_id
+  project_id       = module.iam.project_id
   service_user_ids = module.iam.service_user_ids
-  services = module.common.service_role_mappings
+  services         = module.common.service_role_mappings
+}
+
+module "applications" {
+  source = "./modules/applications"
+  providers = {
+    zitadel = zitadel
+  }
+
+  project_id = module.iam.project_id
+
+  // should be loaded from output here
+  redirect_uris = ["http://localhost:3000"]
+  applications  = module.common.applications
 }

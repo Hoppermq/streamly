@@ -143,7 +143,7 @@ services:
 
   # Monitoring and observability
   prometheus:
-    image: prom/prometheus:v2.55.1
+    image: prom/prometheus:v3.9.1
     ports:
       - "9090:9090"
     volumes:

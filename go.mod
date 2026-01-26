@@ -17,7 +17,7 @@ require (
 	github.com/uptrace/bun v1.2.16
 	github.com/uptrace/bun/dialect/pgdialect v1.2.16
 	github.com/uptrace/bun/driver/pgdriver v1.2.16
-	github.com/zitadel/zitadel-go/v3 v3.24.0
+	github.com/zitadel/zitadel-go/v3 v3.24.1
 	github.com/zixyos/glog v0.1.0
 	github.com/zixyos/goloader v0.2.0
 )

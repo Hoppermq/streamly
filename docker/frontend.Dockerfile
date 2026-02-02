@@ -21,7 +21,8 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:3000/ || exit 1
 
-CMD ["bun", "run", "dev"]
+# Auto-install dependencies on startup for smooth DX
+CMD ["sh", "-c", "bun install && bun run dev"]
 
 FROM base AS builder
 ENV NODE_ENV=production

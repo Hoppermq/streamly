@@ -4,7 +4,7 @@ import {useAuthStore} from "@/hooks/store/auth.store.ts";
 import {useEffect} from "react";
 import {userManager} from "@/hooks/auth.oidc-config.ts";
 
-export const callbackRoute = createRoute({
+export const callbackRoute = () => createRoute({
   getParentRoute: () => rootRoute,
   path: '/auth/callback',
   component: () => {

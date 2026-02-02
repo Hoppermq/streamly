@@ -1,7 +1,7 @@
 import {UserManager, type UserManagerSettings, WebStorageStateStore} from 'oidc-client-ts';
 
-const ZITADEL_ISSUER = ""
-const CLIENT_ID = ""
+const ZITADEL_ISSUER = "http://auth.localhost:8080"
+const CLIENT_ID = "357291801155035402"
 
 const userManagerSettings: UserManagerSettings = {
   authority: ZITADEL_ISSUER,

@@ -1,6 +1,6 @@
 import type {User} from "oidc-client-ts";
 import {create} from "zustand";
-import {persist} from "zustand/middleware/persist";
+import {persist} from "zustand/middleware";
 
 type AuthState = {
   user: User | null,

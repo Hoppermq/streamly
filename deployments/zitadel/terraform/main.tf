@@ -52,6 +52,9 @@ module "applications" {
   project_id = module.iam.project_id
 
   // should be loaded from output here
-  redirect_uris = ["http://localhost:3000"]
+  redirect_uris = [
+    "http://localhost:3000/auth/callback",
+    "http://localhost:3000/auth/silent-callback"
+  ]
   applications  = module.common.applications
 }

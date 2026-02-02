@@ -39,7 +39,7 @@ locals {
 
   applications = {
     web-oidc = {
-      type = "OIDC_APP_TYPE_WEB"
+      type = "OIDC_APP_TYPE_USER_AGENT"  # SPA - no server-side code
       name = "web-oidc"
       response_types = [
         "OIDC_RESPONSE_TYPE_CODE"
@@ -48,7 +48,7 @@ locals {
         "OIDC_GRANT_TYPE_AUTHORIZATION_CODE",
         "OIDC_GRANT_TYPE_REFRESH_TOKEN"
       ]
-      auth_method_type = "OIDC_AUTH_METHOD_TYPE_BASIC"
+      auth_method_type = "OIDC_AUTH_METHOD_TYPE_NONE"  # Public client - PKCE only
       access_token_type = "OIDC_TOKEN_TYPE_JWT"
       version = "OIDC_VERSION_1_0"
     }

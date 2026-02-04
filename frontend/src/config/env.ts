@@ -9,6 +9,7 @@ const getEnvVar = (key: string, defaultValue?: string): string => {
 export const config = {
   zitadelURL: getEnvVar('VITE_ZITADEL_ISSUER', 'http://auth.localhost:8080'),
   zitadelClientID: getEnvVar('VITE_ZITADEL_CLIENT_ID', ''),
+  zitadelProjectID: getEnvVar('VITE_ZITADEL_PROJECT_ID', ''),
   apiURL: getEnvVar('VITE_API_URL', 'http://localhost:8080'),
   environment: getEnvVar('VITE_APP_ENV', 'development'),
 } as const;

@@ -28,7 +28,9 @@ const userManagerSettings: UserManagerSettings = {
   redirect_uri: `${window.location.origin}/auth/callback`,
   post_logout_redirect_uri: window.location.origin,
   response_type: 'code',
-  scope: `openid profile email offline_access urn:zitadel:iam:org:project:id:${PROJECT_ID}:aud`,
+  scope: PROJECT_ID
+    ? `openid profile email offline_access urn:zitadel:iam:org:project:id:${PROJECT_ID}:aud`
+    : 'openid profile email offline_access',
   userStore: new WebStorageStateStore({ store: window.localStorage }),
   automaticSilentRenew: true,
   silent_redirect_uri: `${window.location.origin}/auth/silent-callback`,

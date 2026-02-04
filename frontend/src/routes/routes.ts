@@ -8,13 +8,13 @@ import {silentCallbackRoute} from "@/routes/auth/silent-callback.route.tsx";
 const HomeRoute = homeRoute(rootRoute);
 const EventRoute = eventRoute(rootRoute);
 const LoginRoute = loginRoute(rootRoute);
-const CallBackRoute = callbackRoute();
-const SilentCallbackRoute = silentCallbackRoute;
+const CallBackRoute = callbackRoute(rootRoute);
+const SilentCallbackRoute = silentCallbackRoute
 
 export const routes = [
   HomeRoute,
   EventRoute,
   LoginRoute,
   CallBackRoute,
-  SilentCallbackRoute,
+  SilentCallbackRoute ,
 ]

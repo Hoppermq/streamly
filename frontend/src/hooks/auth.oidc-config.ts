@@ -15,13 +15,6 @@ if (!PROJECT_ID) {
   console.error('Zitadel project ID missing from env', 'value', PROJECT_ID)
 }
 
-console.debug('🔐 OIDC Config:', {
-  authority: ZITADEL_ISSUER,
-  client_id: CLIENT_ID,
-  project_id: PROJECT_ID,
-  redirect_uri: `${window.location.origin}/auth/callback`,
-});
-
 const userManagerSettings: UserManagerSettings = {
   authority: ZITADEL_ISSUER,
   client_id: CLIENT_ID,

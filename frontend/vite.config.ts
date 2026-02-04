@@ -7,10 +7,6 @@ import { resolve } from 'node:path'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [viteReact(), tailwindcss()],
-  test: {
-    globals: true,
-    environment: 'jsdom',
-  },
   resolve: {
     alias: {
       '@': resolve(__dirname, './src'),
@@ -21,5 +17,10 @@ export default defineConfig({
     watch: {
       usePolling: true,
     }
+  },
+  define: {
+    'import.meta.env.ZITADEL_API_URL': JSON.stringify(process.env.ZITADEL_API_URL),
+    'import.meta.env.PLATFORM_API_URL': JSON.stringify(process.env.PLATFORM_API_URL),
+    'import.meta.env.VITE_ZITADEL_CLIENT_ID': JSON.stringify(process.env.WEB_OIDC_CLIENT_ID),
   }
 })

@@ -157,6 +157,14 @@ terraform output -json service_credentials 2>/dev/null | jq -r '
   "# \(.key) service\n\(.key | ascii_upcase)_CLIENT_ID=\(.value.client_id)\n\(.key | ascii_upcase)_CLIENT_SECRET=\(.value.client_secret)\n"
 ' > "${SCRIPT_DIR}/../.env.zitadel"
 
+# Save application client IDs (for frontend)
+echo "" >> "${SCRIPT_DIR}/../.env.zitadel"
+echo "# Applications (Frontend)" >> "${SCRIPT_DIR}/../.env.zitadel"
+terraform output -json applications 2>/dev/null | jq -r '
+  to_entries[] |
+  "\(.key | ascii_upcase | gsub("-"; "_"))_CLIENT_ID=\(.value.client_id)"
+' >> "${SCRIPT_DIR}/../.env.zitadel"
+
 # Save root admin credentials
 echo "🔑 Exporting root admin credentials..."
 ROOT_USER_ID=$(terraform output -json root_admin_credentials 2>/dev/null | jq -r '.user_id')
@@ -178,5 +186,6 @@ fi
 
 echo "✅ Service accounts provisioned!"
 echo "📄 Service credentials saved to .env.zitadel"
+echo "📄 Application client IDs saved to .env.zitadel"
 echo "📄 Root admin credentials saved to zitadel/machinekey/"
 echo "🎉 Bootstrap complete! Terraform state saved."

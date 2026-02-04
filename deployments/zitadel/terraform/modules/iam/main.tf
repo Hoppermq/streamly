@@ -2,7 +2,7 @@ resource "zitadel_project" "default" {
   name = var.project_name
   org_id = var.organization_id
   project_role_assertion = true
-  project_role_check = true
+  project_role_check = false ## just for dev here.
 }
 
 resource "zitadel_project_role" "default" {

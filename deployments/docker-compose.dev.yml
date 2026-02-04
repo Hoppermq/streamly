@@ -20,7 +20,10 @@ services:
       - NODE_ENV=development
       - VITE_API_URL=http://api.localhost:8080
       - VITE_ZITADEL_ISSUER=http://auth.localhost:8080
+      - VITE_ZITADEL_CLIENT_ID=${WEB_OIDC_CLIENT_ID}
       - VITE_APP_ENV=development
+    env_file:
+      - .env.zitadel
     depends_on:
       - ingestor-service
       - query-service

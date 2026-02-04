@@ -14,3 +14,9 @@ output "root_admin_credentials" {
   sensitive   = true
   value       = module.iam.root_admin_credentials
 }
+
+output "applications" {
+  description = "Application client IDs for frontend configuration"
+  sensitive = true
+  value       = module.applications.applications
+}

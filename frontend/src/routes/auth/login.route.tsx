@@ -6,7 +6,6 @@ import {createRoute} from "@tanstack/react-router";
 const LoginPage = () => {
   const handleLogin = async () => {
     try {
-      console.info('something happened')
       await userManager.signinRedirect();
     } catch (error) { console.error('login failed:', error)}
   }

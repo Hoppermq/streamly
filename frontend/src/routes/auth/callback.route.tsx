@@ -13,12 +13,11 @@ export const callbackRoute = (parent: typeof rootRoute) => createRoute({
 
     useEffect(() => {
       userManager.signinRedirectCallback().then((user) => {
-        console.info('something happened here', 'user', user)
         setUser(user)
         navigate({ to: '/' })
       }).catch((err) => {
         console.error('login error:', err)
-        navigate({href: '/login'})
+        navigate({to: '/login'})
       })
     }, [navigate, setUser])
 

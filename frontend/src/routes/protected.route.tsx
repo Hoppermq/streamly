@@ -8,7 +8,7 @@ export const protectedRoute = createRoute({
   path: "/dashboard", //should be org here
   beforeLoad: async () => {
     const { isAuthenticated } = useAuthStore.getState();
-    if (!isAuthenticated) { throw redirect({href: '/login'})}
+    if (!isAuthenticated) { throw redirect({to: '/login'})}
   },
   component: HomePage
 })

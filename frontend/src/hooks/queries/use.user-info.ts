@@ -1,7 +1,7 @@
 import {useAuthStore} from "@/hooks/store/auth.store.ts";
 import {useQuery} from "@tanstack/react-query";
+import { config } from "@/config/env.ts";
 
-const ZITADEL_ISSUER = ""
 
 export const useUserInfo = () => {
   const user = useAuthStore((state) => state.user);
@@ -9,7 +9,7 @@ export const useUserInfo = () => {
   return useQuery({
     queryKey: ['user-info', user?.profile.sub],
     queryFn: async () => {
-      const response = await fetch(`${ZITADEL_ISSUER}/oidc/v1/userinfo`, {
+      const response = await fetch(`${config.zitadelURL}/oidc/v1/userinfo`, {
         headers: {
           Authorization: `Bearer ${user?.access_token}`,
         }

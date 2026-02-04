@@ -5,11 +5,12 @@ const ZITADEL_ISSUER: string = config.zitadelURL
 const CLIENT_ID: string = config.zitadelClientID
 const PROJECT_ID: string = config.zitadelProjectID
 
+// Validate required config
 if (!ZITADEL_ISSUER) {
   console.error('Zitadel issuer missing from env', 'value', ZITADEL_ISSUER)
 }
 if (!CLIENT_ID) {
-  console.error('application client id is missing from env', 'value', CLIENT_ID)
+  console.log('application client id is missing from env', 'value', CLIENT_ID)
 }
 if (!PROJECT_ID) {
   console.error('Zitadel project ID missing from env', 'value', PROJECT_ID)

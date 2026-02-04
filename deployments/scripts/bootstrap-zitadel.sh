@@ -165,6 +165,17 @@ terraform output -json applications 2>/dev/null | jq -r '
   "\(.key | ascii_upcase | gsub("-"; "_"))_CLIENT_ID=\(.value.client_id)"
 ' >> "${SCRIPT_DIR}/../.env.zitadel"
 
+# Save project ID
+echo "" >> "${SCRIPT_DIR}/../.env.zitadel"
+echo "# Project" >> "${SCRIPT_DIR}/../.env.zitadel"
+PROJECT_ID=$(terraform output -json project_id 2>/dev/null | jq -r '.')
+if [ -n "$PROJECT_ID" ] && [ "$PROJECT_ID" != "null" ]; then
+  echo "ZITADEL_PROJECT_ID=$PROJECT_ID" >> "${SCRIPT_DIR}/../.env.zitadel"
+  echo "✅ Project ID saved: $PROJECT_ID"
+else
+  echo "⚠️  Could not export project ID"
+fi
+
 # Save root admin credentials
 echo "🔑 Exporting root admin credentials..."
 ROOT_USER_ID=$(terraform output -json root_admin_credentials 2>/dev/null | jq -r '.user_id')
@@ -187,5 +198,6 @@ fi
 echo "✅ Service accounts provisioned!"
 echo "📄 Service credentials saved to .env.zitadel"
 echo "📄 Application client IDs saved to .env.zitadel"
+echo "📄 Project ID saved to .env.zitadel"
 echo "📄 Root admin credentials saved to zitadel/machinekey/"
 echo "🎉 Bootstrap complete! Terraform state saved."

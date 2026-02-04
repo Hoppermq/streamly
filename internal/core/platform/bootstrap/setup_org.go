@@ -12,9 +12,16 @@ import (
 
 func (o *Orchestrator) isFirstInstance(ctx context.Context) (bool, error) {
 	rootUserMail := os.Getenv("ROOT_USER_EMAIL")
+
 	if rootUserMail == "" {
-		o.logger.WarnContext(ctx, "ROOT_USER_EMAIL environment variable not set")
-		return false, errors.ErrRootEmailNotSet
+		o.logger.WarnContext(
+			ctx,
+			"ROOT_USER_EMAIL environment variable not set",
+			"error",
+			errors.ErrRootEmailNotSet,
+		)
+		rootUserMail = "root@streamly.auth.localhost"
+		o.logger.Info("ROOT_USER_EMAIL switched to default")
 	}
 
 	// will use env variable here

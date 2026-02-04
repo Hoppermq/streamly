@@ -41,7 +41,10 @@ func RegisterPlatformRoutes(
 
 	userGroup := v1.Group("/users")
 	{
-		userGroup.GET("/", func(context *gin.Context) {})
+		userGroup.GET("/", func(context *gin.Context) {
+			logger.Info("listing users")
+			context.JSON(200, nil)
+		})
 		userGroup.POST("/new", func(context *gin.Context) {})
 
 		userGroup.GET("/:id", func(context *gin.Context) {})

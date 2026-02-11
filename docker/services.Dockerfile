@@ -1,4 +1,4 @@
-FROM --platform=${BUILDPLATFORM} golang:1.25-alpine AS deps
+FROM --platform=${BUILDPLATFORM} golang:1.26-alpine AS deps
 WORKDIR /app
 COPY go.mod go.sum ./
 RUN --mount=type=cache,target=/go/pkg/mod \

@@ -2,6 +2,7 @@ package routes
 
 import (
 	"log/slog"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 
@@ -43,7 +44,7 @@ func RegisterPlatformRoutes(
 	{
 		userGroup.GET("/", func(context *gin.Context) {
 			logger.Info("listing users")
-			context.JSON(200, nil)
+			context.JSON(http.StatusOK, nil)
 		})
 		userGroup.POST("/new", func(context *gin.Context) {})
 

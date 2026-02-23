@@ -1,7 +1,18 @@
-export const ROUTES: { [title: string]: string} = {
+export const ROUTES = {
   HOME: '/',
+  DASHBOARD: '/dashboard',
   EVENTS: '/events',
+  TRACES: '/traces',
+  LOGS: '/logs',
+  METRICS: '/metrics',
+  ANALYTICS: '/analytics',
+  ERRORS: '/errors',
+  SESSIONS: '/sessions',
+  ALERTS: '/alerts',
+  INCIDENTS: '/incidents',
+  TEAM: '/team',
+  SETTINGS: '/settings',
   LOGIN: '/login',
   AUTH_CALLBACK: '/auth/callback',
   AUTH_SILENT_CALLBACK: '/auth/silent-callback',
-}
+} as const

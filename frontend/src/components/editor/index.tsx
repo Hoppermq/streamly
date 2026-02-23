@@ -8,5 +8,10 @@ export const CodeEditor = () => {
     setContent(v)
   }, [])
 
-  return <CodeMirror value={content} height="50px" extensions={[sql()]} onChange={onChange} />
+  return <CodeMirror
+    value={content}
+    height="50px"
+    extensions={[sql()]}
+    onChange={onChange}
+  />
 }

@@ -19,7 +19,7 @@ import {
   Braces,
   type LucideIcon,
 } from "lucide-react"
-import { useEffect } from "react"
+import { useState } from "react"
 import { useNavigate, useRouterState } from "@tanstack/react-router"
 import { cn } from "@/lib/utils"
 import { useSidebarStore } from "@/hooks/store/sidebar.store"
@@ -82,20 +82,16 @@ const bottomItems: NavItem[] = [
 export const NavBarComponent = () => {
   const navigate = useNavigate()
   const currentPath = useRouterState({ select: (s) => s.location.pathname })
-  const { expanded, toggle, selectedPath, setSelectedPath } = useSidebarStore()
+  const [activePath, setActivePath] = useState(currentPath)
+  const { expanded, toggle } = useSidebarStore()
   const user = useAuthStore((s) => s.user)
 
   const userEmail = user?.profile.email ?? ""
   const userInitial = (user?.profile.name ?? user?.profile.email ?? "?")[0].toUpperCase()
 
-  // Keep selection in sync when the router location changes (e.g. back/forward)
-  useEffect(() => {
-    setSelectedPath(currentPath)
-  }, [currentPath, setSelectedPath])
-
   const handleNavigate = (href: string) => {
-    setSelectedPath(href)
-    navigate({ to: href })
+    setActivePath(href)
+    navigate({ to: href as never })
   }
 
   return (
@@ -152,7 +148,7 @@ export const NavBarComponent = () => {
               <div className="mx-2 my-2 h-px bg-sidebar-border" />
             )}
             {section.items.map((item) => {
-              const isActive = selectedPath === item.href
+              const isActive = activePath === item.href
               const Icon = item.icon
               return (
                 <button
@@ -205,7 +201,7 @@ export const NavBarComponent = () => {
       <div className="border-t border-sidebar-border px-2 py-2">
         {bottomItems.map((item) => {
           const Icon = item.icon
-          const isActive = selectedPath === item.href
+          const isActive = activePath === item.href
           return (
             <button
               key={item.label}

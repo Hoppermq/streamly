@@ -170,7 +170,7 @@ services:
 
   # Grafana for visualization
   grafana:
-    image: grafana/grafana:12.3.3
+    image: grafana/grafana:12.4.0
     ports:
       - "3001:3000"
     volumes:

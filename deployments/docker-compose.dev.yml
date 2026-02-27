@@ -354,7 +354,7 @@ services:
       retries: 3
 
   postgres:
-    image: postgres:17.8-alpine
+    image: postgres:17.9-alpine
     ports:
       - "5432:5432"
     volumes:

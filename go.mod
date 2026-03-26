@@ -21,7 +21,7 @@ require (
 	github.com/zitadel/oidc/v3 v3.45.5
 	github.com/zitadel/zitadel-go/v3 v3.28.0
 	github.com/zixyos/glog v0.1.0
-	github.com/zixyos/goloader v0.2.0
+	github.com/zixyos/goloader v0.3.1
 )
 
 require (
@@ -125,7 +125,7 @@ require (
 	github.com/shirou/gopsutil/v4 v4.26.2 // indirect
 	github.com/shopspring/decimal v1.4.0 // indirect
 	github.com/sirupsen/logrus v1.9.4 // indirect
-	github.com/stretchr/objx v0.5.2 // indirect
+	github.com/stretchr/objx v0.5.3 // indirect
 	github.com/tklauser/go-sysconf v0.3.16 // indirect
 	github.com/tklauser/numcpus v0.11.0 // indirect
 	github.com/tmthrgd/go-hex v0.0.0-20190904060850-447a3041c3bc // indirect

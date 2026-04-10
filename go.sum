@@ -449,6 +449,8 @@ github.com/zitadel/oidc/v3 v3.47.0 h1:ryH8tWkBZ+WHFYi//uoeW2mjg/PsV8YVcMn/GQyqhZ
 github.com/zitadel/oidc/v3 v3.47.0/go.mod h1:xhsEkuRmwxuU7elQ1isxIou983rEJAJdM7fCQnJq2lQ=
 github.com/zitadel/oidc/v3 v3.47.1 h1:fSm+jfOhCxtx2bB8zfA2tImHtKiaGGVpXpgoWcyc73k=
 github.com/zitadel/oidc/v3 v3.47.1/go.mod h1:xhsEkuRmwxuU7elQ1isxIou983rEJAJdM7fCQnJq2lQ=
+github.com/zitadel/oidc/v3 v3.47.2 h1:gOVj4h38miymcu1uiCMR991UpBVm9wNVf8hpt/3Fjg0=
+github.com/zitadel/oidc/v3 v3.47.2/go.mod h1:XxFh0666HRXycyrKmono+3gY0RACpYJLgy4r/+kliKY=
 github.com/zitadel/schema v1.3.1 h1:QT3kwiRIRXXLVAs6gCK/u044WmUVh6IlbLXUsn6yRQU=
 github.com/zitadel/schema v1.3.1/go.mod h1:071u7D2LQacy1HAN+YnMd/mx1qVE2isb0Mjeqg46xnU=
 github.com/zitadel/schema v1.3.2 h1:gfJvt7dOMfTmxzhscZ9KkapKo3Nei3B6cAxjav+lyjI=
@@ -599,6 +601,8 @@ golang.org/x/text v0.34.0 h1:oL/Qq0Kdaqxa1KbNeMKwQq0reLCCaFtqu2eNuSeNHbk=
 golang.org/x/text v0.34.0/go.mod h1:homfLqTYRFyVYemLBFl5GgL/DWEiH5wcsQ5gSh1yziA=
 golang.org/x/text v0.35.0 h1:JOVx6vVDFokkpaq1AEptVzLTpDe9KGpj5tR4/X+ybL8=
 golang.org/x/text v0.35.0/go.mod h1:khi/HExzZJ2pGnjenulevKNX1W67CUy0AsXcNubPGCA=
+golang.org/x/text v0.36.0 h1:JfKh3XmcRPqZPKevfXVpI1wXPTqbkE5f7JA92a55Yxg=
+golang.org/x/text v0.36.0/go.mod h1:NIdBknypM8iqVmPiuco0Dh6P5Jcdk8lJL0CUebqK164=
 golang.org/x/time v0.12.0 h1:ScB/8o8olJvc+CQPWrK3fPZNfh7qgwCrY0zJmoEQLSE=
 golang.org/x/time v0.12.0/go.mod h1:CDIdPxbZBQxdj6cxyCIdrNogrJKMJ7pr37NYpMcMDSg=
 golang.org/x/tools v0.0.0-20180917221912-90fa682c2a6e/go.mod h1:n7NCudcB/nEzxVGmLbDWY5pfWTLqBcC2KZ6jyYvM4mQ=

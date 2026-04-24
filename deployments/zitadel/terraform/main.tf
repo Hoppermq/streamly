@@ -2,7 +2,7 @@ terraform {
   required_providers {
     zitadel = {
       source  = "zitadel/zitadel"
-      version = "2.12.5"
+      version = "2.12.6"
     }
   }
 }

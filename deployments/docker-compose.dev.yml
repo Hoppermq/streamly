@@ -434,7 +434,7 @@ services:
     restart: unless-stopped
 
   traefik:
-    image: "traefik:v3.7.4"
+    image: "traefik:v3.7.5"
     container_name: "traefik"
     security_opt:
       - no-new-privileges:true

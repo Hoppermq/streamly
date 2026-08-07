@@ -9,7 +9,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/hoppermq/middles v0.1.2
 	github.com/pkg/errors v0.9.1
-	github.com/santhosh-tekuri/jsonschema/v6 v6.0.2
+	github.com/santhosh-tekuri/jsonschema/v6 v6.0.3
 	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go v0.43.0
 	github.com/testcontainers/testcontainers-go/modules/clickhouse v0.43.0

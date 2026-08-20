@@ -1,4 +1,4 @@
-FROM --platform=${BUILDPLATFORM} golang:1.26-alpine AS development
+FROM --platform=${BUILDPLATFORM} golang:1.27-alpine AS development
 RUN apk add --no-cache git ca-certificates tzdata
 WORKDIR /app
 

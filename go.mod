@@ -1,11 +1,11 @@
 module github.com/hoppermq/streamly
 
-go 1.25.1
+go 1.25.11
 
 require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.48.0
 	github.com/gin-gonic/gin v1.12.0
-	github.com/golang-migrate/migrate/v4 v4.19.1
+	github.com/golang-migrate/migrate/v4 v4.20.0
 	github.com/google/uuid v1.6.0
 	github.com/hoppermq/middles v0.1.2
 	github.com/pkg/errors v0.9.1

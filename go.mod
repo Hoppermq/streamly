@@ -21,7 +21,7 @@ require (
 	github.com/zitadel/oidc/v3 v3.51.0
 	github.com/zitadel/zitadel-go/v3 v3.29.4
 	github.com/zixyos/glog v0.3.0
-	github.com/zixyos/goloader v0.2.0
+	github.com/zixyos/goloader v0.3.1
 )
 
 require (

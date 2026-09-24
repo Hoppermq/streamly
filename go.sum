@@ -597,6 +597,8 @@ github.com/zitadel/zitadel-go/v3 v3.29.3 h1:+oK/RCP3YjOECYtkDRcjdl9oshZu+yymlDqE
 github.com/zitadel/zitadel-go/v3 v3.29.3/go.mod h1:pTCgIm7LJ0S3zGt9n4d05BLNXhxioZYmp5JCs5xRWpU=
 github.com/zitadel/zitadel-go/v3 v3.29.4 h1:qbGmWFzazkOqkKtUyrH6huju+BpcYwDa7qm/e2gLZPc=
 github.com/zitadel/zitadel-go/v3 v3.29.4/go.mod h1:4R+aki0JFMwIPsr4CIVLYq5DRTVEAfLbehJpFNhFKQw=
+github.com/zitadel/zitadel-go/v3 v3.29.5 h1:1GHv0dyNmEtxbgPCWuxvi4Np9QZzReWxpq5Z4ugaDLY=
+github.com/zitadel/zitadel-go/v3 v3.29.5/go.mod h1:4R+aki0JFMwIPsr4CIVLYq5DRTVEAfLbehJpFNhFKQw=
 github.com/zixyos/glog v0.1.0 h1:fpiYrtfXFdZsLtDuMQkcXR6Gq49GB1dd2HvnaikwDFQ=
 github.com/zixyos/glog v0.1.0/go.mod h1:kuv28tCAyEUUW34Q1E4xB3HZhVO0LQmJF23doGuvvTA=
 github.com/zixyos/glog v0.2.1 h1:vVpUua52eGNMigpzjIDHPBtna4QB5a/N9Kot4yHMbMc=

@@ -21,7 +21,7 @@ require (
 	github.com/zitadel/oidc/v3 v3.51.8
 	github.com/zitadel/zitadel-go/v3 v3.30.0
 	github.com/zixyos/glog v0.3.0
-	github.com/zixyos/goloader v0.2.0
+	github.com/zixyos/goloader v1.0.0
 )
 
 require (
@@ -84,8 +84,8 @@ require (
 	github.com/knadh/koanf/parsers/toml v0.1.0 // indirect
 	github.com/knadh/koanf/providers/env v1.1.0 // indirect
 	github.com/knadh/koanf/providers/file v1.2.0 // indirect
-	github.com/knadh/koanf/providers/fs v1.0.0 // indirect
-	github.com/knadh/koanf/v2 v2.2.2 // indirect
+	github.com/knadh/koanf/providers/fs v1.0.1 // indirect
+	github.com/knadh/koanf/v2 v2.3.8 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.3.0 // indirect
 	github.com/lufia/plan9stats v0.0.0-20260330125221-c963978e514e // indirect
